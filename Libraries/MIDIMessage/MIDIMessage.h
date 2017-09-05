@@ -19,6 +19,11 @@ class MIDIMessage
     uint8_t getDataByte2();
     uint8_t getChannel();
 
+    void setType(uint8_t type);
+    void setDataByte1(uint8_t dataByte1);
+    void setDataByte2(uint8_t dataByte2);
+    void setChannel(uint8_t channel);
+
   private:
     uint8_t _type;      // MIDI message type
     uint8_t _dataByte1; // data byte 1

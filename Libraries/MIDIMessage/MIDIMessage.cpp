@@ -38,3 +38,23 @@ uint8_t MIDIMessage::getChannel()
 {
   return _channel;
 }
+
+void MIDIMessage::setType(uint8_t type)
+{
+  _type = type;
+}
+
+void MIDIMessage::setDataByte1(uint8_t dataByte1)
+{
+  _dataByte1 = dataByte1;
+}
+
+void MIDIMessage::setDataByte2(uint8_t dataByte2)
+{
+  _dataByte2 = dataByte2;
+}
+
+void MIDIMessage::setChannel(uint8_t channel)
+{
+  _channel = channel;
+}

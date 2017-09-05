@@ -37,21 +37,24 @@
 #include "IPotentiometer.h"
 #include "InputComponent.h"
 
-const uint8_t WINDOW_SIZE = 10;
+const uint8_t MAX_WINDOW_SIZE = 50;
 
 class Potentiometer : public IPotentiometer, public InputComponent {
 	public:
-		Potentiometer(uint8_t pin);
+		Potentiometer(uint8_t pin, uint8_t windowSize);
 		uint16_t getValue();
 		uint16_t getSmoothValue();	
-		uint8_t wasChanged();	
+		virtual uint8_t wasChanged();
+
+	protected:
+		uint16_t _lastValue;
+		uint16_t _value;		
 		
 	private:
-	    uint16_t _analog[WINDOW_SIZE];
+	    uint16_t _analog[MAX_WINDOW_SIZE];
 		uint8_t _analogPointer;
 		uint8_t _maxPointer;
-		uint16_t _lastValue;
-		uint16_t _value;				
+		uint8_t _windowSize;						
 };
 
 #endif

@@ -11,13 +11,12 @@
 class MIDIButton : public Button
 {
     public:
-        MIDIButton();
-        MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * messages, MIDIMessage * shiftMessages);
-        MIDIMessage getMessage(uint8_t msgId);
-        MIDIMessage getShiftMessage(uint8_t msgId);
+        MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage);
+        MIDIMessage getOnPressedMessage();
+        MIDIMessage getOnReleasedMessage();
      
     private:
-        MIDIMessage *_messages;
-        MIDIMessage *_shiftMessages;       
+        MIDIMessage *_onPressedMessage;
+        MIDIMessage *_onReleasedMessage;       
 };
 #endif

@@ -11,10 +11,10 @@
 class MIDIPotentiometer : public Potentiometer
 {
     public:      
-        MIDIPotentiometer();        
-        MIDIPotentiometer(uint8_t pin, MIDIMessage * message);
+        MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message);
         MIDIMessage getMessage();
         MIDIMessage getShiftMessage();
+        uint8_t wasChanged ();
      
     private:
         MIDIMessage *_message;         

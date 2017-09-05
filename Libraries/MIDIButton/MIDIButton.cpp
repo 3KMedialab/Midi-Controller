@@ -5,19 +5,19 @@
 
 #include <MIDIButton.h>
 
-MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * messages, MIDIMessage * shiftMessages) : Button (pin, puEnable, invert, dbTime)
+MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : Button (pin, puEnable, invert, dbTime)
 {
-    _messages = messages;
-    _shiftMessages = shiftMessages;
+    _onPressedMessage = onPressedMessage;
+    _onReleasedMessage = onReleasedMessage;
 }
 
-MIDIMessage MIDIButton::getMessage(uint8_t msgId)
+MIDIMessage MIDIButton::getOnPressedMessage()
 {
-    return _messages[msgId];
+    return *_onPressedMessage;
 }
 
-MIDIMessage MIDIButton::getShiftMessage(uint8_t msgId)
+MIDIMessage MIDIButton::getOnReleasedMessage()
 {
-    return _shiftMessages[msgId];
+    return *_onReleasedMessage;
 }
 

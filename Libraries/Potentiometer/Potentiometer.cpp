@@ -11,14 +11,16 @@
 
 #include "Potentiometer.h"
 
-Potentiometer::Potentiometer(uint8_t pin) : IPotentiometer() , InputComponent(pin)
+Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , InputComponent(pin)
 {
 	_lastValue = 0;
 	_value = 0;
 	_analogPointer = 0;
 	_maxPointer = 0;
+	_windowSize = (windowSize > MAX_WINDOW_SIZE) ? MAX_WINDOW_SIZE : windowSize;
 	
-	for (int i = 0; i < WINDOW_SIZE; i++) {
+	if (windowSize > _windowSize)
+	for (int i = 0; i < windowSize; i++) {
 		_analog[i] = 0;
 	}
 }
@@ -37,7 +39,7 @@ uint16_t Potentiometer::getSmoothValue()
 	uint16_t value = analogRead(_pin);
 	
 	// Return if we only keep track of 1 value
-	if (WINDOW_SIZE == 1) {
+	if (_windowSize == 1) {
 		return value;
 	}
 
@@ -52,13 +54,13 @@ uint16_t Potentiometer::getSmoothValue()
 	uint16_t avg = total / (_maxPointer + 1);
 	  
 	// Keep track of how many items we have in the array
-	if (_maxPointer < WINDOW_SIZE - 1) {
+	if (_maxPointer < _windowSize - 1) {
 		_maxPointer++;
 	}
 	 
 	// Update the array pointer 
 	_analogPointer++;
-	if (_analogPointer == WINDOW_SIZE) {
+	if (_analogPointer == _windowSize) {
 		_analogPointer = 0;
 	}
 	  
@@ -69,6 +71,7 @@ uint16_t Potentiometer::getSmoothValue()
 
 uint8_t Potentiometer::wasChanged ()
 {
+	getSmoothValue();
 	uint16_t diff = _lastValue - _value;
 	if (abs(diff) > 1) {
 		_lastValue = _value;
