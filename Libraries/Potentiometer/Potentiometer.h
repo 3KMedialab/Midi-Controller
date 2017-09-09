@@ -35,11 +35,11 @@
 #include "WProgram.h"
 #endif
 #include "IPotentiometer.h"
-#include "InputComponent.h"
+#include "AnalogComponent.h"
 
 const uint8_t MAX_WINDOW_SIZE = 50;
 
-class Potentiometer : public IPotentiometer, public InputComponent {
+class Potentiometer : public IPotentiometer, public AnalogComponent {
 	public:
 		Potentiometer(uint8_t pin, uint8_t windowSize);
 		uint16_t getValue();

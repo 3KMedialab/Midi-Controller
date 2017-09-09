@@ -11,7 +11,7 @@
 
 #include "Potentiometer.h"
 
-Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , InputComponent(pin)
+Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , AnalogComponent(pin)
 {
 	_lastValue = 0;
 	_value = 0;

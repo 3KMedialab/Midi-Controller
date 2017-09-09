@@ -16,11 +16,16 @@
  //Debounce time for the buttons. A time of 20 milliseconds usually works well for tactile button switches.                            
  const uint8_t DEBOUNCE_MS = 20;     
 
- // Input Digital Pin for each button
- const uint8_t BUTTON_PIN1 = 13;
- const uint8_t BUTTON_PIN2 = 12;
- const uint8_t BUTTON_PIN3 = 11;
+ /*************************************************
+ * SHIFT BUTTON CONFIG
+ *************************************************/
 
+ // Input Digital Pin for shift button
+ const uint8_t SHIFT_BUTTON_PIN = 12;
+
+ // Input Output Pin for shift button's led state indicator
+ const uint8_t SHIFT_BUTTON_LED_PIN = 9;
+ 
 /*************************************************
  * MIDI BUTTONS CONFIGURATION
  *************************************************/
@@ -32,7 +37,7 @@
  const uint8_t MIDI_BUTTON_PIN1 = 2;
  const uint8_t MIDI_BUTTON_PIN2 = 3;
  const uint8_t MIDI_BUTTON_PIN3 = 4;
- const uint8_t MIDI_BUTTON_PIN4 = 5;
+
  //-------------------------------- E N D  B U T T O N S  S E C T I O N ---------------------------------------------
 
  //-------------------------------- P O T E N T I O M E T E R S   S E C T I O N ---------------------------------------------
@@ -52,7 +57,7 @@
  *************************************************/
 
  // Number of MIDI Buttons to add to the controller
- const uint8_t NUM_MIDI_POTS = 1;
+ const uint8_t NUM_MIDI_POTS = 0;
   
  // Input Analog Pin for each MIDI potentiometer
  const uint8_t MIDI_POT_PIN1 = A0;

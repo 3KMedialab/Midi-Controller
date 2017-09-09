@@ -11,16 +11,23 @@
   @pin 
 */
 
-MIDIController::MIDIController(MidiInterface& inInterface, Button * shiftButton, MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots) 
+MIDIController::MIDIController(MidiInterface& inInterface, MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots) 
     : _mMidi(inInterface)
 {
     _midiButtons = midiButtons;
     _midiPots = midiPots;
     
     _numMIDIButtons = numMIDIButtons;
-    _numMIDIPots = numMIDIPots;
+    _numMIDIPots = numMIDIPots;  
+}
 
-    _shiftButton = shiftButton;
+MIDIController::MIDIController(MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots) 
+{
+    _midiButtons = midiButtons;
+    _midiPots = midiPots;
+
+    _numMIDIButtons = numMIDIButtons;
+    _numMIDIPots = numMIDIPots;
 }
 
 void MIDIController::begin()
@@ -30,28 +37,21 @@ void MIDIController::begin()
 
 uint8_t MIDIController::wasShiftButtonReleased()
 {
-    (*_shiftButton).read();
-    return (*_shiftButton).wasReleased();
+    _shiftButton.read();
+    return _shiftButton.wasReleased();
+}
+
+void MIDIController::processShiftButton(MIDIButton * midiButtons, MIDIPotentiometer * midiPots)
+{
+    _midiButtons = midiButtons;
+    _midiPots = midiPots;   
+    _shiftMode = !_shiftMode; 
+    _shiftButtonLed.setState(_shiftMode);
 }
 
 uint8_t MIDIController::isShiftMode()
 {
     return _shiftMode;
-}
-
-void MIDIController::setMIDIButtons(MIDIButton * midiButtons)
-{
-    _midiButtons = midiButtons;
-}
-
-void MIDIController::setMIDIPotentiometers (MIDIPotentiometer * midiPots)
-{   
-    _midiPots = midiPots;
-}
-
-void MIDIController::setShiftMode(uint8_t shiftMode)
-{
-    _shiftMode = shiftMode;
 }
 
 void MIDIController::processMIDIPots()
@@ -61,7 +61,7 @@ void MIDIController::processMIDIPots()
        if (_midiPots[i].wasChanged())
        {
            // send MIDI message          
-           sendMIDIMessage(_midiPots[i].getMessage());           
+           sendMIDIMessage(_midiPots[i].getMessage());                
        }
     }
 }
@@ -75,13 +75,13 @@ void MIDIController::processMIDIButtons()
         if (_midiButtons[i].wasPressed())
         {
             // send MIDI message          
-           sendMIDIMessage(_midiButtons[i].getOnPressedMessage());
+           sendMIDIMessage(_midiButtons[i].getOnPressedMessage());              
         }
 
         if (_midiButtons[i].wasReleased())
         {
             // send MIDI message            
-            sendMIDIMessage(_midiButtons[i].getOnReleasedMessage());
+            sendMIDIMessage(_midiButtons[i].getOnReleasedMessage());              
         }       
     }
 }
@@ -107,6 +107,40 @@ void MIDIController::sendMIDIMessage(MIDIMessage message)
 
         case midi::NoteOff:
            _mMidi.sendNoteOff(message.getDataByte1(), message.getDataByte2(), message.getChannel());
+        break;
+    }
+} 
+
+void MIDIController::printSerial(MIDIMessage message)
+{ 
+    switch(message.getType())
+    {
+        case midi::ControlChange:
+          Serial.println("ControlChange");
+          Serial.println(message.getDataByte1(),DEC);
+          Serial.println(message.getDataByte2(),DEC);
+          Serial.println(message.getChannel(),DEC);
+        break;
+
+        case midi::ProgramChange:
+        Serial.println("ProgramChange");
+        Serial.println(message.getDataByte1(),DEC);
+        Serial.println(message.getDataByte2(),DEC);
+        Serial.println(message.getChannel(),DEC);         
+        break;
+
+        case midi::NoteOn:
+        Serial.println("NoteOn");
+        Serial.println(message.getDataByte1(),DEC);
+        Serial.println(message.getDataByte2(),DEC);
+        Serial.println(message.getChannel(),DEC);               
+        break;
+
+        case midi::NoteOff:
+        Serial.println("NoteOff");
+        Serial.println(message.getDataByte1(),DEC);
+        Serial.println(message.getDataByte2(),DEC);
+        Serial.println(message.getChannel(),DEC);            
         break;
     }
 } 

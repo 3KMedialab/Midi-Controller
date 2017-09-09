@@ -16,8 +16,9 @@
 #include "WProgram.h"
 #endif
 #include "IButton.h"
-#include "InputComponent.h"
-class Button : public IButton, public InputComponent
+#include "DigitalComponent.h"
+
+class Button : public IButton, public DigitalComponent
 {
     public:
         Button(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime);

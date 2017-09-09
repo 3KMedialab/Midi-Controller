@@ -8,7 +8,6 @@
  */
 
 #include <Pitches.h>
-#include <ControllerConfig.h>
 #include <MIDIController.h>
   
 // Create the MIDI interface object
@@ -16,7 +15,7 @@ MidiInterface MIDI(Serial);
 
 //-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
 //Shift BUTTON
-Button shiftButton (BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+//Button shiftButton (BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 
 //-------------------------------- E N D  B U T T O N S  S E C T I O N ---------------------------------------------
 
@@ -38,7 +37,7 @@ MIDIMessage onReleasedMessageB3(midi::NoteOff, NOTE_G3, 127, 1);
 MIDIButton midiButtons [NUM_MIDI_BUTTONS] = { 
     {MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB1, &onReleasedMessageB1},
     {MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB2, &onReleasedMessageB2},
-    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB3, &onReleasedMessageB3}    
+    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB3, &onReleasedMessageB3} 
 };
 
 // MIDI BUTTON 1 SHIFT MESSAGES
@@ -57,7 +56,7 @@ MIDIMessage onReleasedShiftMessageB3(midi::ControlChange, midi::Sustain, 0, 1);
 MIDIButton shiftMidiButtons [NUM_MIDI_BUTTONS] = { 
     {MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB1, &onReleasedShiftMessageB1},
     {MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB2, &onReleasedShiftMessageB2},
-    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB3, &onReleasedShiftMessageB3}    
+    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB3, &onReleasedShiftMessageB3}
 };
 
 
@@ -69,43 +68,40 @@ MIDIMessage midiMessageP1(midi::ControlChange, midi::BreathController, 0, 1);
 
 // MIDI POTENTIOMETERS
 MIDIPotentiometer midiPots [NUM_MIDI_POTS] = {
-    {MIDI_POT_PIN1, WINDOW_SIZE, &midiMessageP1}
+    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiMessageP1}
 };
 
 // MIDI POTENTIOMETER 1 SHIFT MESSAGE
-MIDIMessage midiShiftMessageP1(midi::ControlChange, midi::BreathController, 0, 1);
+MIDIMessage midiShiftMessageP1(midi::ControlChange, midi::ModulationWheel, 0, 1);
 
 // MIDI SHIFT POTENTIOMETERS
 MIDIPotentiometer shiftMidiPots [NUM_MIDI_POTS] = {
-    {MIDI_POT_PIN1, WINDOW_SIZE, &midiShiftMessageP1}
+    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiShiftMessageP1}
 };
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
 // Creates the MIDI Controller object
-MIDIController controller(MIDI, &shiftButton, midiButtons, midiPots, NUM_MIDI_BUTTONS, NUM_MIDI_POTS);
+MIDIController controller(MIDI, midiButtons, midiPots, NUM_MIDI_BUTTONS, NUM_MIDI_POTS);
  
  void setup(void)
  {
-    controller.begin();      
+   controller.begin();
  }
  
  void loop(void)
  {
      controller.processMIDIButtons();
-     controller.processMIDIPots();    
+     controller.processMIDIPots(); 
+     
      if (controller.wasShiftButtonReleased())
      {
         if (!controller.isShiftMode())
         {
-            controller.setMIDIButtons(shiftMidiButtons);
-            controller.setMIDIPotentiometers(shiftMidiPots);
+            controller.processShiftButton(shiftMidiButtons, shiftMidiPots);    
         }
         else
         {
-            controller.setMIDIButtons(midiButtons);
-            controller.setMIDIPotentiometers(midiPots);
-        }
-
-        controller.setShiftMode(!controller.isShiftMode());
+            controller.processShiftButton(midiButtons, midiPots);            
+        }      
      }
  }
