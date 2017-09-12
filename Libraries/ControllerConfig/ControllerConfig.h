@@ -23,8 +23,9 @@
  // Input Digital Pin for shift button
  const uint8_t SHIFT_BUTTON_PIN = 12;
 
- // Input Output Pin for shift button's led state indicator
- const uint8_t SHIFT_BUTTON_LED_PIN = 9;
+ // Input Output Pin for shift button's leds state indicator
+ const uint8_t SHIFT_BUTTON_LED_PIN_1 = 9;
+ const uint8_t SHIFT_BUTTON_LED_PIN_2 = A1;
  
 /*************************************************
  * MIDI BUTTONS CONFIGURATION

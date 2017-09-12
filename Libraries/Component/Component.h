@@ -1,7 +1,7 @@
 /*
- * Led.h
+ * Component.h
  *
- * Class that represents a Led output component.
+ * Class that represens an Input/Output component connected to Arduino
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -18,20 +18,20 @@
  * limitations under the License.
  */
 
-#ifndef Led_h
-#define Led_h
+#ifndef Component_h
+#define Component_h
 
-#include "Component.h"
+#include "Arduino.h"
+#include "ComponentType.h"
 
-class Led : public Component
+class Component
 {
-    public:
-        Led(uint8_t pin, uint8_t state);
-        Led(uint8_t pin);
-        void setState (uint8_t state);
-        uint8_t getState();
-    
-    private:             
-        uint8_t _state;       
+  public:
+    Component(uint8_t pin, uint8_t type);  
+    Component(uint8_t pin, uint8_t type, uint8_t puEnable);  
+    uint8_t getPin();                               
+      
+  protected:
+    uint8_t _pin;           
 };
 #endif

@@ -1,17 +1,30 @@
 /*
-||
-|| @file Potentiometer.cpp
-|| @version 1.2
-|| @author Alexander Brevig
-|| @contact alexanderbrevig@gmail.com
-||
-|| @description
-|| | Provide an easy way of making/using potentiometers
-*/
-
+ * Potentiometer.cpp
+ *
+ * Class that represents an analog Potentiometer.
+ *
+ * Copyright 2017 3K MEDIALAB
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "Potentiometer.h"
 
-Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , AnalogComponent(pin)
+/*
+* Constructor
+* pin: Is the Arduino pin the potentiometer is connected to.
+* windowSize: number of measures to be used for smoothing the analog reads.
+*/ 
+Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , Component(pin, ComponentType::INPUT_ANALOG)
 {
 	_lastValue = 0;
 	_value = 0;
@@ -25,13 +38,16 @@ Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer()
 	}
 }
 
+/*
+* Returns the current value of the Potentiometer via analogRead() function.
+*/
 uint16_t Potentiometer::getValue(){
 	_value = analogRead(_pin); 
 	return _value;
 }
 
 /*
-  Perform smooting of analog input
+* Returns the smoothed current value of the Potentiometer via analogRead() function.
 */
 uint16_t Potentiometer::getSmoothValue()
 {
@@ -69,6 +85,12 @@ uint16_t Potentiometer::getSmoothValue()
 	return _value;	
 }
 
+/*
+* Indicates if the potentiometer was changed by the user.
+* It uses the getSmoothValue() method in order to smooth the 
+* analog reads. It also only consider that the component has changed
+* if there is a difference greater than 1.
+*/
 uint8_t Potentiometer::wasChanged ()
 {
 	getSmoothValue();

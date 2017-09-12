@@ -1,7 +1,26 @@
-/* 
-    MIDIController.h - 
-    Created by: Daniel Segura, August 30, 2017
-*/
+/*
+ * MIDIController.h
+ *
+ * The MIDI Controller class. It contains an array of MIDIButtons and MIDIPotentiometers. 
+ * It also contains a button that implemts the shift function and two leds to indicate 
+ * the current shift mode. 
+ *
+ * The configuration of the controller is stored in the ControllerConfig.h file
+ *
+ * Copyright 2017 3K MEDIALAB
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef MIDIController_h
 #define MIDIController_h
@@ -20,9 +39,11 @@ class MIDIController
     MIDIController(MidiInterface& inInterface, MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots);
     MIDIController(MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots);
       
+    void begin(); 
+    
     void processMIDIButtons();
     void processMIDIPots();
-    void begin();  
+ 
     void processShiftButton(MIDIButton * midiButtons, MIDIPotentiometer * midiPots);
     uint8_t wasShiftButtonReleased();
     uint8_t isShiftMode();
@@ -32,9 +53,12 @@ class MIDIController
     uint8_t _numMIDIPots;
     MIDIButton * _midiButtons;
     MIDIPotentiometer * _midiPots;
+
     Button _shiftButton = Button(SHIFT_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);
-    Led _shiftButtonLed = Led(SHIFT_BUTTON_LED_PIN);
+    Led _shiftButtonLed1 = Led(SHIFT_BUTTON_LED_PIN_1, HIGH);
+    Led _shiftButtonLed2 = Led(SHIFT_BUTTON_LED_PIN_2, LOW);
     uint8_t _shiftMode = 0;
+    
     MidiInterface& _mMidi;
 
     void sendMIDIMessage(MIDIMessage message);

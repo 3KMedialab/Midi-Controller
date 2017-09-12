@@ -10,15 +10,11 @@
  *----------------------------------------------------------------------*/
 #ifndef Button_h
 #define Button_h
-#if ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-#include "IButton.h"
-#include "DigitalComponent.h"
 
-class Button : public IButton, public DigitalComponent
+#include "IButton.h"
+#include "Component.h"
+
+class Button : public IButton, public Component
 {
     public:
         Button(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime);

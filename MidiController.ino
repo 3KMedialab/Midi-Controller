@@ -4,7 +4,19 @@
  * Create the components that will be part of the Controller.
  * Process the components of the controller.
  *
- * Created by Daniel Segura, 01/09/2017
+ * Copyright 2017 3K MEDIALAB
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <Pitches.h>
@@ -12,13 +24,6 @@
   
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
-
-//-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
-//Shift BUTTON
-//Button shiftButton (BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-
-//-------------------------------- E N D  B U T T O N S  S E C T I O N ---------------------------------------------
-
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTON 1 MESSAGES
@@ -58,8 +63,6 @@ MIDIButton shiftMidiButtons [NUM_MIDI_BUTTONS] = {
     {MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB2, &onReleasedShiftMessageB2},
     {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB3, &onReleasedShiftMessageB3}
 };
-
-
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
@@ -85,16 +88,19 @@ MIDIController controller(MIDI, midiButtons, midiPots, NUM_MIDI_BUTTONS, NUM_MID
  
  void setup(void)
  {
-   controller.begin();
+   //Initializes MIDI interface
+    controller.begin();
  }
  
  void loop(void)
  {
-     controller.processMIDIButtons();
-     controller.processMIDIPots(); 
-     
-     if (controller.wasShiftButtonReleased())
-     {
+    // Process the MIDI components 
+    controller.processMIDIButtons();
+    controller.processMIDIPots(); 
+    
+    // Process the shift button
+    if (controller.wasShiftButtonReleased())
+    {
         if (!controller.isShiftMode())
         {
             controller.processShiftButton(shiftMidiButtons, shiftMidiPots);    

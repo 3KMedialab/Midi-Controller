@@ -29,7 +29,7 @@
  * (Note that invert cannot be implied from puEnable since an external  *
  *  pullup could be used.)                                              *
  *----------------------------------------------------------------------*/
-Button::Button(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : IButton (), DigitalComponent (pin, ComponentType::INPUT_DIGITAL, puEnable)
+Button::Button(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : IButton (), Component (pin, ComponentType::INPUT_DIGITAL, puEnable)
 {
     _invert = invert;
     _dbTime = dbTime;
