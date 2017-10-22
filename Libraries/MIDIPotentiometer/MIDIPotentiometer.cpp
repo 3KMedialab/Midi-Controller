@@ -31,14 +31,6 @@ MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessag
 }
 
 /*
-* Returns the MIDI message assigned to the component
-*/
-MIDIMessage MIDIPotentiometer::getMessage()
-{
-    return *_message;
-}
-
-/*
 * Indicates if the potentiometer was changed by the user.
 * It uses the getSmoothValue() method in order to smooth the 
 * analog reads. It also only consider that the component has changed
@@ -58,3 +50,11 @@ uint8_t MIDIPotentiometer::wasChanged ()
 	}
 	return 0;
 } 
+
+MIDIMessage * MIDIPotentiometer::getMessageToSend()
+{
+	if (this->wasChanged())
+    {               
+           return this->_message;                
+	}
+}

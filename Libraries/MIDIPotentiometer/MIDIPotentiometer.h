@@ -21,15 +21,16 @@
 #define MIDIPotentiometer_h
 
 #include "Potentiometer.h"
+#include "IMIDIComponent.h"
 #include "MIDIMessage.h"
 
-class MIDIPotentiometer : public Potentiometer
+class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
 {
     public:      
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message);
-        MIDIMessage getMessage();
-        MIDIMessage getShiftMessage();
         uint8_t wasChanged ();
+
+        MIDIMessage * getMessageToSend();
      
     private:
         MIDIMessage *_message;         

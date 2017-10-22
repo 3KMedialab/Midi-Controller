@@ -108,11 +108,7 @@ void MIDIController::processMIDIPots()
 {   
     for (int i = 0; i < _numMIDIPots; i++)
     {
-       if (_midiPots[i].wasChanged())
-       {
-           // send MIDI message          
-           sendMIDIMessage(_midiPots[i].getMessage());                
-       }
+       processMidiComponent(&(_midiPots[i]));
     }
 }
 
@@ -123,19 +119,17 @@ void MIDIController::processMIDIButtons()
 {  
     for (int i = 0; i < _numMIDIButtons; i++)
     {
-        _midiButtons[i].read();
+        processMidiComponent(&(_midiButtons[i]));
+    }
+}
 
-        if (_midiButtons[i].wasPressed())
-        {
-            // send MIDI message          
-           sendMIDIMessage(_midiButtons[i].getOnPressedMessage());              
-        }
-
-        if (_midiButtons[i].wasReleased())
-        {
-            // send MIDI message            
-            sendMIDIMessage(_midiButtons[i].getOnReleasedMessage());              
-        }       
+void MIDIController::processMidiComponent(IMIDIComponent * component)
+{
+    MIDIMessage * message = component->getMessageToSend();
+    
+    if (message != NULL)
+    {
+        sendMIDIMessage(message); 
     }
 }
 
@@ -143,24 +137,24 @@ void MIDIController::processMIDIButtons()
 * Send a MIDI message regarding its type
 * message: the MIDI message.
 */
-void MIDIController::sendMIDIMessage(MIDIMessage message)
+void MIDIController::sendMIDIMessage(MIDIMessage * message)
 { 
-    switch(message.getType())
+    switch(message->getType())
     {
         case midi::ControlChange:
-           _mMidi.sendControlChange(message.getDataByte1(), message.getDataByte2(), message.getChannel());
+           _mMidi.sendControlChange(message->getDataByte1(), message->getDataByte2(), message->getChannel());
         break;
 
         case midi::ProgramChange:
-           _mMidi.sendProgramChange(message.getDataByte1(), message.getChannel());
+           _mMidi.sendProgramChange(message->getDataByte1(), message->getChannel());
         break;
 
         case midi::NoteOn:
-           _mMidi.sendNoteOn(message.getDataByte1(), message.getDataByte2(), message.getChannel());
+           _mMidi.sendNoteOn(message->getDataByte1(), message->getDataByte2(), message->getChannel());
         break;
 
         case midi::NoteOff:
-           _mMidi.sendNoteOff(message.getDataByte1(), message.getDataByte2(), message.getChannel());
+           _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), message->getChannel());
         break;
     }
 } 

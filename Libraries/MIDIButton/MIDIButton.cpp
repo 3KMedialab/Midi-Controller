@@ -38,18 +38,17 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
     _onReleasedMessage = onReleasedMessage;
 }
 
-/*
-* Returns the MIDI message assigned to the onPressed event.
-*/
-MIDIMessage MIDIButton::getOnPressedMessage()
+MIDIMessage * MIDIButton::getMessageToSend()
 {
-    return *_onPressedMessage;
-}
-
-/*
-* Returns the MIDI message assigned to the onReleased event.
-*/
-MIDIMessage MIDIButton::getOnReleasedMessage()
-{
-    return *_onReleasedMessage;
+    this->read();
+    
+    if (this->wasPressed())
+    {
+        return this->_onPressedMessage;              
+    }
+    
+    if (this->wasReleased())
+    {
+        return this->_onReleasedMessage;              
+    }       
 }

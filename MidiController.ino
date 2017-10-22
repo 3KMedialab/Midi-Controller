@@ -71,7 +71,7 @@ MIDIMessage midiMessageP1(midi::ControlChange, midi::BreathController, 0, 1);
 
 // MIDI POTENTIOMETERS
 MIDIPotentiometer midiPots [NUM_MIDI_POTS] = {
-    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiMessageP1}
+    {MIDI_POT_PIN1, WINDOW_SIZE, &midiMessageP1}
 };
 
 // MIDI POTENTIOMETER 1 SHIFT MESSAGE
@@ -79,7 +79,7 @@ MIDIMessage midiShiftMessageP1(midi::ControlChange, midi::ModulationWheel, 0, 1)
 
 // MIDI SHIFT POTENTIOMETERS
 MIDIPotentiometer shiftMidiPots [NUM_MIDI_POTS] = {
-    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiShiftMessageP1}
+    {MIDI_POT_PIN1, WINDOW_SIZE, &midiShiftMessageP1}
 };
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 

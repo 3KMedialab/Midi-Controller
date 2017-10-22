@@ -58,7 +58,7 @@
  *************************************************/
 
  // Number of MIDI Buttons to add to the controller
- const uint8_t NUM_MIDI_POTS = 0;
+ const uint8_t NUM_MIDI_POTS = 1;
   
  // Input Analog Pin for each MIDI potentiometer
  const uint8_t MIDI_POT_PIN1 = A0;

@@ -61,7 +61,8 @@ class MIDIController
     
     MidiInterface& _mMidi;
 
-    void sendMIDIMessage(MIDIMessage message);
+    void processMidiComponent(IMIDIComponent * component);
+    void sendMIDIMessage(MIDIMessage * message);
     void printSerial(MIDIMessage message);
 
 };

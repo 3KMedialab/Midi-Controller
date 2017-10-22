@@ -1,7 +1,7 @@
 /*
- * MIDIButton.h
+ * IMIDIComponent.cpp
  *
- * Class that represents a MIDI Button
+ * Interface that defines MIDI Components behaviour
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -17,21 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MIDIButton_h
-#define MIDIButton_h
 
-#include "Button.h"
 #include "IMIDIComponent.h"
-#include "MIDIMessage.h"
 
-class MIDIButton : public Button, public IMIDIComponent
-{
-    public:
-        MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage);
-        MIDIMessage * getMessageToSend();
-     
-    private:
-        MIDIMessage *_onPressedMessage;
-        MIDIMessage *_onReleasedMessage;       
-};
-#endif
+IMIDIComponent :: IMIDIComponent (){}
