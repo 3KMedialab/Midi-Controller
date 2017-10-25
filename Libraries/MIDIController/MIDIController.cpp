@@ -27,19 +27,14 @@
 /*
 * Constructor
 * inInterface: the MIDI interface that the controller will use.
-* midiButtons: the array of MIDIButtons the controller will manage.
-* midiPots: tha array of potentiometers the controller will manage.
-* numMIDIButtons: number of MIDI buttons to use.
-* numMIDIPots: number of MIDI Potentiometers to use.
+* midiButtons: the array of MIDI components the controller will manage.
+* numMIDIComponents: number of MIDI components assigned to the controllerto use.
 */
-MIDIController::MIDIController(MidiInterface& inInterface, MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots) 
-    : _mMidi(inInterface)
+MIDIController::MIDIController(MidiInterface& inInterface, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
+: _mMidi(inInterface)
 {
-    _midiButtons = midiButtons;
-    _midiPots = midiPots;
-    
-    _numMIDIButtons = numMIDIButtons;
-    _numMIDIPots = numMIDIPots;  
+    _midiComponents = midiComponents;
+    _numMIDIComponents = numMIDIComponents;
 }
 
 /*
@@ -49,13 +44,10 @@ MIDIController::MIDIController(MidiInterface& inInterface, MIDIButton * midiButt
 * numMIDIButtons: number of MIDI buttons to use.
 * numMIDIPots: number of MIDI Potentiometers to use.
 */
-MIDIController::MIDIController(MIDIButton * midiButtons, MIDIPotentiometer * midiPots, uint8_t numMIDIButtons, uint8_t numMIDIPots) 
+MIDIController::MIDIController(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
 {
-    _midiButtons = midiButtons;
-    _midiPots = midiPots;
-
-    _numMIDIButtons = numMIDIButtons;
-    _numMIDIPots = numMIDIPots;
+    _midiComponents = midiComponents;
+    _numMIDIComponents = numMIDIComponents;
 }
 
 /*
@@ -70,11 +62,11 @@ void MIDIController::begin()
 * Checks if the shift button was released.
 * Return true if the shift button was pressed and released.
 */
-uint8_t MIDIController::wasShiftButtonReleased()
+/*uint8_t MIDIController::wasShiftButtonReleased()
 {
     _shiftButton.read();
     return _shiftButton.wasReleased();
-}
+}*/
 
 /*
 * Process the shift function: Changes the assigned MIDI buttons and MIDI Potentiometers of the MIDI Controller and
@@ -82,47 +74,38 @@ uint8_t MIDIController::wasShiftButtonReleased()
 * midiButtons: the new array of buttons that the MIDI Controller will manage.
 * midiPots: the new array of potentiometers that the MIDI Controller will manage.
 */
-void MIDIController::processShiftButton(MIDIButton * midiButtons, MIDIPotentiometer * midiPots)
+/*void MIDIController::processShiftButton(MIDIButton * midiButtons, MIDIPotentiometer * midiPots)
 {
     _midiButtons = midiButtons;
     _midiPots = midiPots;   
     _shiftMode = !_shiftMode; 
     _shiftButtonLed1.setState(!_shiftButtonLed1.getState());
     _shiftButtonLed2.setState(!_shiftButtonLed2.getState());
-}
+}*/
 
 /*
 * Returns the shift state of the MIDI Controller.
 * 0 if the Controller is not in shift mode, 1 if the controller is in shift mode.
 */
-uint8_t MIDIController::isShiftMode()
+/*uint8_t MIDIController::isShiftMode()
 {
     return _shiftMode;
-}
+}*/
 
 /* 
-* Process the MIDI Potentiometers of the MIDI Controller, and send the MIDI Message assingned to the component if 
-* the potentiometers value has changed.
+* Process the MIDI components of the MIDI Controller, and sends the MIDI Message assingned to each component event.
 */
-void MIDIController::processMIDIPots()
-{   
-    for (int i = 0; i < _numMIDIPots; i++)
+void MIDIController::processMIDIComponents()
+{
+    for (int i = 0; i < _numMIDIComponents; i++)
     {
-       processMidiComponent(&(_midiPots[i]));
+        processMidiComponent(_midiComponents[i]);
     }
 }
 
 /* 
-* Process the MIDI Buttons of the MIDI Controller, and sends the MIDI Message assingned to the components events.
+* Send the MIDI message of the MIDI component
 */
-void MIDIController::processMIDIButtons()
-{  
-    for (int i = 0; i < _numMIDIButtons; i++)
-    {
-        processMidiComponent(&(_midiButtons[i]));
-    }
-}
-
 void MIDIController::processMidiComponent(IMIDIComponent * component)
 {
     MIDIMessage * message = component->getMessageToSend();
