@@ -33,23 +33,63 @@
 *  pullup could be used.)                                              
 */
 MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : Button (pin, puEnable, invert, dbTime)
-{
-    _onPressedMessage = onPressedMessage;
-    _onReleasedMessage = onReleasedMessage;
+{   
+    _midiMessages[ON_PRESSED_MESSAGE] = *onPressedMessage;
+    _midiMessages[ON_RELEASED_MESSAGE] = *onReleasedMessage;
 }
 
 /*
-* Returns the MIDI message assigned to the onPressed event.
+* Constructor
+* pin: Is the Arduino pin the button is connected to.              
+* puEnable: Enables the AVR internal pullup resistor if != 0 (can also use true or false).                                         
+* invert: If invert == 0, interprets a high state as pressed, low as released. If invert != 0, interprets a high state as        
+*         released, low as pressed  (can also use true or false).     
+* dbTime: Is the debounce time in milliseconds.
+* (Note that invert cannot be implied from puEnable since an external  
+*  pullup could be used.)                                              
 */
-MIDIMessage MIDIButton::getOnPressedMessage()
-{
-    return *_onPressedMessage;
+MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : Button (pin, puEnable, invert, dbTime)
+{ 
 }
 
 /*
-* Returns the MIDI message assigned to the onReleased event.
+* Returns the MIDI message that has to be sent regarding the component state
 */
-MIDIMessage MIDIButton::getOnReleasedMessage()
+MIDIMessage * MIDIButton::getMessageToSend()
 {
-    return *_onReleasedMessage;
+    this->read();
+    
+    if (this->wasPressed())
+    {
+        return &(_midiMessages[ON_PRESSED_MESSAGE]);              
+    }
+    
+    if (this->wasReleased())
+    {
+        return &(_midiMessages[ON_RELEASED_MESSAGE]);              
+    }       
+}
+
+/*
+* Returns the number of MIDI messages that the component can send
+*/
+uint8_t MIDIButton::getNumMessages()
+{
+    return MIDI_BUTTON_NUM_MESSAGES;
+}
+
+/*
+* Returns the MIDI messages that the component can send
+*/
+MIDIMessage * MIDIButton::getMessages()
+{
+    return _midiMessages;
+}
+
+/*
+* Returns the size of the MIDI data
+*/
+uint8_t MIDIButton::getDataSize()
+{
+    return (sizeof(uint8_t) * 4) * MIDI_BUTTON_NUM_MESSAGES;
 }

@@ -21,70 +21,27 @@
 
 #include <Pitches.h>
 #include <MIDIController.h>
+#include <MIDIButton.h>
+#include <MIDIPotentiometer.h>
   
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTON 1 MESSAGES
-MIDIMessage onPressedMessageB1(midi::NoteOn, NOTE_C3, 127, 1);
-MIDIMessage onReleasedMessageB1(midi::NoteOff, NOTE_C3, 127, 1);
-
-// MIDI BUTTON 2 MESSAGES
-MIDIMessage onPressedMessageB2(midi::NoteOn, NOTE_F3, 127, 1);
-MIDIMessage onReleasedMessageB2(midi::NoteOff, NOTE_F3, 127, 1);
-
-// MIDI BUTTON 3 MESSAGES
-MIDIMessage onPressedMessageB3(midi::NoteOn, NOTE_G3, 127, 1);
-MIDIMessage onReleasedMessageB3(midi::NoteOff, NOTE_G3, 127, 1);
-
-// MIDI BUTTONS
-MIDIButton midiButtons [NUM_MIDI_BUTTONS] = { 
-    {MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB1, &onReleasedMessageB1},
-    {MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB2, &onReleasedMessageB2},
-    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedMessageB3, &onReleasedMessageB3} 
-};
-
-// MIDI BUTTON 1 SHIFT MESSAGES
-MIDIMessage onPressedShiftMessageB1(midi::NoteOn, NOTE_C4, 127, 1);
-MIDIMessage onReleasedShiftMessageB1(-1, -1, -1, -1);
-
-// MIDI BUTTON 2 SHIFT MESSAGES
-MIDIMessage onPressedShiftMessageB2(midi::NoteOn, NOTE_F4, 127, 1);
-MIDIMessage onReleasedShiftMessageB2(-1, -1, -1, -1);
-
-// MIDI BUTTON 3 SHIFT MESSAGES
-MIDIMessage onPressedShiftMessageB3(midi::ControlChange, midi::Sustain, 127, 1);
-MIDIMessage onReleasedShiftMessageB3(midi::ControlChange, midi::Sustain, 0, 1);
-
-// MIDI SHIFT BUTTONS
-MIDIButton shiftMidiButtons [NUM_MIDI_BUTTONS] = { 
-    {MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB1, &onReleasedShiftMessageB1},
-    {MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB2, &onReleasedShiftMessageB2},
-    {MIDI_BUTTON_PIN3, PULLUP, INVERT, DEBOUNCE_MS, &onPressedShiftMessageB3, &onReleasedShiftMessageB3}
-};
+MIDIButton b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b2(MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS);
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 // MIDI POTENTIOMETER 1 MESSAGE
-MIDIMessage midiMessageP1(midi::ControlChange, midi::BreathController, 0, 1);
-
-// MIDI POTENTIOMETERS
-MIDIPotentiometer midiPots [NUM_MIDI_POTS] = {
-    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiMessageP1}
-};
-
-// MIDI POTENTIOMETER 1 SHIFT MESSAGE
-MIDIMessage midiShiftMessageP1(midi::ControlChange, midi::ModulationWheel, 0, 1);
-
-// MIDI SHIFT POTENTIOMETERS
-MIDIPotentiometer shiftMidiPots [NUM_MIDI_POTS] = {
-    //{MIDI_POT_PIN1, WINDOW_SIZE, &midiShiftMessageP1}
-};
+MIDIPotentiometer p1(MIDI_POT_PIN1, WINDOW_SIZE);
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
+IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1, &b2, &p1};
+
 // Creates the MIDI Controller object
-MIDIController controller(MIDI, midiButtons, midiPots, NUM_MIDI_BUTTONS, NUM_MIDI_POTS);
+MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  
  void setup(void)
  {
@@ -95,19 +52,8 @@ MIDIController controller(MIDI, midiButtons, midiPots, NUM_MIDI_BUTTONS, NUM_MID
  void loop(void)
  {
     // Process the MIDI components 
-    controller.processMIDIButtons();
-    controller.processMIDIPots(); 
+    controller.processMIDIComponents();
     
-    // Process the shift button
-    if (controller.wasShiftButtonReleased())
-    {
-        if (!controller.isShiftMode())
-        {
-            controller.processShiftButton(shiftMidiButtons, shiftMidiPots);    
-        }
-        else
-        {
-            controller.processShiftButton(midiButtons, midiPots);            
-        }      
-     }
+    // Process the page inc/dec buttons
+    controller.processPageButtons();    
  }

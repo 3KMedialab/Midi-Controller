@@ -36,6 +36,17 @@ MIDIMessage::MIDIMessage(uint8_t type, uint8_t dataByte1, uint8_t dataByte2, uin
 }
 
 /*
+* Constructor
+*/
+MIDIMessage::MIDIMessage()
+{  
+  _type = 0;
+  _dataByte1 = 0;
+  _dataByte2 = 0;
+  _channel = 0;
+}
+
+/*
 * Getters methods
 */
 uint8_t MIDIMessage::getType()

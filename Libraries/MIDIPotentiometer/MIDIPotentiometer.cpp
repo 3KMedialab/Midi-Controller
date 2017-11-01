@@ -27,15 +27,17 @@
 */
 MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message) : Potentiometer (pin, windowSize)
 {
-    _message = message;
+	_midiMessages[ACTION_MESSAGE] = *message;
 }
 
 /*
-* Returns the MIDI message assigned to the component
+* Constructor
+* pin: Is the Arduino pin the potentiometer is connected to. 
+* windowSize: number of measures of the potentiometer to smooth the reads.
 */
-MIDIMessage MIDIPotentiometer::getMessage()
+MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : Potentiometer (pin, windowSize)
 {
-    return *_message;
+
 }
 
 /*
@@ -53,8 +55,43 @@ uint8_t MIDIPotentiometer::wasChanged ()
 	uint16_t diff = _lastValue - _value;
 	if (abs(diff) > 1) {
         _lastValue = _value;
-        (*_message).setDataByte2(map(_value, 0, 1023, 0, 127));
+        _midiMessages[ACTION_MESSAGE].setDataByte2(map(_value, 0, 1023, 0, 127));
 		return 1;
 	}
 	return 0;
-} 
+}
+
+/*
+* Returns the MIDI message that has to be sent regarding the component state
+*/
+MIDIMessage * MIDIPotentiometer::getMessageToSend()
+{
+	if (this->wasChanged())
+    {               
+        return &(_midiMessages[ACTION_MESSAGE]);                
+	}
+}
+
+/*
+* Returns the number of MIDI messages that the component can send
+*/
+uint8_t MIDIPotentiometer::getNumMessages()
+{
+    return MIDI_POTENTIOMETER_NUM_MESSAGES;
+}
+
+/*
+* Returns the MIDI messages that the component can send
+*/
+MIDIMessage * MIDIPotentiometer::getMessages()
+{
+    return _midiMessages;
+}
+
+/*
+* Returns the size of the MIDI data
+*/
+uint8_t MIDIPotentiometer::getDataSize()
+{
+	return sizeof(uint8_t) * 4;
+}
