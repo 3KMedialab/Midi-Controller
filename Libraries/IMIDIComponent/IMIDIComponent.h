@@ -1,7 +1,7 @@
 /*
  * IMIDIComponent.h
  *
- * Interface that defines potentiometers functionality
+ * Interface that defines a MIDI component
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -29,6 +29,8 @@ class IMIDIComponent
   public:
     IMIDIComponent();
     virtual MIDIMessage * getMessageToSend() = 0;
-	   
+    virtual uint8_t getNumMessages() = 0;
+    virtual MIDIMessage * getMessages() = 0;
+    virtual uint8_t getDataSize() = 0;	   
 };
 #endif

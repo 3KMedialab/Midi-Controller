@@ -27,73 +27,67 @@
 /*
 * Constructor
 * inInterface: the MIDI interface that the controller will use.
-* midiButtons: the array of MIDI components the controller will manage.
-* numMIDIComponents: number of MIDI components assigned to the controllerto use.
+* midiComponents: the array of MIDI components the controller will manage.
+* numMIDIComponents: number of MIDI components assigned to the controller
 */
 MIDIController::MIDIController(MidiInterface& inInterface, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
 : _mMidi(inInterface)
 {
     _midiComponents = midiComponents;
-    _numMIDIComponents = numMIDIComponents;
+    _numMIDIComponents = numMIDIComponents;     
 }
 
 /*
 * Constructor (for debug purposes)
-* midiButtons: the array of MIDIButtons the controller will manage.
-* midiPots: tha array of potentiometers the controller will manage.
-* numMIDIButtons: number of MIDI buttons to use.
-* numMIDIPots: number of MIDI Potentiometers to use.
+* midiComponents: the array of MIDI components the controller will manage.
+* numMIDIComponents: number of MIDI components assigned to the controller
 */
 MIDIController::MIDIController(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
 {
     _midiComponents = midiComponents;
     _numMIDIComponents = numMIDIComponents;
+    _currentPage = 1;
 }
 
 /*
-* Initializes the MIDI interface
+* Initializes the MIDI controller
 */
 void MIDIController::begin()
 {
+   // Initializes the MIDI interface
    _mMidi.begin();
+
+   _memoryManager.initialize(_midiComponents, _numMIDIComponents);
+
+   // load from EEPROM the default page of MIDI messages into the MIDI components
+   _currentPage = 1;   
+   _memoryManager.loadMIDIComponents(_currentPage, _midiComponents, _numMIDIComponents);
 }
 
 /*
-* Checks if the shift button was released.
-* Return true if the shift button was pressed and released.
+* Process the buttons for load pages of MIDI messages into the MIDI components
 */
-/*uint8_t MIDIController::wasShiftButtonReleased()
+void MIDIController::processPageButtons()
 {
-    _shiftButton.read();
-    return _shiftButton.wasReleased();
-}*/
+    // process page decrease button
+    _decPageButton.read();
+    if (_decPageButton.wasPressed() && _currentPage > 1)
+    {
+        _currentPage -= 1;
+        loadPage(_currentPage);
+    }
 
-/*
-* Process the shift function: Changes the assigned MIDI buttons and MIDI Potentiometers of the MIDI Controller and
-* set the new shift and leds state.
-* midiButtons: the new array of buttons that the MIDI Controller will manage.
-* midiPots: the new array of potentiometers that the MIDI Controller will manage.
-*/
-/*void MIDIController::processShiftButton(MIDIButton * midiButtons, MIDIPotentiometer * midiPots)
-{
-    _midiButtons = midiButtons;
-    _midiPots = midiPots;   
-    _shiftMode = !_shiftMode; 
-    _shiftButtonLed1.setState(!_shiftButtonLed1.getState());
-    _shiftButtonLed2.setState(!_shiftButtonLed2.getState());
-}*/
-
-/*
-* Returns the shift state of the MIDI Controller.
-* 0 if the Controller is not in shift mode, 1 if the controller is in shift mode.
-*/
-/*uint8_t MIDIController::isShiftMode()
-{
-    return _shiftMode;
-}*/
+    // process page increase button
+    _incPageButton.read();
+    if (_incPageButton.wasPressed() && _currentPage < _memoryManager.getMaxPages())
+    {
+        _currentPage += 1;
+        loadPage(_currentPage);
+    }
+}
 
 /* 
-* Process the MIDI components of the MIDI Controller, and sends the MIDI Message assingned to each component event.
+* Process the MIDI components of the MIDI Controller
 */
 void MIDIController::processMIDIComponents()
 {
@@ -104,7 +98,8 @@ void MIDIController::processMIDIComponents()
 }
 
 /* 
-* Send the MIDI message of the MIDI component
+* Process a MIDI component in order to send the corresponding MIDI Message regarding the component event triggered
+* component: the MIDI component to process.
 */
 void MIDIController::processMidiComponent(IMIDIComponent * component)
 {
@@ -118,7 +113,7 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
 
 /*
 * Send a MIDI message regarding its type
-* message: the MIDI message.
+* message: the MIDI message to be sent.
 */
 void MIDIController::sendMIDIMessage(MIDIMessage * message)
 { 
@@ -175,3 +170,21 @@ void MIDIController::printSerial(MIDIMessage message)
         break;
     }
 } 
+
+/*
+* Save the MIDI messages currently assigned to each MIDI component in the EEPROM
+* page: page number where the MIDI messages will be saved.
+*/
+void MIDIController::savePage(uint8_t page)
+{        
+    _memoryManager.saveMIDIComponents(page, _midiComponents, _numMIDIComponents);
+}
+
+/*
+* Load the MIDI messages stored in a page in the EEPROM into the MIDI components
+* page: page number which contains the MIDI messages that will be loaded into the MIDI components
+*/
+void MIDIController::loadPage(uint8_t page)
+{        
+    _memoryManager.loadMIDIComponents(page, _midiComponents, _numMIDIComponents);
+}

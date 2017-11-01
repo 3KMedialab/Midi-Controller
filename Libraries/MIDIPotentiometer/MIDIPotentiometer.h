@@ -24,15 +24,22 @@
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
 
+#define MIDI_POTENTIOMETER_NUM_MESSAGES 1 // number of MIDI messages the component can send
+#define ACTION_MESSAGE 0
+
 class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
 {
-    public:      
+    public:
+        MIDIPotentiometer(uint8_t pin, uint8_t windowSize);
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message);
         uint8_t wasChanged ();
 
         MIDIMessage * getMessageToSend();
+        uint8_t getNumMessages();
+        MIDIMessage * getMessages();
+        uint8_t getDataSize();
      
-    private:
-        MIDIMessage *_message;         
+    private:    
+        MIDIMessage _midiMessages [MIDI_POTENTIOMETER_NUM_MESSAGES];    // array with the MIDI messages the component can send     
 };
 #endif
