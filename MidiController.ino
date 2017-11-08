@@ -28,13 +28,13 @@
 MidiInterface MIDI(Serial);
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
-// MIDI BUTTON 1 MESSAGES
+// MIDI BUTTONS
 MIDIButton b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton b2(MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS);
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
-// MIDI POTENTIOMETER 1 MESSAGE
+// MIDI POTENTIOMETERS
 MIDIPotentiometer p1(MIDI_POT_PIN1, WINDOW_SIZE);
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
@@ -50,10 +50,16 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  }
  
  void loop(void)
- {
+  {
+    // Process the tempo potentiometer
+    controller.processTempoPot();
+      
+    // Process MIDI clock components
+    controller.processMIDIClockComponents();
+    
     // Process the MIDI components 
     controller.processMIDIComponents();
     
     // Process the page inc/dec buttons
-    controller.processPageButtons();    
- }
+    controller.processPageButtons();
+  }

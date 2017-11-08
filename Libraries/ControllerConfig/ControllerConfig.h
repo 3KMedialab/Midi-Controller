@@ -24,6 +24,9 @@
  const uint8_t DEC_PAGE_BUTTON_PIN = 12;
  const uint8_t INC_PAGE_BUTTON_PIN = 3;
 
+ // Input Digital Pin for send MIDI clock button
+ const uint8_t MIDI_CLOCK_BUTTON_PIN = 8;
+
 /*************************************************
  * MIDI BUTTONS CONFIGURATION
  *************************************************/
@@ -43,11 +46,11 @@
  * POTENTIOMETERS CONFIGURATION
  *************************************************/
 
- // Input Analog Pin for each Potentiometer
- const uint8_t POT_PIN1 = A5;
-
  // Number of measures to smooth the read analog
- const uint8_t WINDOW_SIZE = 10;
+ const uint8_t WINDOW_SIZE = 5;
+ 
+ // Input Analog Pin for each Potentiometer
+ const uint8_t BPM_POT_PIN = A1;
 
 /*************************************************
  * MIDI POTENTIOMETERS CONFIGURATION
@@ -59,4 +62,19 @@
  // Input Analog Pin for each MIDI potentiometer
  const uint8_t MIDI_POT_PIN1 = A0;
 
-  //-------------------------------- E N D  P O T E N T I O M E T E R S   S E C T I O N ---------------------------------------------
+//-------------------------------- E N D  P O T E N T I O M E T E R S   S E C T I O N ---------------------------------------------
+
+//-------------------------------- L E D  S E C T I O N ---------------------------------------------------------
+  const uint8_t BPM_LED_PIN = 13;
+//-------------------------------- E N D  O F  L E D  S E C T I O N ---------------------------------------------
+
+  //-------------------------------- S C R E E N  S E C T I O N ---------------------------------------------------------
+  const uint8_t I2C_ADDRESS = 0x27;
+  const uint8_t ROW_LENGTH = 16;
+  const uint8_t ROWS = 2;
+  //-------------------------------- E N D  O F  S C R E E N  S E C T I O N ---------------------------------------------
+
+    //-------------------------------- T E M P O  S E C T I O N ---------------------------------------------------------
+    const uint16_t MIN_BPM = 10;
+    const uint16_t MAX_BPM = 300;
+    //-------------------------------- E N D  O F  T E M P O  S E C T I O N ---------------------------------------------

@@ -58,10 +58,25 @@ void MIDIController::begin()
    _mMidi.begin();
 
    _memoryManager.initialize(_midiComponents, _numMIDIComponents);
+   _screenManager.initialize(I2C_ADDRESS, ROW_LENGTH, ROWS);
 
    // load from EEPROM the default page of MIDI messages into the MIDI components
    _currentPage = 1;   
    _memoryManager.loadMIDIComponents(_currentPage, _midiComponents, _numMIDIComponents);
+
+   // set the default tempo
+   _bpm = map(_bpmPot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
+
+   // don't send MIDI clock by default
+   _midiClock = 0;
+
+   // variable that controls the bpm led blink frequency
+   _lastTime = 0;
+
+   _lastTimeClock = 0;
+
+   _screenManager.cleanScreen();
+   _screenManager.printDefault(_currentPage, _bpm);
 }
 
 /*
@@ -75,6 +90,7 @@ void MIDIController::processPageButtons()
     {
         _currentPage -= 1;
         loadPage(_currentPage);
+        _screenManager.printDefault(_currentPage, _bpm);
     }
 
     // process page increase button
@@ -83,6 +99,7 @@ void MIDIController::processPageButtons()
     {
         _currentPage += 1;
         loadPage(_currentPage);
+        _screenManager.printDefault(_currentPage, _bpm);
     }
 }
 
@@ -135,7 +152,31 @@ void MIDIController::sendMIDIMessage(MIDIMessage * message)
            _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), message->getChannel());
         break;
     }
-} 
+}
+
+/*
+* Send MIDI clock signal
+*/
+void MIDIController::sendMIDIRealTime(uint8_t inType)
+{
+    switch(inType)
+    {
+        case midi::Start:
+            _mMidi.sendRealTime(midi::Start);
+        break;
+
+        case midi::Clock:
+            _mMidi.sendRealTime(midi::Clock);
+        break;
+        
+        case midi::Stop:
+            _mMidi.sendRealTime(midi::Stop);
+        break;
+        
+        default:
+        break;
+    }
+}
 
 void MIDIController::printSerial(MIDIMessage message)
 { 
@@ -187,4 +228,67 @@ void MIDIController::savePage(uint8_t page)
 void MIDIController::loadPage(uint8_t page)
 {        
     _memoryManager.loadMIDIComponents(page, _midiComponents, _numMIDIComponents);
+}
+
+/*
+* Check if the tempo potentiometer has changed and calculates the new value of the controller's tempo in BPM
+*/
+void MIDIController::processTempoPot()
+{        
+    if (_bpmPot.wasChanged())
+    {
+        _bpm = map(_bpmPot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
+        _screenManager.printDefault(_currentPage, _bpm);
+        
+        // calculate the blink frequency of the LED
+        uint32_t millisecondsPerMinute = 60000;
+        _delayMS = millisecondsPerMinute / _bpm;       
+    }
+}
+
+/*
+* Process the button that activates/deactivates sending of MIDI clock signal.
+* In case of the controller is sending MIDI clock, then the led blinks at BPM frequency
+*/
+void MIDIController::processMIDIClockComponents()
+{
+    // activate/deactivate MIDI clock signal sending
+    _midiClockButton.read();
+
+    if (_midiClockButton.wasPressed())
+    {
+        _midiClock = !_midiClock;
+
+        if (_midiClock == 1)
+        {
+            sendMIDIRealTime(midi::Start);   
+        }
+        else
+        {
+            sendMIDIRealTime(midi::Stop);
+            _bpmLed.setState(LOW);  
+        }
+    }
+
+    uint32_t currentTime = millis();
+   
+    // send MIDI clock signal regarding the tempo
+    if (currentTime - _lastTimeClock >= (_delayMS / 24))
+    {                       
+        if (_midiClock == 1)
+        {    
+            sendMIDIRealTime(midi::Clock);
+            _lastTimeClock = currentTime;
+        }    
+    }
+
+    // controls led blinking regarding the tempo
+    if (currentTime - _lastTime >= (_delayMS / 2))
+    {
+        if (_midiClock == 1)
+        {          
+            _bpmLed.setState(!_bpmLed.getState());
+            _lastTime =  currentTime;
+        }        
+    }
 }
