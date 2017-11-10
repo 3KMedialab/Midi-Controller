@@ -93,3 +93,21 @@ uint8_t MIDIButton::getDataSize()
 {
     return (sizeof(uint8_t) * 4) * MIDI_BUTTON_NUM_MESSAGES;
 }
+
+/*
+* Returns true if the button was pressed
+*/
+uint8_t MIDIButton::wasActivated()
+{
+    this->read();
+    
+    if (this->wasPressed())
+    {
+        return 1;           
+    }
+    
+    else
+    {
+        return 0;
+    }
+}

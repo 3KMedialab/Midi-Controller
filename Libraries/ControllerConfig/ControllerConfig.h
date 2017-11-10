@@ -27,16 +27,26 @@
  // Input Digital Pin for send MIDI clock button
  const uint8_t MIDI_CLOCK_BUTTON_PIN = 8;
 
+ // Input Digital Pin for edit mode button
+ const uint8_t EDIT_MODE_BUTTON_PIN = 4;
+
 /*************************************************
  * MIDI BUTTONS CONFIGURATION
  *************************************************/
  
  // Number of MIDI Buttons to add to the controller
- const uint8_t NUM_MIDI_BUTTONS = 2;
+ const uint8_t NUM_MIDI_BUTTONS = 1;
 
  // Input Digital Pin for each MIDI button
  const uint8_t MIDI_BUTTON_PIN1 = 2;
- const uint8_t MIDI_BUTTON_PIN2 = 4;
+ /*const uint8_t MIDI_BUTTON_PIN2 = 2;
+ const uint8_t MIDI_BUTTON_PIN3 = 2;
+ const uint8_t MIDI_BUTTON_PIN4 = 2;
+ const uint8_t MIDI_BUTTON_PIN5 = 2;
+ const uint8_t MIDI_BUTTON_PIN6 = 2;
+ const uint8_t MIDI_BUTTON_PIN7 = 2;
+ const uint8_t MIDI_BUTTON_PIN8 = 2;
+ const uint8_t MIDI_BUTTON_PIN9 = 2;*/
 
  //-------------------------------- E N D  B U T T O N S  S E C T I O N ---------------------------------------------
 
@@ -47,7 +57,7 @@
  *************************************************/
 
  // Number of measures to smooth the read analog
- const uint8_t WINDOW_SIZE = 5;
+ const uint8_t WINDOW_SIZE = 10;
  
  // Input Analog Pin for each Potentiometer
  const uint8_t BPM_POT_PIN = A1;
@@ -61,6 +71,8 @@
   
  // Input Analog Pin for each MIDI potentiometer
  const uint8_t MIDI_POT_PIN1 = A0;
+ /*const uint8_t MIDI_POT_PIN2 = A0;
+ const uint8_t MIDI_POT_PIN3 = A0;*/
 
 //-------------------------------- E N D  P O T E N T I O M E T E R S   S E C T I O N ---------------------------------------------
 
@@ -75,6 +87,6 @@
   //-------------------------------- E N D  O F  S C R E E N  S E C T I O N ---------------------------------------------
 
     //-------------------------------- T E M P O  S E C T I O N ---------------------------------------------------------
-    const uint16_t MIN_BPM = 10;
+    const uint8_t MIN_BPM = 10;
     const uint16_t MAX_BPM = 300;
     //-------------------------------- E N D  O F  T E M P O  S E C T I O N ---------------------------------------------

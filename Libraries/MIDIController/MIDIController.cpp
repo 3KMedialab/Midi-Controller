@@ -77,30 +77,65 @@ void MIDIController::begin()
 
    _screenManager.cleanScreen();
    _screenManager.printDefault(_currentPage, _bpm);
+
+   // edit mode is false on initialization
+   _edit = 0;
 }
 
 /*
 * Process the buttons for load pages of MIDI messages into the MIDI components
 */
-void MIDIController::processPageButtons()
+void MIDIController::processIncDecButtons()
 {
-    // process page decrease button
+    /**************************** DECREASE BUTTON **********************/
     _decPageButton.read();
-    if (_decPageButton.wasPressed() && _currentPage > 1)
+
+    // edit mode is off: load the previous page from memory
+    if (_edit == 0)
     {
-        _currentPage -= 1;
-        loadPage(_currentPage);
-        _screenManager.printDefault(_currentPage, _bpm);
+        if (_decPageButton.wasPressed() && _currentPage > 1)
+        {
+            _currentPage -= 1;
+            loadPage(_currentPage);
+            _screenManager.printDefault(_currentPage, _bpm);
+        }
     }
 
-    // process page increase button
-    _incPageButton.read();
-    if (_incPageButton.wasPressed() && _currentPage < _memoryManager.getMaxPages())
+    // edit mode is on: display the previous MIDI message of the component loaded into the Screen Manager
+    else
     {
-        _currentPage += 1;
-        loadPage(_currentPage);
-        _screenManager.printDefault(_currentPage, _bpm);
+        if (_decPageButton.wasPressed() && _screenManager.isComponentDisplayed())
+        {
+            _screenManager.displayPreviousMIDIMsg();
+        }
     }
+
+    /**************************** END DECREASE BUTTON **********************/
+
+    /**************************** INCREASE BUTTON **********************/
+    _incPageButton.read();
+    
+    // edit mode is off: load the next page from memory
+    if (_edit == 0)
+    {
+        if (_incPageButton.wasPressed() && _currentPage < _memoryManager.getMaxPages())
+        {
+            _currentPage += 1;
+            loadPage(_currentPage);
+            _screenManager.printDefault(_currentPage, _bpm);
+        }
+    }    
+
+    // edit mode is on: display the next MIDI message of the component loaded into the Screen Manager
+    else
+    {    
+        if (_incPageButton.wasPressed() && _screenManager.isComponentDisplayed())
+        {
+            _screenManager.displayNextMIDIMsg();
+        }
+    }
+
+    /**************************** INCREASE BUTTON **********************/
 }
 
 /* 
@@ -120,12 +155,29 @@ void MIDIController::processMIDIComponents()
 */
 void MIDIController::processMidiComponent(IMIDIComponent * component)
 {
-    MIDIMessage * message = component->getMessageToSend();
-    
-    if (message != NULL)
+    // edit mode is off: send MIDI message
+    if (_edit == 0)
     {
-        sendMIDIMessage(message); 
+        MIDIMessage * message = component->getMessageToSend();
+        
+        if (message != NULL)
+        {
+            sendMIDIMessage(message); 
+        }
     }
+
+    // edit mode is on: assign the MIDI messages information to the screen and display the first MIDI message
+    else
+    {   
+        if (component->wasActivated())
+        {
+            if (_screenManager.getDisplayedMIDIComponent() != component)
+            {
+                _screenManager.setMIDIComponentToDisplay(component);
+                _screenManager.displayComponentMIDIMessage(1); 
+            }            
+        }        
+    }   
 }
 
 /*
@@ -241,8 +293,9 @@ void MIDIController::processTempoPot()
         _screenManager.printDefault(_currentPage, _bpm);
         
         // calculate the blink frequency of the LED
-        uint32_t millisecondsPerMinute = 60000;
-        _delayMS = millisecondsPerMinute / _bpm;       
+        uint32_t microsecondsPerMinute = 60000000;
+        _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
+        _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
     }
 }
 
@@ -270,10 +323,10 @@ void MIDIController::processMIDIClockComponents()
         }
     }
 
-    uint32_t currentTime = millis();
+    uint32_t currentTime = micros();
    
     // send MIDI clock signal regarding the tempo
-    if (currentTime - _lastTimeClock >= (_delayMS / 24))
+    if (currentTime - _lastTimeClock >= _delayClockTickMS)
     {                       
         if (_midiClock == 1)
         {    
@@ -283,7 +336,7 @@ void MIDIController::processMIDIClockComponents()
     }
 
     // controls led blinking regarding the tempo
-    if (currentTime - _lastTime >= (_delayMS / 2))
+    if (currentTime - _lastTime >= _delayLedMS)
     {
         if (_midiClock == 1)
         {          
@@ -291,4 +344,28 @@ void MIDIController::processMIDIClockComponents()
             _lastTime =  currentTime;
         }        
     }
+}
+
+/*
+* Process the button that activates/deactivates the edit mode.
+*/
+void MIDIController::processEditModeButton()
+{
+    // activate/deactivate edit mode
+    _editButton.read();
+
+    if (_editButton.wasPressed())
+    {
+        _edit = !_edit;
+
+        if (_edit==1)
+        {
+            _screenManager.printSelectComponent();
+        }
+        else
+        {
+            _screenManager.printDefault(_currentPage, _bpm);
+            _screenManager.setMIDIComponentToDisplay(NULL);
+        }
+    }   
 }

@@ -23,8 +23,6 @@
 #include <EEPROM.h>
 #include <IMIDIComponent.h> 
 
-#define EEPROM_SIZE 1024  //size in bytes of the EEPROM for Arduino UNO
-
 class MemoryManager
 {
   public:   

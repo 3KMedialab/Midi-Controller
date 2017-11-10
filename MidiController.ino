@@ -30,15 +30,25 @@ MidiInterface MIDI(Serial);
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTONS
 MIDIButton b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b2(MIDI_BUTTON_PIN2, PULLUP, INVERT, DEBOUNCE_MS);
+/*MIDIButton b2(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b3(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b4(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b5(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b6(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b7(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b8(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton b9(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);*/
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 // MIDI POTENTIOMETERS
 MIDIPotentiometer p1(MIDI_POT_PIN1, WINDOW_SIZE);
+/*MIDIPotentiometer p2(MIDI_POT_PIN1, WINDOW_SIZE);
+MIDIPotentiometer p3(MIDI_POT_PIN1, WINDOW_SIZE);*/
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
-IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1, &b2, &p1};
+//IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1, &b2, &b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
+IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&p1};
 
 // Creates the MIDI Controller object
 MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
@@ -51,15 +61,27 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  
  void loop(void)
   {
+    // Process MIDI clock components
+    controller.processMIDIClockComponents();
+    
     // Process the tempo potentiometer
     controller.processTempoPot();
-      
+
     // Process MIDI clock components
     controller.processMIDIClockComponents();
     
     // Process the MIDI components 
     controller.processMIDIComponents();
+
+    // Process MIDI clock components
+    controller.processMIDIClockComponents();
     
     // Process the page inc/dec buttons
-    controller.processPageButtons();
+    controller.processIncDecButtons();
+
+    // Process MIDI clock components
+    controller.processMIDIClockComponents();
+
+    // Process set edit mode on/off button
+    controller.processEditModeButton();
   }

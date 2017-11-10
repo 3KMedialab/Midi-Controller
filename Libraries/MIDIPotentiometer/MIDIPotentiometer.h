@@ -38,6 +38,7 @@ class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
         uint8_t getNumMessages();
         MIDIMessage * getMessages();
         uint8_t getDataSize();
+        uint8_t wasActivated();
      
     private:    
         MIDIMessage _midiMessages [MIDI_POTENTIOMETER_NUM_MESSAGES];    // array with the MIDI messages the component can send     

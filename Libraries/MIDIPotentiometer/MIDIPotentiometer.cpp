@@ -95,3 +95,11 @@ uint8_t MIDIPotentiometer::getDataSize()
 {
 	return sizeof(uint8_t) * 4;
 }
+
+/*
+* Returns true if the potentiometer was moved
+*/
+uint8_t MIDIPotentiometer::wasActivated()
+{
+	return this->wasChanged();
+}

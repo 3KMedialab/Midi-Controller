@@ -1,7 +1,8 @@
 /*
- * TempoManager.cpp
+ * MIDIUtils.h
  *
- * Class that manage tempo functionalities
+ * Helper class for MIDI messages manipulation 
+ *
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -18,15 +19,19 @@
  * limitations under the License.
  */
 
-#include "TempoManager.h"
+#ifndef MIDIUtils_h
+#define MIDIUtils_h
 
+#include <Arduino.h>
 
-void TempoManager::setBPM(uint16_t bpm)
+class MIDIUtils
 {
-    _bpm = bpm;
-}
+  public:
+    static uint8_t getOctave(uint8_t midiNote);
+    static uint8_t getNoteNumber(uint8_t midiNote);
+    static String getNoteName(uint8_t midiNote);    
 
-void TempoManager::processTempoComponents(Potentiometer bpmPot, Led bpmLed)
-{
-    
-}
+  private:
+    enum{C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B};
+};
+#endif
