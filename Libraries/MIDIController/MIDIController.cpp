@@ -62,10 +62,11 @@ void MIDIController::begin()
 
    // load from EEPROM the default page of MIDI messages into the MIDI components
    _currentPage = 1;   
+   _wasPageSaved = 0;
    _memoryManager.loadMIDIComponents(_currentPage, _midiComponents, _numMIDIComponents);
 
    // set the default tempo
-   _bpm = map(_bpmPot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
+   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
 
    // don't send MIDI clock by default
    _midiClock = 0;
@@ -283,19 +284,41 @@ void MIDIController::loadPage(uint8_t page)
 }
 
 /*
-* Check if the tempo potentiometer has changed and calculates the new value of the controller's tempo in BPM
+* Process the potentiometer that set the value for controller's 
+* tempo or set the values for MIDI messages on edit mode
 */
-void MIDIController::processTempoPot()
+void MIDIController::processSelectValuePot()
 {        
-    if (_bpmPot.wasChanged())
+    if (_selectValuePot.wasChanged())
     {
-        _bpm = map(_bpmPot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
-        _screenManager.printDefault(_currentPage, _bpm);
-        
-        // calculate the blink frequency of the LED
-        uint32_t microsecondsPerMinute = 60000000;
-        _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
-        _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
+        // edit mode is off: set controller's tempo and calculate delays for led blinking and MIDI clock signal sending
+        if (_edit == 0)
+        {
+            _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
+            _screenManager.printDefault(_currentPage, _bpm);
+            
+            // calculate the blink frequency of the LED
+            uint32_t microsecondsPerMinute = 60000000;
+            _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
+            _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
+        }
+
+        // edit mode is on: select a value for a midi message part
+        else
+        {            
+            // get the component displayed on screen currently
+            IMIDIComponent * displayedComponent = _screenManager.getDisplayedMIDIComponent();
+                        
+            // first: select the new MIDI message type:
+            _selectValuePot.setSectors(displayedComponent->getNumAvailableMessageTypes());      
+            uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();
+
+            // set the new MIDI message type into the component and display it on the screen
+            displayedComponent->getMessages()[(_screenManager.getDisplayedMessageIndex())-1].setType(availableMIDIMessages[_selectValuePot.getSector()]);
+            _screenManager.displayMIDIMessageType(availableMIDIMessages[_selectValuePot.getSector()]);
+
+
+        }
     }
 }
 
@@ -308,7 +331,7 @@ void MIDIController::processMIDIClockComponents()
     // activate/deactivate MIDI clock signal sending
     _midiClockButton.read();
 
-    if (_midiClockButton.wasPressed())
+    if (_midiClockButton.wasPressed() && !_edit)
     {
         _midiClock = !_midiClock;
 
@@ -354,18 +377,58 @@ void MIDIController::processEditModeButton()
     // activate/deactivate edit mode
     _editButton.read();
 
-    if (_editButton.wasPressed())
+    if (_editButton.wasReleased() && !_wasPageSaved)
     {
         _edit = !_edit;
 
         if (_edit==1)
         {
-            _screenManager.printSelectComponent();
+            // edit mode on: stop sending MIDI Clock, LED blinks permanently and defaut edit message is displayed on screen
+            if (_midiClock == 1)
+            {
+                sendMIDIRealTime(midi::Stop);
+                _midiClock = 0;
+            }
+            
+            _bpmLed.setState(HIGH); 
+            _screenManager.printSelectComponentMessage();
+
         }
         else
-        {
-            _screenManager.printDefault(_currentPage, _bpm);
-            _screenManager.setMIDIComponentToDisplay(NULL);
+        {   
+            // edit mode off: LED doesn't blink, default message in controller mode is displayed on screen, no component is displayed on screen 
+            _bpmLed.setState(LOW);          
+            _screenManager.printDefault(_currentPage, _bpm);          
         }
-    }   
+    }
+
+    // once a paged was saved, controller exits edit mode
+    else if (_editButton.wasReleased() && _wasPageSaved)
+    {
+        // set edit mode off 
+        _edit = 0;       
+        _bpmLed.setState(LOW);          
+
+        // display default message on screen
+        _screenManager.printDefault(_currentPage, _bpm);
+      
+        // Reset the flag for further button events
+        _wasPageSaved = 0;
+    }
+    
+    // save current page component's configuration and exits edit mode
+    else if (_editButton.pressedFor(PRESSED_FOR_WAIT))
+    {   
+        // stop sending MIDI Clock signal in case of the controller was sending such signal
+        sendMIDIRealTime(midi::Stop);
+        _midiClock = 0;
+        
+        // saves the current page
+        savePage(_currentPage); 
+        _wasPageSaved = 1;
+
+        // prints the corresponding message and wait to continue 
+        _screenManager.printSavedMessage();
+        delay(2000);               
+    }
 }

@@ -23,8 +23,10 @@
 #include "Potentiometer.h"
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
+#include "MIDI.h"
 
-#define MIDI_POTENTIOMETER_NUM_MESSAGES 1 // number of MIDI messages the component can send
+#define MIDI_POTENTIOMETER_NUM_MESSAGES 1       // number of MIDI messages the component can send
+#define MIDI_POTENTIOMETER_AVAILABLE_MESSAGES 2 // number of MIDI messages the component can handle
 #define ACTION_MESSAGE 0
 
 class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
@@ -39,8 +41,11 @@ class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
         MIDIMessage * getMessages();
         uint8_t getDataSize();
         uint8_t wasActivated();
+        uint8_t * getAvailableMessageTypes();
+        uint8_t getNumAvailableMessageTypes();
      
     private:    
-        MIDIMessage _midiMessages [MIDI_POTENTIOMETER_NUM_MESSAGES];    // array with the MIDI messages the component can send     
+        MIDIMessage _midiMessages [MIDI_POTENTIOMETER_NUM_MESSAGES];                 // array with the MIDI messages the component can send     
+        uint8_t _availableMessageTypes [MIDI_POTENTIOMETER_AVAILABLE_MESSAGES];      // list with the MIDI messages the component can handle
 };
 #endif

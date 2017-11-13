@@ -36,6 +36,9 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 {   
     _midiMessages[ON_PRESSED_MESSAGE] = *onPressedMessage;
     _midiMessages[ON_RELEASED_MESSAGE] = *onReleasedMessage;
+
+    _availableMessageTypes[0] = midi::NoteOn;
+    _availableMessageTypes[1] = midi::NoteOff;    
 }
 
 /*
@@ -49,7 +52,9 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 *  pullup could be used.)                                              
 */
 MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : Button (pin, puEnable, invert, dbTime)
-{ 
+{
+    _availableMessageTypes[0] = midi::NoteOn;
+    _availableMessageTypes[1] = midi::NoteOff;
 }
 
 /*
@@ -100,14 +105,21 @@ uint8_t MIDIButton::getDataSize()
 uint8_t MIDIButton::wasActivated()
 {
     this->read();
-    
-    if (this->wasPressed())
-    {
-        return 1;           
-    }
-    
-    else
-    {
-        return 0;
-    }
+    return this->wasPressed();     
+}
+
+/*
+* Returns the list with the MIDI messages the component can handle
+*/
+uint8_t * MIDIButton::getAvailableMessageTypes()
+{
+    return _availableMessageTypes;
+}
+
+/*
+* Returns the numbers of available MIDI messages the component can handle
+*/
+uint8_t MIDIButton::getNumAvailableMessageTypes()
+{
+    return MIDI_BUTTON_AVAILABLE_MESSAGES;
 }

@@ -100,4 +100,24 @@ uint8_t Potentiometer::wasChanged ()
 		return 1;
 	}
 	return 0;
-} 
+}
+
+/*
+* Returns the sector corresponding to the current value of the potentiometer
+*/
+uint16_t Potentiometer::getSector(){
+	return getSmoothValue()/(1024/_sectors);
+}
+
+/*
+* Set the desired number of sectors to divide the potentiometer value
+*/
+void Potentiometer::setSectors(uint16_t newSectors){
+	if (newSectors<1024 && newSectors>0){
+		_sectors=newSectors;
+	}else if (newSectors<0){
+		_sectors=0;
+	}else{
+		_sectors=1023;
+	}
+}

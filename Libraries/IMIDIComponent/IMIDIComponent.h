@@ -33,5 +33,7 @@ class IMIDIComponent
     virtual MIDIMessage * getMessages() = 0;
     virtual uint8_t getDataSize() = 0;
     virtual uint8_t wasActivated() = 0;
+    virtual uint8_t * getAvailableMessageTypes() = 0;
+    virtual uint8_t getNumAvailableMessageTypes() = 0;
 };
 #endif

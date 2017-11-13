@@ -16,6 +16,9 @@
  //Debounce time for the buttons. A time of 20 milliseconds usually works well for tactile button switches.                            
  const uint8_t DEBOUNCE_MS = 20;     
 
+ // Time limit (ms) for detecting Pressed For events
+ const uint32_t PRESSED_FOR_WAIT = 2000;
+
  /*************************************************
  * PAGE BUTTONS CONFIG
  *************************************************/
@@ -60,7 +63,7 @@
  const uint8_t WINDOW_SIZE = 10;
  
  // Input Analog Pin for each Potentiometer
- const uint8_t BPM_POT_PIN = A1;
+ const uint8_t VALUE_POT_PIN = A1;
 
 /*************************************************
  * MIDI POTENTIOMETERS CONFIGURATION

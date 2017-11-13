@@ -64,8 +64,8 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
     // Process MIDI clock components
     controller.processMIDIClockComponents();
     
-    // Process the tempo potentiometer
-    controller.processTempoPot();
+    // Process the select value potentiometer
+    controller.processSelectValuePot();
 
     // Process MIDI clock components
     controller.processMIDIClockComponents();

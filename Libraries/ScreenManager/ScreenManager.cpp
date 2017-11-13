@@ -44,6 +44,9 @@ void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
     char buffer[10];
     uint8_t aux = 0;
     String s ="";
+
+    // No MIDI component is assigned to the Screen Manager
+    _displayedMIDIComponent = NULL;
     
     //Set the cursor on the top left of the screen
     _screen.home();
@@ -82,10 +85,11 @@ void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
     }
 }
 
-void ScreenManager::printSelectComponent()
+void ScreenManager::printSelectComponentMessage()
 {
     char buffer[20]; 
-    
+
+    _screen.noBlink();
     cleanScreen();
 
     getMessage(MSG_EDIT, buffer);  
@@ -117,12 +121,17 @@ IMIDIComponent * ScreenManager::getDisplayedMIDIComponent()
     return _displayedMIDIComponent;
 }
 
+uint8_t ScreenManager::getDisplayedMessageIndex()
+{
+    return _currentMIDIMessageDisplayed;
+}
+
 void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
 {
     char buffer[20];
 
     if (_displayedMIDIComponent != NULL)
-    {
+    {    
         // set the currently MIDI message being displayed
         _currentMIDIMessageDisplayed = msgIndex;
         
@@ -165,6 +174,10 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
                 printPCMIDIMessage(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
         }
+
+        // display cursor for editing the message getType
+        _screen.setCursor(4,0);
+        _screen.blink();
     }    
 }
 
@@ -255,4 +268,59 @@ void ScreenManager::displayNextMIDIMsg()
 void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent * midiComponent)
 {
     _displayedMIDIComponent = midiComponent;
+}
+
+void ScreenManager::displayMIDIMessageType(uint8_t midiMessageType)
+{
+    char buffer[15];
+
+    // calculate the cursor position of the beginning of the MIDI message type name
+    String aux = String(_currentMIDIMessageDisplayed,DEC);
+    aux.concat(F("/"));
+    aux.concat(_displayedMIDIComponent->getNumMessages());
+    aux.concat(F(" "));
+
+    uint8_t backCursorPosition = aux.length();
+
+    switch(midiMessageType)
+    {
+        case midi::NoteOn:
+            getMessage(MSG_NOTE_ON, buffer);             
+        break;
+
+        case midi::NoteOff:
+            getMessage(MSG_NOTE_OFF, buffer);                    
+        break;
+
+        case midi::ControlChange:
+            getMessage(MSG_CTRL_CHANGE, buffer);                   
+        break;
+
+        case midi::ProgramChange:
+            getMessage(MSG_PGRM_CHANGE, buffer);                   
+        break;
+    }
+    
+    // print hte MIDI message type name on screen
+    _screen.print(buffer);
+    aux.concat(buffer);
+
+    // clean the rest of the line
+    for (int i=aux.length();i<_screen.getLCDCols();i++)
+    {
+        _screen.print(" ");    
+    }
+
+    // set the cursor at the beginning of the MIDI message type name
+    _screen.setCursor(backCursorPosition,0);
+}
+
+void ScreenManager::printSavedMessage()
+{
+    char buffer[15];
+    
+    cleanScreen();
+    _screen.noBlink();   
+    getMessage(MSG_SAVED, buffer);  
+    _screen.print(buffer);    
 }

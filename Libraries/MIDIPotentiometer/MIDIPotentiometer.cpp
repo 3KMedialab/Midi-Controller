@@ -28,6 +28,9 @@
 MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message) : Potentiometer (pin, windowSize)
 {
 	_midiMessages[ACTION_MESSAGE] = *message;
+
+	_availableMessageTypes[0] = midi::ControlChange;
+    _availableMessageTypes[1] = midi::ProgramChange; 
 }
 
 /*
@@ -37,7 +40,8 @@ MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessag
 */
 MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : Potentiometer (pin, windowSize)
 {
-
+	_availableMessageTypes[0] = midi::ControlChange;
+    _availableMessageTypes[1] = midi::ProgramChange; 
 }
 
 /*
@@ -102,4 +106,20 @@ uint8_t MIDIPotentiometer::getDataSize()
 uint8_t MIDIPotentiometer::wasActivated()
 {
 	return this->wasChanged();
+}
+
+/*
+* Returns the list with the MIDI messages the component can handle
+*/
+uint8_t * MIDIPotentiometer::getAvailableMessageTypes()
+{
+    return _availableMessageTypes;
+}
+
+/*
+* Returns the numbers of available MIDI messages the component can handle
+*/
+uint8_t MIDIPotentiometer::getNumAvailableMessageTypes()
+{
+    return MIDI_POTENTIOMETER_AVAILABLE_MESSAGES;
 }

@@ -40,6 +40,7 @@
 #define MSG_PGRM_CHANGE 9
 #define MSG_PGM 10
 #define MSG_VELOCITY 11
+#define MSG_SAVED 12
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Page: ";
@@ -54,22 +55,26 @@ const char msg_CC[] PROGMEM = "CC:";
 const char msg_PgrmChange[] PROGMEM = "Pgrm Change";
 const char msg_PGM[] PROGMEM = "PGM:";
 const char msg_Velocity[] PROGMEM = "Vel:";
+const char msg_saved[] PROGMEM = "PAGE SAVED!";
 
-const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity};
+const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved};
 
 class ScreenManager
 {
   public:   
     void initialize(uint8_t i2cAddress, uint8_t rowLength, uint8_t rows);
     void printDefault(uint8_t page, uint16_t tempo);
-    void printSelectComponent();
+    void printSelectComponentMessage();
+    void printSavedMessage();
     void cleanScreen();
     uint8_t isComponentDisplayed();
     void displayPreviousMIDIMsg();
     void displayNextMIDIMsg();
     void displayComponentMIDIMessage(uint8_t msgIndex);
     void setMIDIComponentToDisplay(IMIDIComponent * midiComponent);
-    IMIDIComponent * getDisplayedMIDIComponent();    
+    IMIDIComponent * getDisplayedMIDIComponent();  
+    uint8_t getDisplayedMessageIndex(); 
+    void displayMIDIMessageType(uint8_t midiMessageType);
 
   private:
     void getMessage(uint8_t msgIndex, char * buffer);

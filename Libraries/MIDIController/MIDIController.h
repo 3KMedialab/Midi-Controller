@@ -45,7 +45,7 @@ class MIDIController
     void begin(); 
     void processMIDIComponents(); 
     void processIncDecButtons();
-    void processTempoPot();
+    void processSelectValuePot();
     void processMIDIClockComponents();
     void processEditModeButton();
 
@@ -55,6 +55,7 @@ class MIDIController
 
     MemoryManager _memoryManager;                                                           // object to manage interactions between the controller and the EEPROM
     uint8_t _currentPage;                                                                   // current page of MIDI messages loaded into the controller
+    uint8_t _wasPageSaved;                                                                 // flag that indicates wether a page was saved or not.
 
     ScreenManager _screenManager;                                                           // object to manage interactions between the controller and the screen   
 
@@ -62,7 +63,7 @@ class MIDIController
     Button _incPageButton = Button(INC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);       // button for load the next page of MIDI messages into the MIDI components
     Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);         // button that activates/deactivates the edit mode.
     
-    Potentiometer _bpmPot = Potentiometer(BPM_POT_PIN, WINDOW_SIZE);                        // potentiometer for set the tempo in BPM of the controller.
+    Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);              // potentiometer for set the tempo in BPM of the controller.
     Led _bpmLed = Led(BPM_LED_PIN);                                                         // Led that blinks at BPM frequency when MIDI clock signal is being sent.
     Button _midiClockButton = Button(MIDI_CLOCK_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending
     uint16_t _bpm;                                                                          // Current MIDI controller tempo in BPMs.
@@ -75,6 +76,11 @@ class MIDIController
     uint8_t _edit;                                                                          // Indicates if the controllor is on edit mode.
     
     MidiInterface& _mMidi;                                                                  // object to manage the MIDI functionality
+
+    enum states {CONTROLLER, EDIT, PAGE_SAVED};
+    enum subStates {NONE = -1, MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_MSG_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL};
+
+    char state, subState;
 
     void processMidiComponent(IMIDIComponent * component);
     void sendMIDIMessage(MIDIMessage * message);

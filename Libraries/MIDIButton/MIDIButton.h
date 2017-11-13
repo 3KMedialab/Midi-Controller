@@ -23,10 +23,12 @@
 #include "Button.h"
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
+#include "MIDI.h"
 
 #define MIDI_BUTTON_NUM_MESSAGES 2  // number of MIDI messages the component can send
 #define ON_PRESSED_MESSAGE 0        
 #define ON_RELEASED_MESSAGE 1
+#define MIDI_BUTTON_AVAILABLE_MESSAGES 2  // number of available MIDI messages the component can handle
 
 class MIDIButton : public Button, public IMIDIComponent
 {
@@ -38,8 +40,11 @@ class MIDIButton : public Button, public IMIDIComponent
         MIDIMessage * getMessages();
         uint8_t getDataSize();
         uint8_t wasActivated();
+        uint8_t * getAvailableMessageTypes();
+        uint8_t getNumAvailableMessageTypes();
              
     private:       
-        MIDIMessage _midiMessages [MIDI_BUTTON_NUM_MESSAGES];   // array with the MIDI messages the component can send
+        MIDIMessage _midiMessages [MIDI_BUTTON_NUM_MESSAGES];               // array with the MIDI messages the component can send
+        uint8_t _availableMessageTypes [MIDI_BUTTON_AVAILABLE_MESSAGES];    // list with the MIDI messages the component can handle
 };
 #endif
