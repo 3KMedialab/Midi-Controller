@@ -1,4 +1,3 @@
-
 //-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
 
 /*************************************************
@@ -27,8 +26,8 @@
  const uint8_t DEC_PAGE_BUTTON_PIN = 12;
  const uint8_t INC_PAGE_BUTTON_PIN = 3;
 
- // Input Digital Pin for send MIDI clock button
- const uint8_t MIDI_CLOCK_BUTTON_PIN = 8;
+ // Input Digital Pin for multiple purpose button
+ const uint8_t MULTIPLE_PURPOSE_BUTTON_PIN = 8;
 
  // Input Digital Pin for edit mode button
  const uint8_t EDIT_MODE_BUTTON_PIN = 4;

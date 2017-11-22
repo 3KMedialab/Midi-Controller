@@ -27,7 +27,9 @@
 Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , Component(pin, ComponentType::INPUT_ANALOG)
 {
 	_lastValue = 0;
+	_lastSector = 0;
 	_value = 0;
+	_sector = 0;
 	_analogPointer = 0;
 	_maxPointer = 0;
 	_windowSize = (windowSize > MAX_WINDOW_SIZE) ? MAX_WINDOW_SIZE : windowSize;
@@ -43,6 +45,7 @@ Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer()
 */
 uint16_t Potentiometer::getValue(){
 	_value = analogRead(_pin); 
+	_sector = _value/(1024/_sectors);
 	return _value;
 }
 
@@ -78,10 +81,14 @@ uint16_t Potentiometer::getSmoothValue()
 	_analogPointer++;
 	if (_analogPointer == _windowSize) {
 		_analogPointer = 0;
-	}
+	}	
 	  
-	// Retrun the average
+	// Return the average
 	_value = avg;
+
+	// calculate the current sector
+	_sector = _value/(1024/_sectors);
+
 	return _value;	
 }
 
@@ -103,10 +110,23 @@ uint8_t Potentiometer::wasChanged ()
 }
 
 /*
+* Return true if the potentiometer has moved to a different sector
+*/
+uint8_t Potentiometer::isNewSector()
+{
+	if (_lastSector != _sector){
+		_lastSector = _sector;
+		return 1;
+	}
+
+	return 0;
+}
+
+/*
 * Returns the sector corresponding to the current value of the potentiometer
 */
 uint16_t Potentiometer::getSector(){
-	return getSmoothValue()/(1024/_sectors);
+	return _sector;
 }
 
 /*

@@ -27,7 +27,7 @@
 class MIDIUtils
 {
   public:
-    static uint8_t getOctave(uint8_t midiNote);
+    static String getOctave(uint8_t midiNote);
     static uint8_t getNoteNumber(uint8_t midiNote);
     static String getNoteName(uint8_t midiNote);    
 

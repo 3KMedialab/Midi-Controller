@@ -54,7 +54,7 @@ const char msg_CtrlChange[] PROGMEM = "Ctrl Change";
 const char msg_CC[] PROGMEM = "CC:";
 const char msg_PgrmChange[] PROGMEM = "Pgrm Change";
 const char msg_PGM[] PROGMEM = "PGM:";
-const char msg_Velocity[] PROGMEM = "Vel:";
+const char msg_Velocity[] PROGMEM = "V:";
 const char msg_saved[] PROGMEM = "PAGE SAVED!";
 
 const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved};
@@ -74,17 +74,33 @@ class ScreenManager
     void setMIDIComponentToDisplay(IMIDIComponent * midiComponent);
     IMIDIComponent * getDisplayedMIDIComponent();  
     uint8_t getDisplayedMessageIndex(); 
-    void displayMIDIMessageType(uint8_t midiMessageType);
+    uint8_t getDisplayedMessageType();
+    void refreshMIDIData();
+    void moveCursorToCCValue();
+    void moveCursorToChannelValue();
+    void moveCursorToMsgType();
+    void refreshNoteValue(uint8_t note);
+    void moveCursorToNote();
+    void refreshVelocityValue(uint8_t velocity);
+    void refreshCCValue(uint8_t cc);
+    void refreshChannelValue(uint8_t channel);
+    void moveCursorToVelocity();
+
 
   private:
     void getMessage(uint8_t msgIndex, char * buffer);
-    void printNoteOnOffMIDIMessage (MIDIMessage message);
-    void printCCMIDIMessage (MIDIMessage message);
-    void printPCMIDIMessage (MIDIMessage message);
-    void printMIDIChannel(uint8_t channel);    
+    void printNoteOnOffMIDIData (MIDIMessage message);
+    void printCCMIDIData (MIDIMessage message);
+    void printPCMIDIData (MIDIMessage message);
+    void printMIDIChannel(uint8_t channel);  
+    void clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to);
     
     IMIDIComponent * _displayedMIDIComponent;
     uint8_t _currentMIDIMessageDisplayed;
     LiquidCrystal_I2C _screen;     
+
+    enum {NOTE_POS=0, VELOCITY_POS=5, NOTE_ON_OFF_CHANNEL_POS=11};
+    enum {CC_POS=0, CC_CHANNEL_POS=7};
+    enum {PROGRAM_CHANNEL_POS=0};
 };
 #endif

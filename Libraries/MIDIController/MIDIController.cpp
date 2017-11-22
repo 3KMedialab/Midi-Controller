@@ -61,15 +61,12 @@ void MIDIController::begin()
    _screenManager.initialize(I2C_ADDRESS, ROW_LENGTH, ROWS);
 
    // load from EEPROM the default page of MIDI messages into the MIDI components
-   _currentPage = 1;   
-   _wasPageSaved = 0;
+   _currentPage = 1;    
    _memoryManager.loadMIDIComponents(_currentPage, _midiComponents, _numMIDIComponents);
+   _wasPageSaved = 0;
 
    // set the default tempo
-   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
-
-   // don't send MIDI clock by default
-   _midiClock = 0;
+   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);  
 
    // variable that controls the bpm led blink frequency
    _lastTime = 0;
@@ -79,8 +76,9 @@ void MIDIController::begin()
    _screenManager.cleanScreen();
    _screenManager.printDefault(_currentPage, _bpm);
 
-   // edit mode is false on initialization
-   _edit = 0;
+   // Controller initial state and substate
+   _state = CONTROLLER;
+   _subState = MIDI_CLOCK_OFF; 
 }
 
 /*
@@ -91,51 +89,67 @@ void MIDIController::processIncDecButtons()
     /**************************** DECREASE BUTTON **********************/
     _decPageButton.read();
 
-    // edit mode is off: load the previous page from memory
-    if (_edit == 0)
+    if (_decPageButton.wasPressed())
     {
-        if (_decPageButton.wasPressed() && _currentPage > 1)
-        {
-            _currentPage -= 1;
-            loadPage(_currentPage);
-            _screenManager.printDefault(_currentPage, _bpm);
+        switch (_state)
+        {        
+            // load the previous page from memory
+            case CONTROLLER:
+            
+                if (_currentPage > 1)
+                {
+                    _currentPage -= 1;
+                    loadPage(_currentPage);
+                    _screenManager.printDefault(_currentPage, _bpm);
+                }
+
+            break;
+
+            // display the previous MIDI message of the component loaded into the Screen Manager
+            case EDIT:
+                
+                if (_subState != DEFAULT_EDIT_MSG)
+                {
+                    _screenManager.displayPreviousMIDIMsg();
+                    _subState = EDIT_MIDI_TYPE;
+                }
+
+            break;       
         }
     }
-
-    // edit mode is on: display the previous MIDI message of the component loaded into the Screen Manager
-    else
-    {
-        if (_decPageButton.wasPressed() && _screenManager.isComponentDisplayed())
-        {
-            _screenManager.displayPreviousMIDIMsg();
-        }
-    }
-
     /**************************** END DECREASE BUTTON **********************/
 
     /**************************** INCREASE BUTTON **********************/
     _incPageButton.read();
-    
-    // edit mode is off: load the next page from memory
-    if (_edit == 0)
+
+    if (_incPageButton.wasPressed())
     {
-        if (_incPageButton.wasPressed() && _currentPage < _memoryManager.getMaxPages())
+        switch (_state)
         {
-            _currentPage += 1;
-            loadPage(_currentPage);
-            _screenManager.printDefault(_currentPage, _bpm);
+            // load the next page from memory
+            case CONTROLLER:
+                
+                if (_currentPage < _memoryManager.getMaxPages())
+                {
+                    _currentPage += 1;
+                    loadPage(_currentPage);
+                    _screenManager.printDefault(_currentPage, _bpm);
+                }   
+            
+            break;
+           
+            // display the next MIDI message of the component loaded into the Screen Manager
+            case EDIT:
+            
+                if (_subState != DEFAULT_EDIT_MSG)
+                {
+                    _screenManager.displayNextMIDIMsg();
+                    _subState = EDIT_MIDI_TYPE;
+                }          
+            
+            break;
         }
-    }    
-
-    // edit mode is on: display the next MIDI message of the component loaded into the Screen Manager
-    else
-    {    
-        if (_incPageButton.wasPressed() && _screenManager.isComponentDisplayed())
-        {
-            _screenManager.displayNextMIDIMsg();
-        }
-    }
-
+    }   
     /**************************** INCREASE BUTTON **********************/
 }
 
@@ -157,27 +171,36 @@ void MIDIController::processMIDIComponents()
 void MIDIController::processMidiComponent(IMIDIComponent * component)
 {
     // edit mode is off: send MIDI message
-    if (_edit == 0)
+    switch (_state)
     {
-        MIDIMessage * message = component->getMessageToSend();
-        
-        if (message != NULL)
-        {
-            sendMIDIMessage(message); 
-        }
-    }
-
-    // edit mode is on: assign the MIDI messages information to the screen and display the first MIDI message
-    else
-    {   
-        if (component->wasActivated())
-        {
-            if (_screenManager.getDisplayedMIDIComponent() != component)
+        // send a MIDI message
+        case CONTROLLER:
+        {            
+            MIDIMessage * message = component->getMessageToSend();
+            
+            if (message != NULL)
             {
-                _screenManager.setMIDIComponentToDisplay(component);
-                _screenManager.displayComponentMIDIMessage(1); 
-            }            
-        }        
+                sendMIDIMessage(message); 
+            }
+        
+            break;
+        }
+        
+        // assign the MIDI messages information to the screen and display the first MIDI message
+        case EDIT:
+        {
+            if (component->wasActivated())
+            {
+                if (_screenManager.getDisplayedMIDIComponent() != component)
+                {
+                    _screenManager.setMIDIComponentToDisplay(component);
+                    _screenManager.displayComponentMIDIMessage(1); 
+                    _subState = EDIT_MIDI_TYPE;
+                }            
+            }
+
+            break;
+        }
     }   
 }
 
@@ -225,45 +248,8 @@ void MIDIController::sendMIDIRealTime(uint8_t inType)
         case midi::Stop:
             _mMidi.sendRealTime(midi::Stop);
         break;
-        
-        default:
-        break;
     }
 }
-
-void MIDIController::printSerial(MIDIMessage message)
-{ 
-    switch(message.getType())
-    {
-        case midi::ControlChange:
-          Serial.println("ControlChange");
-          Serial.println(message.getDataByte1(),DEC);
-          Serial.println(message.getDataByte2(),DEC);
-          Serial.println(message.getChannel(),DEC);
-        break;
-
-        case midi::ProgramChange:
-        Serial.println("ProgramChange");
-        Serial.println(message.getDataByte1(),DEC);
-        Serial.println(message.getDataByte2(),DEC);
-        Serial.println(message.getChannel(),DEC);         
-        break;
-
-        case midi::NoteOn:
-        Serial.println("NoteOn");
-        Serial.println(message.getDataByte1(),DEC);
-        Serial.println(message.getDataByte2(),DEC);
-        Serial.println(message.getChannel(),DEC);               
-        break;
-
-        case midi::NoteOff:
-        Serial.println("NoteOff");
-        Serial.println(message.getDataByte1(),DEC);
-        Serial.println(message.getDataByte2(),DEC);
-        Serial.println(message.getChannel(),DEC);            
-        break;
-    }
-} 
 
 /*
 * Save the MIDI messages currently assigned to each MIDI component in the EEPROM
@@ -291,82 +277,257 @@ void MIDIController::processSelectValuePot()
 {        
     if (_selectValuePot.wasChanged())
     {
-        // edit mode is off: set controller's tempo and calculate delays for led blinking and MIDI clock signal sending
-        if (_edit == 0)
+        switch (_state)
         {
-            _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
-            _screenManager.printDefault(_currentPage, _bpm);
+            // set controller's tempo and calculate delays for led blinking and MIDI clock signal sending
+            case CONTROLLER:
+            {
+                _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
+                _screenManager.printDefault(_currentPage, _bpm);
+                
+                // calculate the blink frequency of the LED
+                uint32_t microsecondsPerMinute = 60000000;
+                _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
+                _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
             
-            // calculate the blink frequency of the LED
-            uint32_t microsecondsPerMinute = 60000000;
-            _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
-            _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
-        }
+                break;
+            } 
 
-        // edit mode is on: select a value for a midi message part
-        else
-        {            
-            // get the component displayed on screen currently
-            IMIDIComponent * displayedComponent = _screenManager.getDisplayedMIDIComponent();
+            // select a value for a midi message part
+            case EDIT:
+            {
+                // get the component displayed on screen currently
+                IMIDIComponent * displayedComponent = _screenManager.getDisplayedMIDIComponent();             
+                uint8_t displayedMessageIndex = (_screenManager.getDisplayedMessageIndex())-1;
+
+                switch (_subState)
+                {
+                    case EDIT_MIDI_TYPE:    
+                    {
+                        // select the new MIDI message type
+                        _selectValuePot.setSectors(displayedComponent->getNumAvailableMessageTypes());
+
+                        // set the new MIDI message type into the component and refresh the screen
+                        uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();
+                        displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[_selectValuePot.getSector()]);
+                        if (_selectValuePot.isNewSector())
+                        {
+                            _screenManager.refreshMIDIData();
+                        }
+                        break;
+                    }
+
+                    case EDIT_NOTE:
+                    {
+                        // set the new note value in to the component
+                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_G9);
+                        displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
+
+                        // print the new note value on the screen
+                        _screenManager.refreshNoteValue(note);                      
+                   
+                        break;
+                    }
+
+                    case EDIT_VELOCITY:
+                    {
+
+                        //set the new velocity value into the component
+                        uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 127);
+                        displayedComponent->getMessages()[displayedMessageIndex].setDataByte2(velocity);
+
+                        // print the new velocity value on the screen
+                        _screenManager.refreshVelocityValue(velocity);                          
+
+                        break;
+                    }
+
+                    case EDIT_CC:
+                    {
+                        //set the new control change type value into the component
+                        uint8_t ccValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 127);
+                        displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(ccValue);
+
+                        // print the new cc value on the screen
+                        _screenManager.refreshCCValue(ccValue);   
                         
-            // first: select the new MIDI message type:
-            _selectValuePot.setSectors(displayedComponent->getNumAvailableMessageTypes());      
-            uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();
+                        break;
+                    }
 
-            // set the new MIDI message type into the component and display it on the screen
-            displayedComponent->getMessages()[(_screenManager.getDisplayedMessageIndex())-1].setType(availableMIDIMessages[_selectValuePot.getSector()]);
-            _screenManager.displayMIDIMessageType(availableMIDIMessages[_selectValuePot.getSector()]);
+                    case EDIT_CHANNEL:
+                    {
+                        //set the new channel value into the component
+                        uint8_t channelValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 16);
+                        displayedComponent->getMessages()[displayedMessageIndex].setChannel(channelValue);
+                        
+                        // print the new channel value on the screen
+                        _screenManager.refreshChannelValue(channelValue);   
+                        
+                        break;
+                    }
+                    break;                   
+                }
 
-
-        }
+                break;
+            }
+        }  
     }
 }
 
-/*
-* Process the button that activates/deactivates sending of MIDI clock signal.
-* In case of the controller is sending MIDI clock, then the led blinks at BPM frequency
-*/
-void MIDIController::processMIDIClockComponents()
+void MIDIController::processMultiplePurposeButton()
 {
-    // activate/deactivate MIDI clock signal sending
-    _midiClockButton.read();
-
-    if (_midiClockButton.wasPressed() && !_edit)
+    _multiplePurposeButton.read();
+    
+    if (_multiplePurposeButton.wasPressed())
     {
-        _midiClock = !_midiClock;
+        switch (_state)
+        {
+            // activate/deactivate MIDI clock signal sending
+            case CONTROLLER:                
+                updateMIDIClockState();
+            break;
 
-        if (_midiClock == 1)
-        {
-            sendMIDIRealTime(midi::Start);   
-        }
-        else
-        {
+           case EDIT:
+                moveCursorToValue();                          
+           break;
+        }    
+    }  
+}
+
+
+void MIDIController::updateMIDIClockState()
+{               
+    _subState == MIDI_CLOCK_OFF ? _subState=MIDI_CLOCK_ON : _subState=MIDI_CLOCK_OFF;  
+            
+    switch (_subState)
+    {
+        // send start real time message
+        case MIDI_CLOCK_ON:
+            sendMIDIRealTime(midi::Start);  
+        break;
+
+        // send stop realtime message
+        case MIDI_CLOCK_OFF:
             sendMIDIRealTime(midi::Stop);
             _bpmLed.setState(LOW);  
-        }
-    }
+        break;
+    }           
+}
 
+void MIDIController::moveCursorToValue()
+{
+    // get the current MIDI message type displayed on the screen, set the next subState and move the cursor to the next value to edit 
+    switch (_screenManager.getDisplayedMessageType())
+    {                    
+        case midi::ControlChange:
+
+            switch (_subState)
+            {
+                case EDIT_MIDI_TYPE:
+
+                    _subState = EDIT_CC;
+                    _screenManager.moveCursorToCCValue();
+
+                break;
+
+                case EDIT_CC:
+
+                    _subState = EDIT_CHANNEL;
+                    _screenManager.moveCursorToChannelValue();
+
+                break;
+
+                case EDIT_CHANNEL:
+                
+                    _subState = EDIT_MIDI_TYPE;
+                    _screenManager.moveCursorToMsgType();
+
+                break;
+            }
+        
+        break;
+
+        case midi::ProgramChange:
+
+            switch (_subState)
+            {
+                case EDIT_MIDI_TYPE:
+
+                    _subState = EDIT_CHANNEL;
+                    _screenManager.moveCursorToChannelValue();
+
+                break;                          
+
+                case EDIT_CHANNEL:
+                
+                    _subState = EDIT_MIDI_TYPE;
+                    _screenManager.moveCursorToMsgType();
+
+                break;
+            }
+            
+        break;
+
+        case midi::NoteOn:
+        case midi::NoteOff:
+
+            switch (_subState)
+            {
+                case EDIT_MIDI_TYPE:
+
+                    _subState = EDIT_NOTE;
+                    _screenManager.moveCursorToNote();
+
+                break;
+
+                case EDIT_NOTE:
+
+                    _subState = EDIT_VELOCITY;
+                    _screenManager.moveCursorToVelocity();
+
+                break;
+
+                case EDIT_VELOCITY:
+                
+                    _subState = EDIT_CHANNEL;
+                    _screenManager.moveCursorToChannelValue();
+                
+                break;
+                
+                case EDIT_CHANNEL:
+                
+                    _subState = EDIT_MIDI_TYPE;
+                    _screenManager.moveCursorToMsgType();
+
+                break;
+            }            
+        break;
+    }
+}    
+
+void MIDIController::sendMIDIClock()
+{
     uint32_t currentTime = micros();
-   
-    // send MIDI clock signal regarding the tempo
-    if (currentTime - _lastTimeClock >= _delayClockTickMS)
-    {                       
-        if (_midiClock == 1)
-        {    
-            sendMIDIRealTime(midi::Clock);
-            _lastTimeClock = currentTime;
-        }    
-    }
-
-    // controls led blinking regarding the tempo
-    if (currentTime - _lastTime >= _delayLedMS)
-    {
-        if (_midiClock == 1)
-        {          
-            _bpmLed.setState(!_bpmLed.getState());
-            _lastTime =  currentTime;
-        }        
-    }
+    
+     // send MIDI clock signal regarding the tempo
+     if (currentTime - _lastTimeClock >= _delayClockTickMS)
+     {                       
+         if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
+         {    
+             sendMIDIRealTime(midi::Clock);
+             _lastTimeClock = currentTime;
+         }    
+     }
+ 
+     // controls led blinking regarding the tempo
+     if (currentTime - _lastTime >= _delayLedMS)
+     {
+         if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
+         {          
+             _bpmLed.setState(!_bpmLed.getState());
+             _lastTime =  currentTime;
+         }        
+     }
 }
 
 /*
@@ -377,58 +538,72 @@ void MIDIController::processEditModeButton()
     // activate/deactivate edit mode
     _editButton.read();
 
-    if (_editButton.wasReleased() && !_wasPageSaved)
+    if (_editButton.wasReleased())
     {
-        _edit = !_edit;
-
-        if (_edit==1)
+        if (!_wasPageSaved)
         {
-            // edit mode on: stop sending MIDI Clock, LED blinks permanently and defaut edit message is displayed on screen
-            if (_midiClock == 1)
+            switch (_state)
             {
-                sendMIDIRealTime(midi::Stop);
-                _midiClock = 0;
-            }
-            
-            _bpmLed.setState(HIGH); 
-            _screenManager.printSelectComponentMessage();
+                // stop sending MIDI Clock, LED blinks permanently and defaut edit message is displayed on screen
+                case CONTROLLER:
 
-        }
-        else
-        {   
-            // edit mode off: LED doesn't blink, default message in controller mode is displayed on screen, no component is displayed on screen 
-            _bpmLed.setState(LOW);          
-            _screenManager.printDefault(_currentPage, _bpm);          
-        }
-    }
-
-    // once a paged was saved, controller exits edit mode
-    else if (_editButton.wasReleased() && _wasPageSaved)
-    {
-        // set edit mode off 
-        _edit = 0;       
-        _bpmLed.setState(LOW);          
-
-        // display default message on screen
-        _screenManager.printDefault(_currentPage, _bpm);
-      
-        // Reset the flag for further button events
-        _wasPageSaved = 0;
-    }
+                    // stop sending MIDI Clock signal in case of the controller was sending such signal
+                    if (_subState == MIDI_CLOCK_ON)
+                        sendMIDIRealTime(midi::Stop);        
     
+                    _state = EDIT;
+                    _subState = DEFAULT_EDIT_MSG;                
+                        
+                    _bpmLed.setState(HIGH); 
+                    _screenManager.printSelectComponentMessage();
+                
+                break;
+    
+                // LED doesn't blink, default message is displayed on screen 
+                case EDIT:
+    
+                    _state = CONTROLLER;
+                    _subState = MIDI_CLOCK_OFF;    
+                
+                    _bpmLed.setState(LOW);          
+                    _screenManager.printDefault(_currentPage, _bpm);      
+                    
+                break;
+            }
+        }       
+   
+        // after saving a page, set controller status to CONTROLLER
+        else
+        {
+            _state = CONTROLLER;
+            _subState = MIDI_CLOCK_OFF;
+
+            _bpmLed.setState(LOW);          
+
+            // display default message on screen
+            _screenManager.printDefault(_currentPage, _bpm);
+        
+            // Reset the flag for further button events
+            _wasPageSaved = 0;
+        }
+    }
+
     // save current page component's configuration and exits edit mode
-    else if (_editButton.pressedFor(PRESSED_FOR_WAIT))
+    if (_editButton.pressedFor(PRESSED_FOR_WAIT))
     {   
         // stop sending MIDI Clock signal in case of the controller was sending such signal
-        sendMIDIRealTime(midi::Stop);
-        _midiClock = 0;
+        if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
+            sendMIDIRealTime(midi::Stop);        
         
         // saves the current page
         savePage(_currentPage); 
-        _wasPageSaved = 1;
+        _wasPageSaved = 1;        
 
         // prints the corresponding message and wait to continue 
         _screenManager.printSavedMessage();
-        delay(2000);               
+        delay(2000);
+        
+        _state = CONTROLLER;
+        _subState = MIDI_CLOCK_OFF;
     }
 }

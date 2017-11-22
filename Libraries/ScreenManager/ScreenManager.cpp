@@ -42,7 +42,6 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
 void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
 {
     char buffer[10];
-    uint8_t aux = 0;
     String s ="";
 
     // No MIDI component is assigned to the Screen Manager
@@ -52,37 +51,25 @@ void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
     _screen.home();
     
     // prints the loaded page information
-    getMessage(MSG_PAGE, buffer);  
-    _screen.print(buffer);
-    aux += strlen(buffer);
-    _screen.print(page, DEC);
+    getMessage(MSG_PAGE, buffer); 
+    s.concat(buffer); 
     s.concat(page);
-    aux += s.length();
-    for (int i=aux;i<_screen.getLCDCols();i++)
-    {
-        _screen.print(" ");    
-    }
-
-    aux = 0;
+    _screen.print(s);
+       
+    clearRangeOnCurentLine(0, s.length(), _screen.getLCDCols());
+    
     s = "";
 
     // prints the tempo information
     _screen.setCursor(0,1);
-     getMessage(MSG_TEMPO, buffer);  
-    _screen.print(buffer);
-    aux += strlen(buffer);
-    _screen.print(tempo, DEC);
-
-    s.concat(tempo);
-    aux += s.length();
-   
+    getMessage(MSG_TEMPO, buffer);  
+    s.concat(buffer);
+    s.concat(tempo);   
     getMessage(MSG_BPM, buffer);  
-    _screen.print(buffer);
-    aux += strlen(buffer);
-    for (int i=aux;i<_screen.getLCDCols();i++)
-    {
-        _screen.print(" ");    
-    }
+    s.concat(buffer);
+    _screen.print(s);
+
+    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
 }
 
 void ScreenManager::printSelectComponentMessage()
@@ -126,6 +113,18 @@ uint8_t ScreenManager::getDisplayedMessageIndex()
     return _currentMIDIMessageDisplayed;
 }
 
+uint8_t ScreenManager::getDisplayedMessageType()
+{
+    if (_displayedMIDIComponent != NULL)
+    {
+        return _displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType();
+    }
+    else
+    {
+        return midi::InvalidType; 
+    }
+}
+
 void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
 {
     char buffer[20];
@@ -141,37 +140,33 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
         _screen.print(msgIndex);
         _screen.print(F("/"));
         _screen.print(_displayedMIDIComponent->getNumMessages());
-        _screen.print(F(" "));
+        _screen.print(F(" "));  
 
         // display the first MIDI message of the component
         switch((_displayedMIDIComponent->getMessages()[msgIndex-1]).getType())
         {
             case midi::NoteOn:
                 getMessage(MSG_NOTE_ON, buffer);  
-                _screen.print(buffer);
-                _screen.setCursor(0,1);
-                printNoteOnOffMIDIMessage(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+                _screen.print(buffer);            
+                printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
 
             case midi::NoteOff:
                 getMessage(MSG_NOTE_OFF, buffer);  
                 _screen.print(buffer);
-                _screen.setCursor(0,1);
-                printNoteOnOffMIDIMessage(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+                printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
 
             case midi::ControlChange:
                 getMessage(MSG_CTRL_CHANGE, buffer);  
-                _screen.print(buffer);
-                _screen.setCursor(0,1);
-                printCCMIDIMessage(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+                _screen.print(buffer);         
+                printCCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
 
             case midi::ProgramChange:
                 getMessage(MSG_PGRM_CHANGE, buffer);  
-                _screen.print(buffer);
-                _screen.setCursor(0,1);
-                printPCMIDIMessage(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+                _screen.print(buffer);   
+                printPCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
         }
 
@@ -181,65 +176,65 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
     }    
 }
 
-void ScreenManager::printNoteOnOffMIDIMessage(MIDIMessage message)
+void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
 {
-    char buffer[10]; 
-    
-    //print Note
-    String note = String(MIDIUtils::getNoteName(message.getDataByte1()));
-    note.concat(MIDIUtils::getOctave(message.getDataByte1()));
-    note.concat(F(" "));
-    _screen.print(note);
+    char buffer[10];
 
+    //print note    
+    _screen.setCursor(NOTE_POS,1);
+    String aux = String(MIDIUtils::getNoteName(message.getDataByte1()));
+    aux.concat(MIDIUtils::getOctave(message.getDataByte1()));
+    aux.concat(F(" "));    
+    _screen.print(aux);
+      
     //print velocity
+    _screen.setCursor(VELOCITY_POS,1);
     getMessage(MSG_VELOCITY, buffer);  
-    _screen.print(buffer);
-    _screen.print(message.getDataByte2());
-    _screen.print(F(" "));   
-    
+    aux= String(buffer);
+    aux.concat(message.getDataByte2());
+    _screen.print(aux);   
+   
     //print channel
+    _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS,1);
     printMIDIChannel(message.getChannel());
 }
 
-void ScreenManager::printCCMIDIMessage(MIDIMessage message)
+void ScreenManager::printCCMIDIData(MIDIMessage message)
 {
     char buffer[10];
+    String aux = "";
 
     //print CC Number
+    _screen.setCursor(CC_POS,1);   
     getMessage(MSG_CC, buffer);  
-    _screen.print(buffer);
-    _screen.print(message.getDataByte1());
-    _screen.print(F(" "));   
-
-    //print CC value
-    _screen.print(message.getDataByte2());
-    _screen.print(F(" "));   
-
+    aux.concat(buffer);
+    aux.concat(message.getDataByte1());
+    _screen.print(aux);
+    
     //print channel
+    _screen.setCursor(CC_CHANNEL_POS,1);  
     printMIDIChannel(message.getChannel());
 }
 
-void ScreenManager::printPCMIDIMessage(MIDIMessage message)
+void ScreenManager::printPCMIDIData(MIDIMessage message)
 {
-    char buffer[10];
-
-    //print program Number
-    getMessage(MSG_PGM, buffer);  
-    _screen.print(buffer);
-    _screen.print(message.getDataByte1());
-    _screen.print(F(" "));       
+    char buffer[10];    
 
     //print channel
-    printMIDIChannel(message.getChannel());
+    _screen.setCursor(PROGRAM_CHANNEL_POS,1); 
+    printMIDIChannel(message.getChannel());     
 }
 
 void ScreenManager::printMIDIChannel(uint8_t channel)
 {
     char buffer[4];
+    String aux = "";
 
     getMessage(MSG_CHANNEL, buffer);  
-    _screen.print(buffer);
-    _screen.print(channel);  
+    aux.concat(buffer);
+    aux.concat(channel);
+    _screen.print(aux);   
+    
 }
 
 uint8_t ScreenManager::isComponentDisplayed()
@@ -270,7 +265,7 @@ void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent * midiComponent)
     _displayedMIDIComponent = midiComponent;
 }
 
-void ScreenManager::displayMIDIMessageType(uint8_t midiMessageType)
+void ScreenManager::refreshMIDIData()
 {
     char buffer[15];
 
@@ -282,7 +277,7 @@ void ScreenManager::displayMIDIMessageType(uint8_t midiMessageType)
 
     uint8_t backCursorPosition = aux.length();
 
-    switch(midiMessageType)
+    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
     {
         case midi::NoteOn:
             getMessage(MSG_NOTE_ON, buffer);             
@@ -303,12 +298,29 @@ void ScreenManager::displayMIDIMessageType(uint8_t midiMessageType)
     
     // print hte MIDI message type name on screen
     _screen.print(buffer);
-    aux.concat(buffer);
 
-    // clean the rest of the line
-    for (int i=aux.length();i<_screen.getLCDCols();i++)
+    // clean the rest of the line and refresh the MIDI data displayed
+    aux.concat(buffer);
+    clearRangeOnCurentLine(0, aux.length(), _screen.getLCDCols());
+    clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
+ 
+    switch (_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
     {
-        _screen.print(" ");    
+        case midi::NoteOn:
+            printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);            
+        break;
+
+        case midi::NoteOff:
+            printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);    
+        break;
+
+        case midi::ControlChange:
+            printCCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);                    
+        break;
+
+        case midi::ProgramChange:
+            printPCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);                  
+        break;
     }
 
     // set the cursor at the beginning of the MIDI message type name
@@ -323,4 +335,144 @@ void ScreenManager::printSavedMessage()
     _screen.noBlink();   
     getMessage(MSG_SAVED, buffer);  
     _screen.print(buffer);    
+}
+
+void ScreenManager::moveCursorToMsgType()
+{
+    String aux = String(_currentMIDIMessageDisplayed,DEC);
+    aux.concat(F("/"));
+    aux.concat(_displayedMIDIComponent->getNumMessages());
+    aux.concat(F(" "));
+    _screen.setCursor(aux.length(),0);
+}
+
+void ScreenManager::moveCursorToNote()
+{
+    char buffer[10];   
+
+    getMessage(MSG_CC, buffer);  
+    _screen.setCursor(NOTE_POS + strlen(buffer),1); 
+}
+
+void ScreenManager::moveCursorToVelocity()
+{
+    char buffer[10];    
+
+    getMessage(MSG_CC, buffer);  
+    _screen.setCursor(VELOCITY_POS + strlen(buffer),1);   
+}
+
+void ScreenManager::moveCursorToCCValue()
+{
+    char buffer[10];
+    
+    getMessage(MSG_CC, buffer);  
+    _screen.setCursor(strlen(buffer),1);    
+}
+
+void ScreenManager::moveCursorToChannelValue()
+{
+    char buffer[10]; 
+
+    // set the cursor regarding the MIDImessage type
+    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
+    {
+        case midi::NoteOn:
+        case midi::NoteOff:
+              
+            getMessage(MSG_CHANNEL, buffer);  
+            _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS + strlen(buffer),1);
+        
+        break;
+    
+       
+        case midi::ControlChange:
+                        
+            getMessage(MSG_CHANNEL, buffer);
+            _screen.setCursor(CC_CHANNEL_POS + strlen(buffer),1);
+        
+        break;
+                
+
+        case midi::ProgramChange:
+
+            getMessage(MSG_CHANNEL, buffer);
+            _screen.setCursor(PROGRAM_CHANNEL_POS + strlen(buffer),1);        
+          
+        break;    
+    }
+}
+
+
+void ScreenManager::refreshNoteValue (uint8_t note)
+{
+    String noteName = String(MIDIUtils::getNoteName(note));
+    noteName.concat(MIDIUtils::getOctave(note));   
+    _screen.print(noteName);
+    clearRangeOnCurentLine(1,noteName.length(),VELOCITY_POS);
+    moveCursorToNote();
+}
+
+void ScreenManager::refreshVelocityValue(uint8_t velocity)
+{
+    String velocityValue= String (velocity, DEC);
+    _screen.print(velocityValue);
+    clearRangeOnCurentLine(1,velocityValue.length(), NOTE_ON_OFF_CHANNEL_POS);
+    moveCursorToVelocity();
+}
+
+void ScreenManager::refreshCCValue(uint8_t cc)
+{
+    String ccValue= String (cc, DEC);
+    _screen.print(ccValue);
+    clearRangeOnCurentLine(1,ccValue.length(), CC_CHANNEL_POS);
+    moveCursorToCCValue();
+}
+
+void ScreenManager::refreshChannelValue(uint8_t channel)
+{    
+    // set the cursor regarding the MIDImessage type
+    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
+    {
+        case midi::NoteOn:
+        case midi::NoteOff:
+            
+            getMessage(MSG_CHANNEL, buffer);  
+            _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS + strlen(buffer),1);
+        
+        break;
+
+    
+        case midi::ControlChange:
+                        
+            getMessage(MSG_CHANNEL, buffer);
+            _screen.setCursor(CC_CHANNEL_POS + strlen(buffer),1);
+        
+        break;
+                
+
+        case midi::ProgramChange:
+
+            getMessage(MSG_CHANNEL, buffer);
+            _screen.setCursor(PROGRAM_CHANNEL_POS + strlen(buffer),1);        
+        
+        break;    
+    }
+
+
+    String channelValue= String (channel, DEC);
+    _screen.print(ccValue);
+    clearRangeOnCurentLine(1,ccValue.length(), CC_CHANNEL_POS);
+    moveCursorToCCValue();
+}
+
+
+
+void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to)
+{
+    _screen.setCursor(from, row);
+    for (int i=from; i<to; i++)
+    {
+        _screen.print(F(" "));
+    }
 }

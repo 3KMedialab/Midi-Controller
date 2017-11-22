@@ -21,10 +21,11 @@
 
 #include <MIDIUtils.h>
 
-uint8_t MIDIUtils::getOctave(uint8_t midiNote)
+String MIDIUtils::getOctave(uint8_t midiNote)
 {
      //Calculate the octave of the midi note
-     return (midiNote / 12) -1;
+     String octave = String((midiNote / 12) -1, DEC);
+     return octave;
 }
 
 uint8_t MIDIUtils::getNoteNumber(uint8_t midiNote)

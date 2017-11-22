@@ -31,12 +31,15 @@ class Potentiometer : public IPotentiometer, public Component {
 		uint16_t getValue();
 		uint16_t getSmoothValue();	
 		virtual uint8_t wasChanged();
+		uint8_t isNewSector();
 		uint16_t getSector();
 		void setSectors(uint16_t sectors);
 
 	protected:
 		uint16_t _lastValue;
-		uint16_t _value;		
+		uint16_t _lastSector;
+		uint16_t _value;	
+		uint16_t _sector;	
 		
 	private:
 	    uint16_t _analog[MAX_WINDOW_SIZE];
