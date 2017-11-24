@@ -348,10 +348,7 @@ void ScreenManager::moveCursorToMsgType()
 
 void ScreenManager::moveCursorToNote()
 {
-    char buffer[10];   
-
-    getMessage(MSG_CC, buffer);  
-    _screen.setCursor(NOTE_POS + strlen(buffer),1); 
+    _screen.setCursor(NOTE_POS,1); 
 }
 
 void ScreenManager::moveCursorToVelocity()
@@ -359,10 +356,10 @@ void ScreenManager::moveCursorToVelocity()
     char buffer[10];    
 
     getMessage(MSG_CC, buffer);  
-    _screen.setCursor(VELOCITY_POS + strlen(buffer),1);   
+    _screen.setCursor(VELOCITY_POS + strlen(buffer) - 1,1);   
 }
 
-void ScreenManager::moveCursorToCCValue()
+void ScreenManager::moveCursorToCC()
 {
     char buffer[10];
     
@@ -370,7 +367,7 @@ void ScreenManager::moveCursorToCCValue()
     _screen.setCursor(strlen(buffer),1);    
 }
 
-void ScreenManager::moveCursorToChannelValue()
+void ScreenManager::moveCursorToChannel()
 {
     char buffer[10]; 
 
@@ -406,67 +403,82 @@ void ScreenManager::moveCursorToChannelValue()
 
 void ScreenManager::refreshNoteValue (uint8_t note)
 {
+    _screen.noBlink();
+    
     String noteName = String(MIDIUtils::getNoteName(note));
     noteName.concat(MIDIUtils::getOctave(note));   
     _screen.print(noteName);
+
     clearRangeOnCurentLine(1,noteName.length(),VELOCITY_POS);
     moveCursorToNote();
+
+    _screen.blink();
 }
 
 void ScreenManager::refreshVelocityValue(uint8_t velocity)
 {
+    char buffer[5];
+
+    _screen.noBlink();
+       
     String velocityValue= String (velocity, DEC);
     _screen.print(velocityValue);
-    clearRangeOnCurentLine(1,velocityValue.length(), NOTE_ON_OFF_CHANNEL_POS);
+ 
+    getMessage(MSG_VELOCITY, buffer);
+    clearRangeOnCurentLine(1, VELOCITY_POS + strlen(buffer) + velocityValue.length(), NOTE_ON_OFF_CHANNEL_POS);
     moveCursorToVelocity();
+
+    _screen.blink();
 }
 
 void ScreenManager::refreshCCValue(uint8_t cc)
 {
+    char buffer[5];
+    
+    _screen.noBlink();
+    
     String ccValue= String (cc, DEC);
     _screen.print(ccValue);
-    clearRangeOnCurentLine(1,ccValue.length(), CC_CHANNEL_POS);
-    moveCursorToCCValue();
+
+    getMessage(MSG_CC, buffer);
+    clearRangeOnCurentLine(1, CC_POS + strlen(buffer) + ccValue.length(), CC_CHANNEL_POS);
+    moveCursorToCC();
+
+    _screen.blink();
 }
 
 void ScreenManager::refreshChannelValue(uint8_t channel)
 {    
-    // set the cursor regarding the MIDImessage type
+    char buffer[5];
+
+    _screen.noBlink();
+
+    String channelValue = String (channel, DEC);
+    _screen.print(channelValue);
+    
+    getMessage(MSG_CHANNEL, buffer);
+
+    // clean line regarding the MIDImessage type
     switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
     {
         case midi::NoteOn:
         case midi::NoteOff:
-            
-            getMessage(MSG_CHANNEL, buffer);  
-            _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS + strlen(buffer),1);
-        
-        break;
-
-    
+            clearRangeOnCurentLine(1, NOTE_ON_OFF_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols()); 
+        break;    
+       
         case midi::ControlChange:
-                        
-            getMessage(MSG_CHANNEL, buffer);
-            _screen.setCursor(CC_CHANNEL_POS + strlen(buffer),1);
-        
-        break;
-                
+            clearRangeOnCurentLine(1, CC_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols());   
+        break;                
 
         case midi::ProgramChange:
-
-            getMessage(MSG_CHANNEL, buffer);
-            _screen.setCursor(PROGRAM_CHANNEL_POS + strlen(buffer),1);        
-        
+            clearRangeOnCurentLine(1, PROGRAM_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols()); 
         break;    
     }
+    
+    moveCursorToChannel();
 
-
-    String channelValue= String (channel, DEC);
-    _screen.print(ccValue);
-    clearRangeOnCurentLine(1,ccValue.length(), CC_CHANNEL_POS);
-    moveCursorToCCValue();
+    _screen.blink();
 }
-
-
 
 void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to)
 {

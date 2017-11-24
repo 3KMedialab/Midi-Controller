@@ -426,14 +426,14 @@ void MIDIController::moveCursorToValue()
                 case EDIT_MIDI_TYPE:
 
                     _subState = EDIT_CC;
-                    _screenManager.moveCursorToCCValue();
+                    _screenManager.moveCursorToCC();
 
                 break;
 
                 case EDIT_CC:
 
                     _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannelValue();
+                    _screenManager.moveCursorToChannel();
 
                 break;
 
@@ -454,7 +454,7 @@ void MIDIController::moveCursorToValue()
                 case EDIT_MIDI_TYPE:
 
                     _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannelValue();
+                    _screenManager.moveCursorToChannel();
 
                 break;                          
 
@@ -490,7 +490,7 @@ void MIDIController::moveCursorToValue()
                 case EDIT_VELOCITY:
                 
                     _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannelValue();
+                    _screenManager.moveCursorToChannel();
                 
                 break;
                 

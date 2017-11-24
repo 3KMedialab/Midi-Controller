@@ -76,8 +76,8 @@ class ScreenManager
     uint8_t getDisplayedMessageIndex(); 
     uint8_t getDisplayedMessageType();
     void refreshMIDIData();
-    void moveCursorToCCValue();
-    void moveCursorToChannelValue();
+    void moveCursorToCC();
+    void moveCursorToChannel();
     void moveCursorToMsgType();
     void refreshNoteValue(uint8_t note);
     void moveCursorToNote();
