@@ -30,7 +30,8 @@ MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessag
 	_midiMessages[ACTION_MESSAGE] = *message;
 
 	_availableMessageTypes[0] = midi::ControlChange;
-    _availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[1] = midi::ProgramChange;
+	_availableMessageTypes[2] = midi::InvalidType; 
 }
 
 /*
@@ -41,7 +42,8 @@ MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessag
 MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : Potentiometer (pin, windowSize)
 {
 	_availableMessageTypes[0] = midi::ControlChange;
-    _availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[2] = midi::InvalidType;
 }
 
 /*
@@ -58,8 +60,24 @@ uint8_t MIDIPotentiometer::wasChanged ()
 	Potentiometer::getSmoothValue();
 	uint16_t diff = _lastValue - _value;
 	if (abs(diff) > 1) {
-        _lastValue = _value;
-        _midiMessages[ACTION_MESSAGE].setDataByte2(map(_value, 0, 1023, 0, 127));
+		_lastValue = _value;
+
+		switch (_midiMessages[ACTION_MESSAGE].getType())
+		{
+			case midi::ProgramChange:
+				_midiMessages[ACTION_MESSAGE].setDataByte1(map(_value, 0, 1023, 0, 127));
+			break;
+
+			case midi::ControlChange:
+				_midiMessages[ACTION_MESSAGE].setDataByte2(map(_value, 0, 1023, 0, 127));
+			break;
+
+			case midi::NoteOn:
+			case midi::NoteOff:
+				_midiMessages[ACTION_MESSAGE].setDataByte2(map(_value, 0, 1023, 0, 127));
+			break;
+		}
+		
 		return 1;
 	}
 	return 0;
@@ -74,6 +92,8 @@ MIDIMessage * MIDIPotentiometer::getMessageToSend()
     {               
         return &(_midiMessages[ACTION_MESSAGE]);                
 	}
+
+	return NULL;
 }
 
 /*

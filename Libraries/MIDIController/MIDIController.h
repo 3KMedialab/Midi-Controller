@@ -66,7 +66,7 @@ class MIDIController
     Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);                     // button that activates/deactivates the edit mode.
     
     Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                          // potentiometer for set the tempo in BPM of the controller.
-    Led _bpmLed = Led(BPM_LED_PIN);                                                                     // Led that blinks at BPM frequency when MIDI clock signal is being sent.
+    Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
     Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
     uint16_t _bpm;                                                                                      // Current MIDI controller tempo in BPMs.   
     uint32_t _delayLedMS;                                                                               // Variable that holds the delay between led blinks

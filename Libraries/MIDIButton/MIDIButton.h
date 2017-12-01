@@ -28,7 +28,7 @@
 #define MIDI_BUTTON_NUM_MESSAGES 2  // number of MIDI messages the component can send
 #define ON_PRESSED_MESSAGE 0        
 #define ON_RELEASED_MESSAGE 1
-#define MIDI_BUTTON_AVAILABLE_MESSAGES 2  // number of available MIDI messages the component can handle
+#define MIDI_BUTTON_AVAILABLE_MESSAGES 3  // number of available MIDI messages the component can handle
 
 class MIDIButton : public Button, public IMIDIComponent
 {

@@ -180,7 +180,12 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
             
             if (message != NULL)
             {
-                sendMIDIMessage(message); 
+                if (message->getType() != midi::InvalidType)
+                {
+                    _midiLed.setState(HIGH);
+                    sendMIDIMessage(message);
+                    _midiLed.setState(LOW);
+                } 
             }
         
             break;
@@ -226,6 +231,9 @@ void MIDIController::sendMIDIMessage(MIDIMessage * message)
 
         case midi::NoteOff:
            _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), message->getChannel());
+        break;
+
+        case midi::InvalidType:        
         break;
     }
 }
@@ -304,13 +312,16 @@ void MIDIController::processSelectValuePot()
                 {
                     case EDIT_MIDI_TYPE:    
                     {
-                        // select the new MIDI message type
-                        _selectValuePot.setSectors(displayedComponent->getNumAvailableMessageTypes());
+                        // get the current MIDI message type
+                        MIDIMessage oldMessage = displayedComponent->getMessages()[displayedMessageIndex];
 
                         // set the new MIDI message type into the component and refresh the screen
-                        uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();
-                        displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[_selectValuePot.getSector()]);
-                        if (_selectValuePot.isNewSector())
+                        uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();    
+                        uint8_t numAvailableMsgTypes = displayedComponent->getNumAvailableMessageTypes();                    
+                       
+                        displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[map(_selectValuePot.getSmoothValue(),0,1023,0,numAvailableMsgTypes-1)]);
+
+                        if (oldMessage.getType() != displayedComponent->getMessages()[displayedMessageIndex].getType())
                         {
                             _screenManager.refreshMIDIData();
                         }
@@ -409,7 +420,7 @@ void MIDIController::updateMIDIClockState()
         // send stop realtime message
         case MIDI_CLOCK_OFF:
             sendMIDIRealTime(midi::Stop);
-            _bpmLed.setState(LOW);  
+            _midiLed.setState(LOW);  
         break;
     }           
 }
@@ -502,7 +513,11 @@ void MIDIController::moveCursorToValue()
                 break;
             }            
         break;
+
+        case midi::InvalidType:
+        break;
     }
+    
 }    
 
 void MIDIController::sendMIDIClock()
@@ -524,7 +539,7 @@ void MIDIController::sendMIDIClock()
      {
          if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
          {          
-             _bpmLed.setState(!_bpmLed.getState());
+             _midiLed.setState(!_midiLed.getState());
              _lastTime =  currentTime;
          }        
      }
@@ -554,7 +569,7 @@ void MIDIController::processEditModeButton()
                     _state = EDIT;
                     _subState = DEFAULT_EDIT_MSG;                
                         
-                    _bpmLed.setState(HIGH); 
+                    _midiLed.setState(HIGH); 
                     _screenManager.printSelectComponentMessage();
                 
                 break;
@@ -565,7 +580,7 @@ void MIDIController::processEditModeButton()
                     _state = CONTROLLER;
                     _subState = MIDI_CLOCK_OFF;    
                 
-                    _bpmLed.setState(LOW);          
+                    _midiLed.setState(LOW);          
                     _screenManager.printDefault(_currentPage, _bpm);      
                     
                 break;
@@ -578,7 +593,7 @@ void MIDIController::processEditModeButton()
             _state = CONTROLLER;
             _subState = MIDI_CLOCK_OFF;
 
-            _bpmLed.setState(LOW);          
+            _midiLed.setState(LOW);          
 
             // display default message on screen
             _screenManager.printDefault(_currentPage, _bpm);

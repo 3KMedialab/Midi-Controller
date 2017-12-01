@@ -168,6 +168,13 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
                 _screen.print(buffer);   
                 printPCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
+
+            case midi::InvalidType:
+                getMessage(MSG_EMPTY_MIDI_TYPE, buffer);  
+                _screen.print(buffer);      
+            break;      
+               
+        break;
         }
 
         // display cursor for editing the message getType
@@ -294,6 +301,10 @@ void ScreenManager::refreshMIDIData()
         case midi::ProgramChange:
             getMessage(MSG_PGRM_CHANGE, buffer);                   
         break;
+
+        case midi::InvalidType:
+            getMessage(MSG_EMPTY_MIDI_TYPE, buffer);                   
+        break;
     }
     
     // print hte MIDI message type name on screen
@@ -320,6 +331,10 @@ void ScreenManager::refreshMIDIData()
 
         case midi::ProgramChange:
             printPCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);                  
+        break;
+
+        case midi::InvalidType:
+            clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
         break;
     }
 

@@ -26,7 +26,7 @@
 #include "MIDI.h"
 
 #define MIDI_POTENTIOMETER_NUM_MESSAGES 1       // number of MIDI messages the component can send
-#define MIDI_POTENTIOMETER_AVAILABLE_MESSAGES 2 // number of MIDI messages the component can handle
+#define MIDI_POTENTIOMETER_AVAILABLE_MESSAGES 3 // number of MIDI messages the component can handle
 #define ACTION_MESSAGE 0
 
 class MIDIPotentiometer : public Potentiometer, public IMIDIComponent

@@ -41,6 +41,7 @@
 #define MSG_PGM 10
 #define MSG_VELOCITY 11
 #define MSG_SAVED 12
+#define MSG_EMPTY_MIDI_TYPE 13
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Page: ";
@@ -56,8 +57,9 @@ const char msg_PgrmChange[] PROGMEM = "Pgrm Change";
 const char msg_PGM[] PROGMEM = "PGM:";
 const char msg_Velocity[] PROGMEM = "V:";
 const char msg_saved[] PROGMEM = "PAGE SAVED!";
+const char msg_empty_midi_type[] PROGMEM = "No Msg";
 
-const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved};
+const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type};
 
 class ScreenManager
 {

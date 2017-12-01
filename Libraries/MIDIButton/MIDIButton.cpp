@@ -39,6 +39,7 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 
     _availableMessageTypes[0] = midi::NoteOn;
     _availableMessageTypes[1] = midi::NoteOff;    
+    _availableMessageTypes[2] = midi::InvalidType;
 }
 
 /*
@@ -55,6 +56,7 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 {
     _availableMessageTypes[0] = midi::NoteOn;
     _availableMessageTypes[1] = midi::NoteOff;
+    _availableMessageTypes[2] = midi::InvalidType;
 }
 
 /*
@@ -72,7 +74,9 @@ MIDIMessage * MIDIButton::getMessageToSend()
     if (this->wasReleased())
     {
         return &(_midiMessages[ON_RELEASED_MESSAGE]);              
-    }       
+    }    
+    
+    return NULL;
 }
 
 /*
