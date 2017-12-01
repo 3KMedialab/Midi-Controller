@@ -29,12 +29,12 @@
 #define MIDI_POTENTIOMETER_AVAILABLE_MESSAGES 3 // number of MIDI messages the component can handle
 #define ACTION_MESSAGE 0
 
-class MIDIPotentiometer : public Potentiometer, public IMIDIComponent
+template<class T>
+class MIDIPotentiometer : public T, public IMIDIComponent
 {
     public:
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize);
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message);
-        uint8_t wasChanged ();
 
         MIDIMessage * getMessageToSend();
         uint8_t getNumMessages();

@@ -32,7 +32,8 @@
 * (Note that invert cannot be implied from puEnable since an external  
 *  pullup could be used.)                                              
 */
-MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : Button (pin, puEnable, invert, dbTime)
+template<class C>
+MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : C (pin, puEnable, invert, dbTime)
 {   
     _midiMessages[ON_PRESSED_MESSAGE] = *onPressedMessage;
     _midiMessages[ON_RELEASED_MESSAGE] = *onReleasedMessage;
@@ -52,7 +53,8 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 * (Note that invert cannot be implied from puEnable since an external  
 *  pullup could be used.)                                              
 */
-MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : Button (pin, puEnable, invert, dbTime)
+template<class C>
+MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : C (pin, puEnable, invert, dbTime)
 {
     _availableMessageTypes[0] = midi::NoteOn;
     _availableMessageTypes[1] = midi::NoteOff;
@@ -62,7 +64,8 @@ MIDIButton::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t d
 /*
 * Returns the MIDI message that has to be sent regarding the component state
 */
-MIDIMessage * MIDIButton::getMessageToSend()
+template<class C>
+MIDIMessage * MIDIButton<C>::getMessageToSend()
 {
     this->read();
     
@@ -82,7 +85,8 @@ MIDIMessage * MIDIButton::getMessageToSend()
 /*
 * Returns the number of MIDI messages that the component can send
 */
-uint8_t MIDIButton::getNumMessages()
+template<class C>
+uint8_t MIDIButton<C>::getNumMessages()
 {
     return MIDI_BUTTON_NUM_MESSAGES;
 }
@@ -90,7 +94,8 @@ uint8_t MIDIButton::getNumMessages()
 /*
 * Returns the MIDI messages that the component can send
 */
-MIDIMessage * MIDIButton::getMessages()
+template<class C>
+MIDIMessage * MIDIButton<C>::getMessages()
 {
     return _midiMessages;
 }
@@ -98,7 +103,8 @@ MIDIMessage * MIDIButton::getMessages()
 /*
 * Returns the size of the MIDI data
 */
-uint8_t MIDIButton::getDataSize()
+template<class C>
+uint8_t MIDIButton<C>::getDataSize()
 {
     return (sizeof(uint8_t) * 4) * MIDI_BUTTON_NUM_MESSAGES;
 }
@@ -106,7 +112,8 @@ uint8_t MIDIButton::getDataSize()
 /*
 * Returns true if the button was pressed
 */
-uint8_t MIDIButton::wasActivated()
+template<class C>
+uint8_t MIDIButton<C>::wasActivated()
 {
     this->read();
     return this->wasPressed();     
@@ -115,7 +122,8 @@ uint8_t MIDIButton::wasActivated()
 /*
 * Returns the list with the MIDI messages the component can handle
 */
-uint8_t * MIDIButton::getAvailableMessageTypes()
+template<class C>
+uint8_t * MIDIButton<C>::getAvailableMessageTypes()
 {
     return _availableMessageTypes;
 }
@@ -123,7 +131,8 @@ uint8_t * MIDIButton::getAvailableMessageTypes()
 /*
 * Returns the numbers of available MIDI messages the component can handle
 */
-uint8_t MIDIButton::getNumAvailableMessageTypes()
+template<class C>
+uint8_t MIDIButton<C>::getNumAvailableMessageTypes()
 {
     return MIDI_BUTTON_AVAILABLE_MESSAGES;
 }

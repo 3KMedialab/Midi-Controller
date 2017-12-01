@@ -20,7 +20,6 @@
 #ifndef MIDIButton_h
 #define MIDIButton_h
 
-#include "Button.h"
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
 #include "MIDI.h"
@@ -30,7 +29,8 @@
 #define ON_RELEASED_MESSAGE 1
 #define MIDI_BUTTON_AVAILABLE_MESSAGES 3  // number of available MIDI messages the component can handle
 
-class MIDIButton : public Button, public IMIDIComponent
+template<class C>
+class MIDIButton : public C, public IMIDIComponent
 {
     public:
         MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage);

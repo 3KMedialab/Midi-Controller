@@ -34,18 +34,16 @@ class Potentiometer : public IPotentiometer, public Component {
 		uint8_t isNewSector();
 		uint16_t getSector();
 		void setSectors(uint16_t sectors);
-
-	protected:
-		uint16_t _lastValue;
-		uint16_t _lastSector;
-		uint16_t _value;	
-		uint16_t _sector;	
 		
 	private:
 	    uint16_t _analog[MAX_WINDOW_SIZE];
 		uint8_t _analogPointer;
 		uint8_t _maxPointer;
 		uint8_t _windowSize;		
-		uint16_t _sectors;				
+		uint16_t _sectors;		
+		uint16_t _lastValue;
+		uint16_t _lastSector;
+		uint16_t _value;	
+		uint16_t _sector;			
 };
 #endif

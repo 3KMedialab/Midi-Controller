@@ -22,29 +22,31 @@
 #include <Pitches.h>
 #include <MIDIController.h>
 #include <MIDIButton.h>
+#include <MIDIButton.cpp>
 #include <MIDIPotentiometer.h>
+#include <MIDIPotentiometer.cpp>
   
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTONS
-MIDIButton b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b2(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b3(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b4(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b5(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b6(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b7(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b8(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton b9(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b2(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b3(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b4(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b5(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b6(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b7(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b8(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b9(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 // MIDI POTENTIOMETERS
-MIDIPotentiometer p1(MIDI_POT_PIN1, WINDOW_SIZE);
-MIDIPotentiometer p2(MIDI_POT_PIN1, WINDOW_SIZE);
-MIDIPotentiometer p3(MIDI_POT_PIN1, WINDOW_SIZE);
+MIDIPotentiometer<Potentiometer> p1(MIDI_POT_PIN1, WINDOW_SIZE);
+MIDIPotentiometer<Potentiometer> p2(MIDI_POT_PIN1, WINDOW_SIZE);
+MIDIPotentiometer<Potentiometer> p3(MIDI_POT_PIN1, WINDOW_SIZE);
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
 //IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1, &b2, &b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
