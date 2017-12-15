@@ -1,7 +1,7 @@
 /*
- * Potentiometer.cpp
+ * MuxPotentiometer.cpp
  *
- * Class that represents an analog Potentiometer.
+ * Class that represents an analog Potentiometer connected to Arduino through a multiplexer.
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -17,14 +17,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "Potentiometer.h"
+#include "MuxPotentiometer.h"
 
-/*
-* Constructor
-* pin: Is the Arduino pin the potentiometer is connected to.
-* windowSize: number of measures to be used for smoothing the analog reads.
-*/ 
-Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , Component(pin, ComponentType::INPUT_ANALOG)
+MuxPotentiometer::MuxPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize) : IPotentiometer() , MuxComponent (mux, channel)
 {
 	_lastValue = 0;
 	_lastSector = 0;
@@ -32,7 +27,7 @@ Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer()
 	_sector = 0;
 	_analogPointer = 0;
 	_maxPointer = 0;
-	_windowSize = (windowSize > MAX_WINDOW_SIZE) ? MAX_WINDOW_SIZE : windowSize;
+	_windowSize = (windowSize > MAX_MUX_WINDOW_SIZE) ? MAX_MUX_WINDOW_SIZE : windowSize;
 	
 	if (windowSize > _windowSize)
 	for (int i = 0; i < windowSize; i++) {
@@ -43,8 +38,10 @@ Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer()
 /*
 * Returns the current value of the Potentiometer via analogRead() function.
 */
-uint16_t Potentiometer::getValue(){
-	_value = analogRead(_pin); 
+uint16_t MuxPotentiometer::getValue(){
+
+	_mux->setChannel(_channel);    
+	_value = analogRead(_mux->getPin()); 
 	_sector = _value/(1024/_sectors);
 	return _value;
 }
@@ -52,10 +49,11 @@ uint16_t Potentiometer::getValue(){
 /*
 * Returns the smoothed current value of the Potentiometer via analogRead() function.
 */
-uint16_t Potentiometer::getSmoothValue()
+uint16_t MuxPotentiometer::getSmoothValue()
 {
 	// Read the pin
-	uint16_t value = analogRead(_pin);
+	_mux->setChannel(_channel);  
+	uint16_t value = analogRead(_mux->getPin());
 	
 	// Return if we only keep track of 1 value
 	if (_windowSize == 1) {
@@ -98,7 +96,7 @@ uint16_t Potentiometer::getSmoothValue()
 * analog reads. It also only consider that the component has changed
 * if there is a difference greater than 1.
 */
-uint8_t Potentiometer::wasChanged ()
+uint8_t MuxPotentiometer::wasChanged ()
 {
 	getSmoothValue();
 	uint16_t diff = _lastValue - _value;
@@ -112,7 +110,7 @@ uint8_t Potentiometer::wasChanged ()
 /*
 * Return true if the potentiometer has moved to a different sector
 */
-uint8_t Potentiometer::isNewSector()
+uint8_t MuxPotentiometer::isNewSector()
 {
 	if (_lastSector != _sector){
 		_lastSector = _sector;
@@ -125,14 +123,14 @@ uint8_t Potentiometer::isNewSector()
 /*
 * Returns the sector corresponding to the current value of the potentiometer
 */
-uint16_t Potentiometer::getSector(){
+uint16_t MuxPotentiometer::getSector(){
 	return _sector;
 }
 
 /*
 * Set the desired number of sectors to divide the potentiometer value
 */
-void Potentiometer::setSectors(uint16_t newSectors){
+void MuxPotentiometer::setSectors(uint16_t newSectors){
 	if (newSectors<1024 && newSectors>0){
 		_sectors=newSectors;
 	}else if (newSectors<0){

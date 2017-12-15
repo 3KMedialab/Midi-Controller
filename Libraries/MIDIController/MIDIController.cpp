@@ -331,7 +331,7 @@ void MIDIController::processSelectValuePot()
                     case EDIT_NOTE:
                     {
                         // set the new note value in to the component
-                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_G9);
+                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_C8);
                         displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
 
                         // print the new note value on the screen

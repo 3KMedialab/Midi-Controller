@@ -23,6 +23,7 @@
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
 #include "MIDI.h"
+#include "Multiplexer.h"
 
 #define MIDI_BUTTON_NUM_MESSAGES 2  // number of MIDI messages the component can send
 #define ON_PRESSED_MESSAGE 0        
@@ -35,6 +36,8 @@ class MIDIButton : public C, public IMIDIComponent
     public:
         MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage);
         MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime);
+        MIDIButton(Multiplexer * mux, uint8_t channel, uint8_t invert, uint32_t dbTime);
+        MIDIButton(Multiplexer * mux, uint8_t channel, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage);
         MIDIMessage * getMessageToSend();
         uint8_t getNumMessages();
         MIDIMessage * getMessages();

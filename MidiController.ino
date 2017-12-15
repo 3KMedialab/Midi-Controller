@@ -25,13 +25,18 @@
 #include <MIDIButton.cpp>
 #include <MIDIPotentiometer.h>
 #include <MIDIPotentiometer.cpp>
+#include <Multiplexer.h>
+#include <MuxButton.h>
+#include <MuxPotentiometer.h>
   
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
 
+Multiplexer muxMIDIButtons1 (MUX1_MIDI_BUTTONS_OUTPUT_PIN, MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS, MUX1_MIDI_BUTTONS_CONTROL_PINS, ComponentType::INPUT_DIGITAL, PULLUP);
+
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
-// MIDI BUTTONS
-MIDIButton<Button> b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+// MIDI BUTTONS directly connected to Arduino board
+/*MIDIButton<Button> b1(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b2(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b3(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b4(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
@@ -39,7 +44,12 @@ MIDIButton<Button> b5(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b6(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b7(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b8(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
-MIDIButton<Button> b9(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);
+MIDIButton<Button> b9(MIDI_BUTTON_PIN1, PULLUP, INVERT, DEBOUNCE_MS);*/
+
+// MIDI Buttons connected to Arduino board through multiplexer
+MIDIButton<MuxButton> b1(&muxMIDIButtons1, MIDI_BUTTON1_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b2(&muxMIDIButtons1, MIDI_BUTTON2_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
@@ -50,7 +60,7 @@ MIDIPotentiometer<Potentiometer> p3(MIDI_POT_PIN1, WINDOW_SIZE);
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
 //IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1, &b2, &b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
-IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&p1};
+IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&p1};
 
 // Creates the MIDI Controller object
 MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
