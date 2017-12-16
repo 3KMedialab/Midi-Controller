@@ -20,7 +20,7 @@
 #include <MIDIPotentiometer.h>
 
 /*
-* Constructor
+* Constructor for MIDI Potentiometers connected directly to Arduino board
 * pin: Is the Arduino pin the potentiometer is connected to. 
 * windowSize: number of measures of the potentiometer to smooth the reads.
 * message: the MIDI message assigned to the component.
@@ -36,12 +36,43 @@ MIDIPotentiometer<T>::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMes
 }
 
 /*
-* Constructor
+* Constructor for MIDI Potentiometers connected directly to Arduino board
 * pin: Is the Arduino pin the potentiometer is connected to. 
 * windowSize: number of measures of the potentiometer to smooth the reads.
 */
 template<class T>
 MIDIPotentiometer<T>::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : T (pin, windowSize)
+{
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[2] = midi::InvalidType;
+}
+
+/*
+* Constructor for MIDI Potentiometers connected to Arduino boards through a Multiplexer
+* mux: multiplexer which the MIDI Potentiometer is connected to.              
+* channel: channel of the mux where the MIDI Potentiometer is connected.
+* windowSize: number of measures of the potentiometer to smooth the reads.
+* message: the MIDI message assigned to the component.
+*/
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize, MIDIMessage * message) : T (mux, channel, windowSize)
+{
+	_midiMessages[ACTION_MESSAGE] = *message;
+
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange;
+	_availableMessageTypes[2] = midi::InvalidType; 
+}
+
+/*
+* Constructor for MIDI Potentiometers connected to Arduino boards through a Multiplexer
+* mux: multiplexer which the MIDI Potentiometer is connected to.              
+* channel: channel of the mux where the MIDI Potentiometer is connected. 
+* windowSize: number of measures of the potentiometer to smooth the reads.
+*/
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize) : T (mux, channel, windowSize)
 {
 	_availableMessageTypes[0] = midi::ControlChange;
 	_availableMessageTypes[1] = midi::ProgramChange; 

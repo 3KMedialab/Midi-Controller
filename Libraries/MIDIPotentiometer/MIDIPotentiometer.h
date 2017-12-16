@@ -20,10 +20,10 @@
 #ifndef MIDIPotentiometer_h
 #define MIDIPotentiometer_h
 
-#include "Potentiometer.h"
 #include "IMIDIComponent.h"
 #include "MIDIMessage.h"
 #include "MIDI.h"
+#include "Multiplexer.h"
 
 #define MIDI_POTENTIOMETER_NUM_MESSAGES 1       // number of MIDI messages the component can send
 #define MIDI_POTENTIOMETER_AVAILABLE_MESSAGES 3 // number of MIDI messages the component can handle
@@ -35,6 +35,8 @@ class MIDIPotentiometer : public T, public IMIDIComponent
     public:
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize);
         MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message);
+        MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize);
+        MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize, MIDIMessage * message);
 
         MIDIMessage * getMessageToSend();
         uint8_t getNumMessages();

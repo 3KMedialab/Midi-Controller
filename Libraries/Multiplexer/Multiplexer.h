@@ -26,6 +26,7 @@ class Multiplexer : public Component {
     
     public:
         Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type, uint8_t puEnable);
+        Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type);
         uint8_t getNumControlPins();
         const uint8_t * getControlPins();	
         uint8_t getType();

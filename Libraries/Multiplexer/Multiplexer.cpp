@@ -25,6 +25,7 @@
 * numControlPins: number of control pins for select an input.
 * controlPins: list of the control pins
 * type: is the type of the components connected to the Multiplexer.
+* puEnable: True for use internal PULLUP resistor in the mux output pin of Arduino. False otherwise.
 */ 
 Multiplexer::Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type, uint8_t puEnable) : Component(pin, type, puEnable)
 {
@@ -33,13 +34,30 @@ Multiplexer::Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * co
     _type = type;
 
     // set the control pins mode
-    if (type == ComponentType::INPUT_DIGITAL)
+    for (int i=0; i<numControlPins; i++)
     {
-        for (int i=0; i<numControlPins; i++)
-        {
-            pinMode(controlPins[i], OUTPUT);
-        }
-    }
+        pinMode(controlPins[i], OUTPUT);
+    }  
+}
+
+/*
+* Constructor
+* pin: Is the output Arduino pin of the Multiplexer.
+* numControlPins: number of control pins for select an input.
+* controlPins: list of the control pins
+* type: is the type of the components connected to the Multiplexer.
+*/ 
+Multiplexer::Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type) : Component(pin, type)
+{
+    _numControlPins = numControlPins;
+    _controlPins = controlPins;	
+    _type = type;
+
+    // set the control pins mode
+    for (int i=0; i<numControlPins; i++)
+    {
+        pinMode(controlPins[i], OUTPUT);
+    }    
 }
 
 uint8_t Multiplexer::getNumControlPins()
