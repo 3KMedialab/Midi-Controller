@@ -39,7 +39,7 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
     _screen.begin();
 }
 
-void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
+void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
 {
     char buffer[10];
     String s ="";
@@ -50,10 +50,12 @@ void ScreenManager::printDefault(uint8_t page, uint16_t tempo)
     //Set the cursor on the top left of the screen
     _screen.home();
     
-    // prints the loaded page information
+    // prints the pages information
     getMessage(MSG_PAGE, buffer); 
     s.concat(buffer); 
     s.concat(page);
+    s.concat(F("/"));
+    s.concat(numPages);
     _screen.print(s);
        
     clearRangeOnCurentLine(0, s.length(), _screen.getLCDCols());

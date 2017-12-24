@@ -63,8 +63,8 @@ MIDIButton<MuxButton> b4(&muxMIDIButtons1, MIDI_BUTTON4_MUX1_CHANNEL, INVERT, DE
 MIDIButton<MuxButton> b5(&muxMIDIButtons1, MIDI_BUTTON5_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
 MIDIButton<MuxButton> b6(&muxMIDIButtons1, MIDI_BUTTON6_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
 MIDIButton<MuxButton> b7(&muxMIDIButtons1, MIDI_BUTTON7_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b8(&muxMIDIButtons1, MIDI_BUTTON8_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b9(&muxMIDIButtons2, MIDI_BUTTON1_MUX2_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b8(&muxMIDIButtons2, MIDI_BUTTON1_MUX2_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b9(&muxMIDIButtons2, MIDI_BUTTON2_MUX2_CHANNEL, INVERT, DEBOUNCE_MS);
 
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
@@ -82,7 +82,7 @@ MIDIPotentiometer<MuxPotentiometer> p3(&muxMIDIPots1, MIDI_POT3_MUX1_CHANNEL, WI
 
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
-IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b9,&p1,&p2};
+IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
 
 // Creates the MIDI Controller object
 MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);

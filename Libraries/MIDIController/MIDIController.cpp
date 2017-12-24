@@ -74,7 +74,7 @@ void MIDIController::begin()
    _lastTimeClock = 0;
 
    _screenManager.cleanScreen();
-   _screenManager.printDefault(_currentPage, _bpm);
+   _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
 
    // Controller initial state and substate
    _state = CONTROLLER;
@@ -100,7 +100,7 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage -= 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, _bpm);
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
                 }
 
             break;
@@ -133,7 +133,7 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage += 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, _bpm);
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
                 }   
             
             break;
@@ -290,8 +290,8 @@ void MIDIController::processSelectValuePot()
             // set controller's tempo and calculate delays for led blinking and MIDI clock signal sending
             case CONTROLLER:
             {
-                _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);
-                _screenManager.printDefault(_currentPage, _bpm);
+                _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
+                _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
                 
                 // calculate the blink frequency of the LED
                 uint32_t microsecondsPerMinute = 60000000;
@@ -319,7 +319,7 @@ void MIDIController::processSelectValuePot()
                         uint8_t * availableMIDIMessages = displayedComponent->getAvailableMessageTypes();    
                         uint8_t numAvailableMsgTypes = displayedComponent->getNumAvailableMessageTypes();                    
                        
-                        displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[map(_selectValuePot.getSmoothValue(),0,1023,0,numAvailableMsgTypes-1)]);
+                        displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[map(_selectValuePot.getSmoothValue(),0,1023,0,numAvailableMsgTypes)]);
 
                         if (oldMessage.getType() != displayedComponent->getMessages()[displayedMessageIndex].getType())
                         {
@@ -331,7 +331,7 @@ void MIDIController::processSelectValuePot()
                     case EDIT_NOTE:
                     {
                         // set the new note value in to the component
-                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_C8);
+                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
                         displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
 
                         // print the new note value on the screen
@@ -344,7 +344,7 @@ void MIDIController::processSelectValuePot()
                     {
 
                         //set the new velocity value into the component
-                        uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 127);
+                        uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 128);
                         displayedComponent->getMessages()[displayedMessageIndex].setDataByte2(velocity);
 
                         // print the new velocity value on the screen
@@ -356,7 +356,7 @@ void MIDIController::processSelectValuePot()
                     case EDIT_CC:
                     {
                         //set the new control change type value into the component
-                        uint8_t ccValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 127);
+                        uint8_t ccValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 128);
                         displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(ccValue);
 
                         // print the new cc value on the screen
@@ -368,7 +368,7 @@ void MIDIController::processSelectValuePot()
                     case EDIT_CHANNEL:
                     {
                         //set the new channel value into the component
-                        uint8_t channelValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 16);
+                        uint8_t channelValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 17);
                         displayedComponent->getMessages()[displayedMessageIndex].setChannel(channelValue);
                         
                         // print the new channel value on the screen
@@ -581,7 +581,7 @@ void MIDIController::processEditModeButton()
                     _subState = MIDI_CLOCK_OFF;    
                 
                     _midiLed.setState(LOW);          
-                    _screenManager.printDefault(_currentPage, _bpm);      
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);      
                     
                 break;
             }
@@ -596,7 +596,7 @@ void MIDIController::processEditModeButton()
             _midiLed.setState(LOW);          
 
             // display default message on screen
-            _screenManager.printDefault(_currentPage, _bpm);
+            _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
         
             // Reset the flag for further button events
             _wasPageSaved = 0;

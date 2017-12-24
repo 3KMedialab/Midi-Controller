@@ -65,7 +65,7 @@ class ScreenManager
 {
   public:   
     void initialize(uint8_t i2cAddress, uint8_t rowLength, uint8_t rows);
-    void printDefault(uint8_t page, uint16_t tempo);
+    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo);
     void printSelectComponentMessage();
     void printSavedMessage();
     void cleanScreen();

@@ -1,3 +1,5 @@
+#ifndef ControllerConfig_h
+#define ControllerConfig_h
 //-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
 
 /*************************************************
@@ -37,7 +39,7 @@
  *************************************************/
  
  // Number of MIDI Buttons to add to the controller
- const uint8_t NUM_MIDI_BUTTONS = 2;
+ const uint8_t NUM_MIDI_BUTTONS = 9;
 
  // Input Digital Pin for each MIDI button connected directly to Arduino
  const uint8_t MIDI_BUTTON9_PIN = 5;
@@ -62,8 +64,8 @@
  const uint8_t MIDI_BUTTON5_MUX1_CHANNEL = 4;
  const uint8_t MIDI_BUTTON6_MUX1_CHANNEL = 5;
  const uint8_t MIDI_BUTTON7_MUX1_CHANNEL = 6;
- const uint8_t MIDI_BUTTON8_MUX1_CHANNEL = 7;
  const uint8_t MIDI_BUTTON1_MUX2_CHANNEL = 0;
+ const uint8_t MIDI_BUTTON2_MUX2_CHANNEL = 1;
 
  //-------------------------------- E N D  B U T T O N S  S E C T I O N ---------------------------------------------
 
@@ -84,7 +86,7 @@
  *************************************************/
 
  // Number of MIDI Potentiometers to add to the controller
- const uint8_t NUM_MIDI_POTS = 2;
+ const uint8_t NUM_MIDI_POTS = 3;
   
  // Input Analog Pin for each MIDI potentiometer connected directly to Arduino
  /*const uint8_t MIDI_POT1_PIN = A0;
@@ -127,3 +129,4 @@ const uint8_t MUX1_MIDI_POTS_NUM_CONTROL_PINS = 3;
 const uint8_t MUX1_MIDI_POTS_CONTROL_PINS [MUX1_MIDI_POTS_NUM_CONTROL_PINS] = {2, 3, 4};
 
 //-------------------------------- E N D  O F  M U L T I P L E X E R  S E C T I O N ---------------------------------------------
+#endif

@@ -90,11 +90,11 @@ MIDIMessage * MIDIPotentiometer<T>::getMessageToSend()
 		switch (_midiMessages[ACTION_MESSAGE].getType())
 		{
 			case midi::ProgramChange:
-				_midiMessages[ACTION_MESSAGE].setDataByte1(map(this->getSmoothValue(), 0, 1023, 0, 127));
+				_midiMessages[ACTION_MESSAGE].setDataByte1(map(this->getSmoothValue(), 0, 1023, 0, 128));
 			break;
 
 			case midi::ControlChange:
-				_midiMessages[ACTION_MESSAGE].setDataByte2(map(this->getSmoothValue(), 0, 1023, 0, 127));
+				_midiMessages[ACTION_MESSAGE].setDataByte2(map(this->getSmoothValue(), 0, 1023, 0, 128));
 			break;			
 		}      
 		
