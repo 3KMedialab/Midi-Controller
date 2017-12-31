@@ -36,7 +36,7 @@ MidiInterface MIDI(Serial);
 Multiplexer muxMIDIButtons1 (MUX1_MIDI_BUTTONS_OUTPUT_PIN, MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS, MUX1_MIDI_BUTTONS_CONTROL_PINS, ComponentType::INPUT_DIGITAL, PULLUP);
 
 // Mux for MIDI Potentiometers (analog)
-Multiplexer muxMIDIPots1 (MUX1_MIDI_POTS_OUTPUT_PIN, MUX1_MIDI_POTS_NUM_CONTROL_PINS, MUX1_MIDI_POTS_CONTROL_PINS, ComponentType::INPUT_ANALOG);
+//Multiplexer muxMIDIPots1 (MUX1_MIDI_POTS_OUTPUT_PIN, MUX1_MIDI_POTS_NUM_CONTROL_PINS, MUX1_MIDI_POTS_CONTROL_PINS, ComponentType::INPUT_ANALOG);
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTONS directly connected to Arduino board
@@ -71,15 +71,15 @@ MIDIButton<MuxButton> b9(&muxMIDIButtons1, MIDI_BUTTON8_MUX1_CHANNEL, INVERT, DE
 
 //-------------------------------- M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 // MIDI Potentiometers directly connected to Arduino board
-/*MIDIPotentiometer<Potentiometer> p1(MIDI_POT1_PIN, WINDOW_SIZE);
+MIDIPotentiometer<Potentiometer> p1(MIDI_POT1_PIN, WINDOW_SIZE);
 MIDIPotentiometer<Potentiometer> p2(MIDI_POT2_PIN, WINDOW_SIZE);
-MIDIPotentiometer<Potentiometer> p3(MIDI_POT3_PIN, WINDOW_SIZE);*/
+MIDIPotentiometer<Potentiometer> p3(MIDI_POT3_PIN, WINDOW_SIZE);
 
 
 // MIDI Potentiometers connected to Arduino board through multiplexer
-MIDIPotentiometer<MuxPotentiometer> p1(&muxMIDIPots1, MIDI_POT1_MUX1_CHANNEL, WINDOW_SIZE);
+/*MIDIPotentiometer<MuxPotentiometer> p1(&muxMIDIPots1, MIDI_POT1_MUX1_CHANNEL, WINDOW_SIZE);
 MIDIPotentiometer<MuxPotentiometer> p2(&muxMIDIPots1, MIDI_POT2_MUX1_CHANNEL, WINDOW_SIZE);
-MIDIPotentiometer<MuxPotentiometer> p3(&muxMIDIPots1, MIDI_POT3_MUX1_CHANNEL, WINDOW_SIZE);
+MIDIPotentiometer<MuxPotentiometer> p3(&muxMIDIPots1, MIDI_POT3_MUX1_CHANNEL, WINDOW_SIZE);*/
 
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 

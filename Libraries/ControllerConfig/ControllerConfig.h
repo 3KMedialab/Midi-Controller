@@ -89,14 +89,14 @@
  const uint8_t NUM_MIDI_POTS = 3;
   
  // Input Analog Pin for each MIDI potentiometer connected directly to Arduino
- /*const uint8_t MIDI_POT1_PIN = A0;
- const uint8_t MIDI_POT2_PIN = A2;
- const uint8_t MIDI_POT3_PIN = A0; */
+ const uint8_t MIDI_POT1_PIN = A2;
+ const uint8_t MIDI_POT2_PIN = A3;
+ const uint8_t MIDI_POT3_PIN = A6;
 
  // Channel of multiplexer where the MIDI potentiometers are connected
- const uint8_t MIDI_POT1_MUX1_CHANNEL = 0;
+ /*const uint8_t MIDI_POT1_MUX1_CHANNEL = 0;
  const uint8_t MIDI_POT2_MUX1_CHANNEL = 1;
- const uint8_t MIDI_POT3_MUX1_CHANNEL = 2;
+ const uint8_t MIDI_POT3_MUX1_CHANNEL = 2;*/
 
 //-------------------------------- E N D  P O T E N T I O M E T E R S   S E C T I O N ---------------------------------------------
 
@@ -120,8 +120,8 @@ const uint8_t MUX1_MIDI_BUTTONS_OUTPUT_PIN = 11;
 const uint8_t MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS = 3;
 const uint8_t MUX1_MIDI_BUTTONS_CONTROL_PINS [MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS] = {2, 3, 4};
 
-const uint8_t MUX1_MIDI_POTS_OUTPUT_PIN = A0;
+/*const uint8_t MUX1_MIDI_POTS_OUTPUT_PIN = A0;
 const uint8_t MUX1_MIDI_POTS_NUM_CONTROL_PINS = 3;
-const uint8_t MUX1_MIDI_POTS_CONTROL_PINS [MUX1_MIDI_POTS_NUM_CONTROL_PINS] = {2, 3, 4};
+const uint8_t MUX1_MIDI_POTS_CONTROL_PINS [MUX1_MIDI_POTS_NUM_CONTROL_PINS] = {2, 3, 4};*/
 //-------------------------------- E N D  O F  M U L T I P L E X E R  S E C T I O N ---------------------------------------------
 #endif
