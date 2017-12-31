@@ -108,7 +108,7 @@ void MIDIController::processIncDecButtons()
             // display the previous MIDI message of the component loaded into the Screen Manager
             case EDIT:
                 
-                if (_subState != DEFAULT_EDIT_MSG)
+                if (_subState != DEFAULT_EDIT_MSG && _screenManager.getDisplayedMessageIndex() > 1)
                 {
                     _screenManager.displayPreviousMIDIMsg();
                     _subState = EDIT_MIDI_TYPE;
@@ -141,7 +141,7 @@ void MIDIController::processIncDecButtons()
             // display the next MIDI message of the component loaded into the Screen Manager
             case EDIT:
             
-                if (_subState != DEFAULT_EDIT_MSG)
+                if (_subState != DEFAULT_EDIT_MSG && (_screenManager.getDisplayedMessageIndex() < _screenManager.getDisplayedMIDIComponent()->getNumMessages()))
                 {
                     _screenManager.displayNextMIDIMsg();
                     _subState = EDIT_MIDI_TYPE;
@@ -385,6 +385,10 @@ void MIDIController::processSelectValuePot()
     }
 }
 
+/*
+* Process the button that controls MIDI clock when CONTROLLER mode is on, or that move the cursor through the screen
+* when EDIT mode is on
+*/
 void MIDIController::processMultiplePurposeButton()
 {
     _multiplePurposeButton.read();
@@ -405,6 +409,9 @@ void MIDIController::processMultiplePurposeButton()
     }  
 }
 
+/*
+* Control the MIDI clock sending status
+*/
 
 void MIDIController::updateMIDIClockState()
 {               
@@ -425,6 +432,9 @@ void MIDIController::updateMIDIClockState()
     }           
 }
 
+/*
+* Move the cursor to the different MIDI parameters while controller is on EDIT mode
+*/
 void MIDIController::moveCursorToValue()
 {
     // get the current MIDI message type displayed on the screen, set the next subState and move the cursor to the next value to edit 
@@ -520,6 +530,9 @@ void MIDIController::moveCursorToValue()
     
 }    
 
+/*
+* Send a MIDI clock tick and blink the LED
+*/
 void MIDIController::sendMIDIClock()
 {
     uint32_t currentTime = micros();

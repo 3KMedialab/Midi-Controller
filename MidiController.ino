@@ -32,17 +32,16 @@
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
 
-// Mux1 for MIDI Buttons
+// Mux for MIDI Buttons (digital)
 Multiplexer muxMIDIButtons1 (MUX1_MIDI_BUTTONS_OUTPUT_PIN, MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS, MUX1_MIDI_BUTTONS_CONTROL_PINS, ComponentType::INPUT_DIGITAL, PULLUP);
-
-// Mux2 for MIDI Buttons
-Multiplexer muxMIDIButtons2 (MUX2_MIDI_BUTTONS_OUTPUT_PIN, MUX2_MIDI_BUTTONS_NUM_CONTROL_PINS, MUX2_MIDI_BUTTONS_CONTROL_PINS, ComponentType::INPUT_DIGITAL, PULLUP);
 
 // Mux for MIDI Potentiometers (analog)
 Multiplexer muxMIDIPots1 (MUX1_MIDI_POTS_OUTPUT_PIN, MUX1_MIDI_POTS_NUM_CONTROL_PINS, MUX1_MIDI_POTS_CONTROL_PINS, ComponentType::INPUT_ANALOG);
 
 //-------------------------------- M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 // MIDI BUTTONS directly connected to Arduino board
+MIDIButton<Button> b1(MIDI_BUTTON1_PIN, PULLUP, INVERT, DEBOUNCE_MS);
+
 /*
 MIDIButton<Button> b1(MIDI_BUTTON1_PIN, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b2(MIDI_BUTTON2_PIN, PULLUP, INVERT, DEBOUNCE_MS);
@@ -55,16 +54,18 @@ MIDIButton<Button> b8(MIDI_BUTTON8_PIN, PULLUP, INVERT, DEBOUNCE_MS);
 MIDIButton<Button> b9(MIDI_BUTTON9_PIN, PULLUP, INVERT, DEBOUNCE_MS);
 */
 
+ 
+
 // MIDI Buttons connected to Arduino board through multiplexer
-MIDIButton<MuxButton> b1(&muxMIDIButtons1, MIDI_BUTTON1_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b2(&muxMIDIButtons1, MIDI_BUTTON2_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b3(&muxMIDIButtons1, MIDI_BUTTON3_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b4(&muxMIDIButtons1, MIDI_BUTTON4_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b5(&muxMIDIButtons1, MIDI_BUTTON5_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b6(&muxMIDIButtons1, MIDI_BUTTON6_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b7(&muxMIDIButtons1, MIDI_BUTTON7_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b8(&muxMIDIButtons2, MIDI_BUTTON1_MUX2_CHANNEL, INVERT, DEBOUNCE_MS);
-MIDIButton<MuxButton> b9(&muxMIDIButtons2, MIDI_BUTTON2_MUX2_CHANNEL, INVERT, DEBOUNCE_MS);
+//MIDIButton<MuxButton> b1(&muxMIDIButtons1, MIDI_BUTTON1_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b2(&muxMIDIButtons1, MIDI_BUTTON1_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b3(&muxMIDIButtons1, MIDI_BUTTON2_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b4(&muxMIDIButtons1, MIDI_BUTTON3_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b5(&muxMIDIButtons1, MIDI_BUTTON4_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b6(&muxMIDIButtons1, MIDI_BUTTON5_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b7(&muxMIDIButtons1, MIDI_BUTTON6_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b8(&muxMIDIButtons1, MIDI_BUTTON7_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
+MIDIButton<MuxButton> b9(&muxMIDIButtons1, MIDI_BUTTON8_MUX1_CHANNEL, INVERT, DEBOUNCE_MS);
 
 //-------------------------------- E N D  M I D I  B U T T O N S  S E C T I O N ---------------------------------------------
 
@@ -82,6 +83,7 @@ MIDIPotentiometer<MuxPotentiometer> p3(&muxMIDIPots1, MIDI_POT3_MUX1_CHANNEL, WI
 
 //-------------------------------- E N D  M I D I  P O T E N T I O M E T E R S  S E C T I O N ---------------------------------------------
 
+// MIDI components assigned to the controller
 IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
 
 // Creates the MIDI Controller object
@@ -95,7 +97,6 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  
  void loop(void)
   {
-
     // Process multiple purpose button for activate/deactivate MIDI clock signal or move to the next value to edit
     controller.processMultiplePurposeButton();
 

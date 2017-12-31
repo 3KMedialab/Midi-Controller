@@ -23,27 +23,21 @@
 #include "IPotentiometer.h"
 #include "MuxComponent.h"
 
-const uint8_t MAX_MUX_WINDOW_SIZE = 20;
+const uint8_t MAX_MUX_WINDOW_SIZE = 10;
 
 class MuxPotentiometer : public IPotentiometer, public MuxComponent {
 	public:
 		MuxPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize);
 		uint16_t getValue();
 		uint16_t getSmoothValue();	
-		virtual uint8_t wasChanged();
-		uint8_t isNewSector();
-		uint16_t getSector();
-		void setSectors(uint16_t sectors);
+		virtual uint8_t wasChanged();		
 		
 	private:
 	    uint16_t _analog[MAX_MUX_WINDOW_SIZE];
 		uint8_t _analogPointer;
 		uint8_t _maxPointer;
-		uint8_t _windowSize;		
-		uint16_t _sectors;		
-		uint16_t _lastValue;
-		uint16_t _lastSector;
-		uint16_t _value;	
-		uint16_t _sector;			
+		uint8_t _windowSize;	
+		uint16_t _lastValue;	
+		uint16_t _value;			
 };
 #endif

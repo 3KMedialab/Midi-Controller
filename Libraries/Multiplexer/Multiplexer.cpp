@@ -60,27 +60,38 @@ Multiplexer::Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * co
     }    
 }
 
+/*
+* Return the number of control pins of the Multiplexer
+*/
 uint8_t Multiplexer::getNumControlPins()
 {
     return _numControlPins;
 }
 
+/*
+* Return the control pins of the Multiplexer
+*/
 const uint8_t * Multiplexer::getControlPins()
 {
     return _controlPins;
 }
 
+/*
+* Return the type of the multiplexer: INPUT_DIGITAL, OUTPUT_DIGITAL, INPUT_ANALOG
+*/
 uint8_t Multiplexer::getType()
 {
     return _type;
 }
 
+/* 
+* Set a value in the control pins to select a channel
+* channel: the channel that will be selected
+*/
 void Multiplexer::setChannel(uint8_t channel)
 {
     for (int i=0; i<_numControlPins; i++)
     {
         digitalWrite(_controlPins[i], bitRead(channel, i));
-    }
-    
+    }    
 }
-

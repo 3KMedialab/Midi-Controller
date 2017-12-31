@@ -1,7 +1,7 @@
 /*
  * MIDIPotentiometer.cpp
  *
- * Class that represents a MIDI Potentiometer
+ * Template class that represents a MIDI Potentiometer. It can be derived from different Potentiometer implementations.
  *
  * Copyright 2017 3K MEDIALAB
  *   

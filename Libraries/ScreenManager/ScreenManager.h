@@ -97,12 +97,12 @@ class ScreenManager
     void printMIDIChannel(uint8_t channel);  
     void clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to);
     
-    IMIDIComponent * _displayedMIDIComponent;
-    uint8_t _currentMIDIMessageDisplayed;
-    LiquidCrystal_I2C _screen;     
+    IMIDIComponent * _displayedMIDIComponent;                               // MIDI component currently assigned to the screen
+    uint8_t _currentMIDIMessageDisplayed;                                   // MIDI message currently displayed on the screen
+    LiquidCrystal_I2C _screen;                                              // LCD screen object
 
-    enum {NOTE_POS=0, VELOCITY_POS=5, NOTE_ON_OFF_CHANNEL_POS=11};
-    enum {CC_POS=0, CC_CHANNEL_POS=7};
-    enum {PROGRAM_CHANNEL_POS=0};
+    enum {NOTE_POS=0, VELOCITY_POS=5, NOTE_ON_OFF_CHANNEL_POS=11};          // Screen start position of the Note On/Off message parameters 
+    enum {CC_POS=0, CC_CHANNEL_POS=7};                                      // Screen start position of the CC message parameters 
+    enum {PROGRAM_CHANNEL_POS=0};                                           // Screen start position of the Program Change message parameters 
 };
 #endif

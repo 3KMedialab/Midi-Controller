@@ -21,6 +21,10 @@
 
 #include <MIDIUtils.h>
 
+/*
+* Return the octave of a note
+* midiNote: note which octave will be returned
+*/
 String MIDIUtils::getOctave(uint8_t midiNote)
 {
      //Calculate the octave of the midi note
@@ -28,12 +32,20 @@ String MIDIUtils::getOctave(uint8_t midiNote)
      return octave;
 }
 
+/*
+* Return the number within a scale of a note
+* midiNote: note which number will be returned
+*/
 uint8_t MIDIUtils::getNoteNumber(uint8_t midiNote)
 {
     //Calculate the midi note value (0-11) 
     return midiNote % 12;
 }
 
+/*
+* Return the note name of a note
+* midiNote: note which name will be returned
+*/
 String MIDIUtils::getNoteName(uint8_t midiNote)
 {
     //Get note number (0-11) 

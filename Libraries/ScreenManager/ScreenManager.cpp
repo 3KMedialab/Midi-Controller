@@ -39,6 +39,11 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
     _screen.begin();
 }
 
+/*
+* Prints the information of controller's pages and selected tempo
+* page: current selected page of messages
+* tempo: current selected tempo in BPMs
+*/
 void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
 {
     char buffer[10];
@@ -74,6 +79,9 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
     clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
 }
 
+/*
+* Display the default message when enter on EDIT mode
+*/
 void ScreenManager::printSelectComponentMessage()
 {
     char buffer[20]; 
@@ -95,26 +103,43 @@ void ScreenManager::printSelectComponentMessage()
     }        
 }
 
+/*
+* Load a string of chars from the PROGMEM
+* msgIndex: text to Load
+* buffer: array of chars where the text will be loaded
+*/
 void ScreenManager::getMessage(uint8_t msgIndex, char * buffer)
 {
     strcpy_P(buffer, (char*)pgm_read_word(&(messages[msgIndex])));    
 }
 
+/*
+* Clean the lines of the screen
+*/
 void ScreenManager::cleanScreen()
 {
     _screen.clear();
 }
 
+/*
+* Return the MIDI component currently assigned to the screen
+*/
 IMIDIComponent * ScreenManager::getDisplayedMIDIComponent()
 {
     return _displayedMIDIComponent;
 }
 
+/*
+* Return the index of the MIDI message currently displayed on screen
+*/
 uint8_t ScreenManager::getDisplayedMessageIndex()
 {
     return _currentMIDIMessageDisplayed;
 }
 
+/*
+* Return the type of the MIDI message currently displayed on the screen
+*/
 uint8_t ScreenManager::getDisplayedMessageType()
 {
     if (_displayedMIDIComponent != NULL)
@@ -127,6 +152,10 @@ uint8_t ScreenManager::getDisplayedMessageType()
     }
 }
 
+/*
+* Display the information of a MIDI message of the MIDI component assignet to the screen.
+* msgIndex: is the index of the component's MIDI message that is displayed
+*/
 void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
 {
     char buffer[20];
@@ -185,6 +214,10 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
     }    
 }
 
+/*
+* Display the information of a Note On/Off MIDI message
+* message: the MIDI message to display
+*/
 void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
 {
     char buffer[10];
@@ -208,6 +241,10 @@ void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
     printMIDIChannel(message.getChannel());
 }
 
+/*
+* Display the information of a CC MIDI message
+* message: the MIDI message to display
+*/
 void ScreenManager::printCCMIDIData(MIDIMessage message)
 {
     char buffer[10];
@@ -225,6 +262,10 @@ void ScreenManager::printCCMIDIData(MIDIMessage message)
     printMIDIChannel(message.getChannel());
 }
 
+/*
+* Display the information of a Program Change MIDI message
+* message: the MIDI message to display
+*/
 void ScreenManager::printPCMIDIData(MIDIMessage message)
 {
     char buffer[10];    
@@ -234,6 +275,10 @@ void ScreenManager::printPCMIDIData(MIDIMessage message)
     printMIDIChannel(message.getChannel());     
 }
 
+/*
+* Display the MIDI channel value regarding the MIDI message type
+* channel: the MIDI channel value to display
+*/
 void ScreenManager::printMIDIChannel(uint8_t channel)
 {
     char buffer[4];
@@ -246,11 +291,17 @@ void ScreenManager::printMIDIChannel(uint8_t channel)
     
 }
 
+/*
+* Returns true if a MIDI component has been assigned to the screen
+*/
 uint8_t ScreenManager::isComponentDisplayed()
 {
     return _displayedMIDIComponent == NULL ? 0 : 1;  
 }
 
+/*
+* Display the previous MIDI message of the component assigned to the screen
+*/
 void ScreenManager::displayPreviousMIDIMsg()
 {
     if (_currentMIDIMessageDisplayed > 1)
@@ -260,6 +311,9 @@ void ScreenManager::displayPreviousMIDIMsg()
     }
 }
 
+/*
+* Display the next MIDI message of the component assigned to the screen
+*/
 void ScreenManager::displayNextMIDIMsg()
 {
     if (_currentMIDIMessageDisplayed < _displayedMIDIComponent->getNumMessages())
@@ -269,11 +323,18 @@ void ScreenManager::displayNextMIDIMsg()
     }    
 }
 
+/*
+* Assign a MIDI component to the screen to display its MIDI messages information
+* midiComponent: the MIDI component to be displayed
+*/ 
 void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent * midiComponent)
 {
     _displayedMIDIComponent = midiComponent;
 }
 
+/*
+* Refresh the information displayed on the screen when a parameter's value has changed
+*/
 void ScreenManager::refreshMIDIData()
 {
     char buffer[15];
@@ -344,6 +405,9 @@ void ScreenManager::refreshMIDIData()
     _screen.setCursor(backCursorPosition,0);
 }
 
+/*
+* Display the default message when a page is saved into the EEPROM
+*/
 void ScreenManager::printSavedMessage()
 {
     char buffer[15];
@@ -354,6 +418,9 @@ void ScreenManager::printSavedMessage()
     _screen.print(buffer);    
 }
 
+/*
+* Move the screen cursor to the start position of the MIDI message type
+*/ 
 void ScreenManager::moveCursorToMsgType()
 {
     String aux = String(_currentMIDIMessageDisplayed,DEC);
@@ -363,11 +430,17 @@ void ScreenManager::moveCursorToMsgType()
     _screen.setCursor(aux.length(),0);
 }
 
+/*
+* Move the screen cursor to the start position of the note name
+*/ 
 void ScreenManager::moveCursorToNote()
 {
     _screen.setCursor(NOTE_POS,1); 
 }
 
+/*
+* Move the screen cursor to the start position of the velocity value
+*/ 
 void ScreenManager::moveCursorToVelocity()
 {
     char buffer[10];    
@@ -376,6 +449,9 @@ void ScreenManager::moveCursorToVelocity()
     _screen.setCursor(VELOCITY_POS + strlen(buffer) - 1,1);   
 }
 
+/*
+* Move the screen cursor to the start position of the MIDI CC type 
+*/ 
 void ScreenManager::moveCursorToCC()
 {
     char buffer[10];
@@ -384,6 +460,9 @@ void ScreenManager::moveCursorToCC()
     _screen.setCursor(strlen(buffer),1);    
 }
 
+/*
+* Move the screen cursor to the start position of the channel value
+*/ 
 void ScreenManager::moveCursorToChannel()
 {
     char buffer[10]; 
@@ -417,7 +496,10 @@ void ScreenManager::moveCursorToChannel()
     }
 }
 
-
+/*
+* Display the new note name and octave without refreshing all the screen data
+* note: note value which name and octave will be displayed.
+*/
 void ScreenManager::refreshNoteValue (uint8_t note)
 {
     _screen.noBlink();
@@ -432,6 +514,10 @@ void ScreenManager::refreshNoteValue (uint8_t note)
     _screen.blink();
 }
 
+/*
+* Display the new velocity value without refreshing all the screen data
+* velocity: velocity value that will be displayed.
+*/
 void ScreenManager::refreshVelocityValue(uint8_t velocity)
 {
     char buffer[5];
@@ -448,6 +534,10 @@ void ScreenManager::refreshVelocityValue(uint8_t velocity)
     _screen.blink();
 }
 
+/*
+* Display the new CC value without refreshing all the screen data
+* cc: cc value that will be displayed.
+*/
 void ScreenManager::refreshCCValue(uint8_t cc)
 {
     char buffer[5];
@@ -464,6 +554,10 @@ void ScreenManager::refreshCCValue(uint8_t cc)
     _screen.blink();
 }
 
+/*
+* Display the new channel value without refreshing all the screen data
+* channel: channel value that will be displayed.
+*/
 void ScreenManager::refreshChannelValue(uint8_t channel)
 {    
     char buffer[5];
@@ -497,6 +591,12 @@ void ScreenManager::refreshChannelValue(uint8_t channel)
     _screen.blink();
 }
 
+/*
+* Clean a range of characters from a row of the screen 
+* row: line where the chars will be deleted
+* from: initial position of the range that will be deleted
+* to: last position of the range that will be deleted
+*/
 void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to)
 {
     _screen.setCursor(from, row);

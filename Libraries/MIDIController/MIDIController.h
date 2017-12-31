@@ -76,10 +76,9 @@ class MIDIController
     
     MidiInterface& _mMidi;                                                                              // object to manage the MIDI functionality
 
-    enum State {CONTROLLER, EDIT};
-    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL};
-
-    char _state, _subState;
+    enum State {CONTROLLER, EDIT};                                                                      // Controller status list
+    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL}; // Controller substatus list
+    char _state, _subState;                                                                             // Controller current status and substatus  
 
     void processMidiComponent(IMIDIComponent * component);
     void sendMIDIMessage(MIDIMessage * message);

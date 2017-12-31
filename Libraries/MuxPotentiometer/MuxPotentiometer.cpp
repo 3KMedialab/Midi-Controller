@@ -19,12 +19,16 @@
  */
 #include "MuxPotentiometer.h"
 
+/*
+* Constructor
+* mux: multiplexer where the component is connected to
+* channel: input of the multiplexer where the component is connected
+* windowSize: number of measures to be used for smoothing the analog reads.
+*/ 
 MuxPotentiometer::MuxPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize) : IPotentiometer() , MuxComponent (mux, channel)
 {
-	_lastValue = 0;
-	_lastSector = 0;
-	_value = 0;
-	_sector = 0;
+	_lastValue = 0;	
+	_value = 0;	
 	_analogPointer = 0;
 	_maxPointer = 0;
 	_windowSize = (windowSize > MAX_MUX_WINDOW_SIZE) ? MAX_MUX_WINDOW_SIZE : windowSize;
@@ -42,7 +46,6 @@ uint16_t MuxPotentiometer::getValue(){
 
 	_mux->setChannel(_channel);    
 	_value = analogRead(_mux->getPin()); 
-	_sector = _value/(1024/_sectors);
 	return _value;
 }
 
@@ -82,10 +85,7 @@ uint16_t MuxPotentiometer::getSmoothValue()
 	}	
 	  
 	// Return the average
-	_value = avg;
-
-	// calculate the current sector
-	_sector = _value/(1024/_sectors);
+	_value = avg;	
 
 	return _value;	
 }
@@ -105,37 +105,4 @@ uint8_t MuxPotentiometer::wasChanged ()
 		return 1;
 	}
 	return 0;
-}
-
-/*
-* Return true if the potentiometer has moved to a different sector
-*/
-uint8_t MuxPotentiometer::isNewSector()
-{
-	if (_lastSector != _sector){
-		_lastSector = _sector;
-		return 1;
-	}
-
-	return 0;
-}
-
-/*
-* Returns the sector corresponding to the current value of the potentiometer
-*/
-uint16_t MuxPotentiometer::getSector(){
-	return _sector;
-}
-
-/*
-* Set the desired number of sectors to divide the potentiometer value
-*/
-void MuxPotentiometer::setSectors(uint16_t newSectors){
-	if (newSectors<1024 && newSectors>0){
-		_sectors=newSectors;
-	}else if (newSectors<0){
-		_sectors=0;
-	}else{
-		_sectors=1023;
-	}
 }

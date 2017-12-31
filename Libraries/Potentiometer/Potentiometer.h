@@ -23,7 +23,7 @@
 #include "IPotentiometer.h"
 #include "Component.h"
 
-const uint8_t MAX_WINDOW_SIZE = 20;
+const uint8_t MAX_WINDOW_SIZE = 10;
 
 class Potentiometer : public IPotentiometer, public Component {
 	public:
@@ -31,19 +31,13 @@ class Potentiometer : public IPotentiometer, public Component {
 		uint16_t getValue();
 		uint16_t getSmoothValue();	
 		virtual uint8_t wasChanged();
-		uint8_t isNewSector();
-		uint16_t getSector();
-		void setSectors(uint16_t sectors);
 		
 	private:
 	    uint16_t _analog[MAX_WINDOW_SIZE];
 		uint8_t _analogPointer;
 		uint8_t _maxPointer;
-		uint8_t _windowSize;		
-		uint16_t _sectors;		
-		uint16_t _lastValue;
-		uint16_t _lastSector;
-		uint16_t _value;	
-		uint16_t _sector;			
+		uint8_t _windowSize;			
+		uint16_t _lastValue;	
+		uint16_t _value;			
 };
 #endif

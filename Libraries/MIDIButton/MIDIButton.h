@@ -1,7 +1,7 @@
 /*
  * MIDIButton.h
  *
- * Class that represents a MIDI Button
+ * Template class that represents a MIDI Button. It can be derived from different Button implementations.
  *
  * Copyright 2017 3K MEDIALAB
  *   

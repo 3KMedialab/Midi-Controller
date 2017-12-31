@@ -1,7 +1,7 @@
 /*
  * MuxComponent.cpp
  *
- * Class that represens a component connected to Arduino through a Multiplexer
+ * Class that represents a component connected to Arduino through a Multiplexer
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -20,6 +20,11 @@
 
 #include "MuxComponent.h"
 
+/*
+* Constructor
+* mux: multiplexer where the component is connected to
+* channel: input of the multiplexer where the component is connected
+*/
 MuxComponent::MuxComponent(Multiplexer * mux, uint8_t channel)
 {
   _mux = mux;
