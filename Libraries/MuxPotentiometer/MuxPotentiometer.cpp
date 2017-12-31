@@ -1,7 +1,7 @@
 /*
- * Potentiometer.cpp
+ * MuxPotentiometer.cpp
  *
- * Class that represents an analog Potentiometer.
+ * Class that represents an analog Potentiometer connected to Arduino through a multiplexer.
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -17,20 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "Potentiometer.h"
+#include "MuxPotentiometer.h"
 
 /*
 * Constructor
-* pin: Is the Arduino pin the potentiometer is connected to.
+* mux: multiplexer where the component is connected to
+* channel: input of the multiplexer where the component is connected
 * windowSize: number of measures to be used for smoothing the analog reads.
 */ 
-Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer() , Component(pin, ComponentType::INPUT_ANALOG)
+MuxPotentiometer::MuxPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize) : IPotentiometer() , MuxComponent (mux, channel)
 {
 	_lastValue = 0;	
 	_value = 0;	
 	_analogPointer = 0;
 	_maxPointer = 0;
-	_windowSize = (windowSize > MAX_WINDOW_SIZE) ? MAX_WINDOW_SIZE : windowSize;
+	_windowSize = (windowSize > MAX_MUX_WINDOW_SIZE) ? MAX_MUX_WINDOW_SIZE : windowSize;
 	
 	if (windowSize > _windowSize)
 	for (int i = 0; i < windowSize; i++) {
@@ -41,18 +42,21 @@ Potentiometer::Potentiometer(uint8_t pin, uint8_t windowSize) : IPotentiometer()
 /*
 * Returns the current value of the Potentiometer via analogRead() function.
 */
-uint16_t Potentiometer::getValue(){
-	_value = analogRead(_pin); 	
+uint16_t MuxPotentiometer::getValue(){
+
+	_mux->setChannel(_channel);    
+	_value = analogRead(_mux->getPin()); 
 	return _value;
 }
 
 /*
 * Returns the smoothed current value of the Potentiometer via analogRead() function.
 */
-uint16_t Potentiometer::getSmoothValue()
+uint16_t MuxPotentiometer::getSmoothValue()
 {
 	// Read the pin
-	uint16_t value = analogRead(_pin);
+	_mux->setChannel(_channel);  
+	uint16_t value = analogRead(_mux->getPin());
 	
 	// Return if we only keep track of 1 value
 	if (_windowSize == 1) {
@@ -92,7 +96,7 @@ uint16_t Potentiometer::getSmoothValue()
 * analog reads. It also only consider that the component has changed
 * if there is a difference greater than 1.
 */
-uint8_t Potentiometer::wasChanged ()
+uint8_t MuxPotentiometer::wasChanged ()
 {
 	getSmoothValue();
 	uint16_t diff = _lastValue - _value;

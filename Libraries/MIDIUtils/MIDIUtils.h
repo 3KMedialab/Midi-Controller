@@ -1,7 +1,8 @@
 /*
- * IMIDIComponent.h
+ * MIDIUtils.h
  *
- * Interface that defines a MIDI component
+ * Helper class for MIDI messages manipulation 
+ *
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -18,22 +19,19 @@
  * limitations under the License.
  */
 
-#ifndef IMIDIComponent_h
-#define IMIDIComponent_h
+#ifndef MIDIUtils_h
+#define MIDIUtils_h
 
-#include "Arduino.h"
-#include "MIDIMessage.h"
+#include <Arduino.h>
 
-class IMIDIComponent
+class MIDIUtils
 {
   public:
-    IMIDIComponent();
-    virtual MIDIMessage * getMessageToSend() = 0;
-    virtual uint8_t getNumMessages() = 0;
-    virtual MIDIMessage * getMessages() = 0;
-    virtual uint8_t getDataSize() = 0;
-    virtual uint8_t wasActivated() = 0;
-    virtual uint8_t * getAvailableMessageTypes() = 0;
-    virtual uint8_t getNumAvailableMessageTypes() = 0;
+    static String getOctave(uint8_t midiNote);
+    static uint8_t getNoteNumber(uint8_t midiNote);
+    static String getNoteName(uint8_t midiNote);    
+
+  private:
+    enum{C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B};
 };
 #endif

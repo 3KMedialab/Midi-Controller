@@ -1,7 +1,7 @@
 /*
- * Potentiometer.h
+ * Multiplexer.h
  *
- * Class that represents an analog Potentiometer.
+ * Class that represents a Multiplexer.
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -17,27 +17,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef Potentiometer_h
-#define Potentiometer_h
+#ifndef Multiplexer_h
+#define Multiplexer_h
 
-#include "IPotentiometer.h"
 #include "Component.h"
 
-const uint8_t MAX_WINDOW_SIZE = 10;
-
-class Potentiometer : public IPotentiometer, public Component {
-	public:
-		Potentiometer(uint8_t pin, uint8_t windowSize);
-		uint16_t getValue();
-		uint16_t getSmoothValue();	
-		virtual uint8_t wasChanged();
+class Multiplexer : public Component {
+    
+    public:
+        Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type, uint8_t puEnable);
+        Multiplexer(uint8_t pin, uint8_t numControlPins, const uint8_t * controlPins, uint8_t type);
+        uint8_t getNumControlPins();
+        const uint8_t * getControlPins();	
+        uint8_t getType();
+        void setChannel(uint8_t channel);
 		
-	private:
-	    uint16_t _analog[MAX_WINDOW_SIZE];
-		uint8_t _analogPointer;
-		uint8_t _maxPointer;
-		uint8_t _windowSize;			
-		uint16_t _lastValue;	
-		uint16_t _value;			
+    private:
+        uint8_t _numControlPins;
+        const uint8_t * _controlPins;	 
+        uint8_t _type;
 };
 #endif

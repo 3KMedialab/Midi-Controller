@@ -1,7 +1,7 @@
 /*
- * IMIDIComponent.h
+ * MuxComponent.cpp
  *
- * Interface that defines a MIDI component
+ * Class that represents a component connected to Arduino through a Multiplexer
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -18,22 +18,16 @@
  * limitations under the License.
  */
 
-#ifndef IMIDIComponent_h
-#define IMIDIComponent_h
+#include "MuxComponent.h"
 
-#include "Arduino.h"
-#include "MIDIMessage.h"
-
-class IMIDIComponent
+/*
+* Constructor
+* mux: multiplexer where the component is connected to
+* channel: input of the multiplexer where the component is connected
+*/
+MuxComponent::MuxComponent(Multiplexer * mux, uint8_t channel)
 {
-  public:
-    IMIDIComponent();
-    virtual MIDIMessage * getMessageToSend() = 0;
-    virtual uint8_t getNumMessages() = 0;
-    virtual MIDIMessage * getMessages() = 0;
-    virtual uint8_t getDataSize() = 0;
-    virtual uint8_t wasActivated() = 0;
-    virtual uint8_t * getAvailableMessageTypes() = 0;
-    virtual uint8_t getNumAvailableMessageTypes() = 0;
-};
-#endif
+  _mux = mux;
+  _channel = channel;
+}
+

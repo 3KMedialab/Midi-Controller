@@ -34,7 +34,7 @@ void MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDI
     }
 
     // calculate the maximum number of pages
-    _maxNumPages = EEPROM_SIZE / _pageSize;
+    _maxNumPages = 1024 / _pageSize;
 }
 
 /*

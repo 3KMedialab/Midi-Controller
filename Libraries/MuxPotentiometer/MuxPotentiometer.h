@@ -1,7 +1,7 @@
 /*
  * Potentiometer.h
  *
- * Class that represents an analog Potentiometer.
+ * Class that represents an analog Potentiometer connected to Arduino through a multiplexer.
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -17,26 +17,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef Potentiometer_h
-#define Potentiometer_h
+#ifndef MuxPotentiometer_h
+#define MuxPotentiometer_h
 
 #include "IPotentiometer.h"
-#include "Component.h"
+#include "MuxComponent.h"
 
-const uint8_t MAX_WINDOW_SIZE = 10;
+const uint8_t MAX_MUX_WINDOW_SIZE = 10;
 
-class Potentiometer : public IPotentiometer, public Component {
+class MuxPotentiometer : public IPotentiometer, public MuxComponent {
 	public:
-		Potentiometer(uint8_t pin, uint8_t windowSize);
+		MuxPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize);
 		uint16_t getValue();
 		uint16_t getSmoothValue();	
-		virtual uint8_t wasChanged();
+		virtual uint8_t wasChanged();		
 		
 	private:
-	    uint16_t _analog[MAX_WINDOW_SIZE];
+	    uint16_t _analog[MAX_MUX_WINDOW_SIZE];
 		uint8_t _analogPointer;
 		uint8_t _maxPointer;
-		uint8_t _windowSize;			
+		uint8_t _windowSize;	
 		uint16_t _lastValue;	
 		uint16_t _value;			
 };

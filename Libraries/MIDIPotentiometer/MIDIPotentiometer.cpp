@@ -1,7 +1,7 @@
 /*
  * MIDIPotentiometer.cpp
  *
- * Class that represents a MIDI Potentiometer
+ * Template class that represents a MIDI Potentiometer. It can be derived from different Potentiometer implementations.
  *
  * Copyright 2017 3K MEDIALAB
  *   
@@ -20,62 +20,95 @@
 #include <MIDIPotentiometer.h>
 
 /*
-* Constructor
+* Constructor for MIDI Potentiometers connected directly to Arduino board
 * pin: Is the Arduino pin the potentiometer is connected to. 
 * windowSize: number of measures of the potentiometer to smooth the reads.
 * message: the MIDI message assigned to the component.
 */
-MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message) : Potentiometer (pin, windowSize)
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(uint8_t pin, uint8_t windowSize, MIDIMessage * message) : T (pin, windowSize)
 {
 	_midiMessages[ACTION_MESSAGE] = *message;
+
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange;
+	_availableMessageTypes[2] = midi::InvalidType; 
 }
 
 /*
-* Constructor
+* Constructor for MIDI Potentiometers connected directly to Arduino board
 * pin: Is the Arduino pin the potentiometer is connected to. 
 * windowSize: number of measures of the potentiometer to smooth the reads.
 */
-MIDIPotentiometer::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : Potentiometer (pin, windowSize)
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(uint8_t pin, uint8_t windowSize) : T (pin, windowSize)
 {
-
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[2] = midi::InvalidType;
 }
 
 /*
-* Indicates if the potentiometer was changed by the user.
-* It uses the getSmoothValue() method in order to smooth the 
-* analog reads. It also only consider that the component has changed
-* if there is a difference greater than 1. If a change was detected, the
-* new value read is mapped in the range of the midi messages data bytes, and
-* is assigned to the second data byte of the message.
-* Returns true if the MIDI potentiometer value has changed.
+* Constructor for MIDI Potentiometers connected to Arduino boards through a Multiplexer
+* mux: multiplexer which the MIDI Potentiometer is connected to.              
+* channel: channel of the mux where the MIDI Potentiometer is connected.
+* windowSize: number of measures of the potentiometer to smooth the reads.
+* message: the MIDI message assigned to the component.
 */
-uint8_t MIDIPotentiometer::wasChanged ()
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize, MIDIMessage * message) : T (mux, channel, windowSize)
 {
-	Potentiometer::getSmoothValue();
-	uint16_t diff = _lastValue - _value;
-	if (abs(diff) > 1) {
-        _lastValue = _value;
-        _midiMessages[ACTION_MESSAGE].setDataByte2(map(_value, 0, 1023, 0, 127));
-		return 1;
-	}
-	return 0;
+	_midiMessages[ACTION_MESSAGE] = *message;
+
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange;
+	_availableMessageTypes[2] = midi::InvalidType; 
+}
+
+/*
+* Constructor for MIDI Potentiometers connected to Arduino boards through a Multiplexer
+* mux: multiplexer which the MIDI Potentiometer is connected to.              
+* channel: channel of the mux where the MIDI Potentiometer is connected. 
+* windowSize: number of measures of the potentiometer to smooth the reads.
+*/
+template<class T>
+MIDIPotentiometer<T>::MIDIPotentiometer(Multiplexer * mux, uint8_t channel, uint8_t windowSize) : T (mux, channel, windowSize)
+{
+	_availableMessageTypes[0] = midi::ControlChange;
+	_availableMessageTypes[1] = midi::ProgramChange; 
+	_availableMessageTypes[2] = midi::InvalidType;
 }
 
 /*
 * Returns the MIDI message that has to be sent regarding the component state
 */
-MIDIMessage * MIDIPotentiometer::getMessageToSend()
+template<class T>
+MIDIMessage * MIDIPotentiometer<T>::getMessageToSend()
 {
 	if (this->wasChanged())
-    {               
-        return &(_midiMessages[ACTION_MESSAGE]);                
+    {         
+		switch (_midiMessages[ACTION_MESSAGE].getType())
+		{
+			case midi::ProgramChange:
+				_midiMessages[ACTION_MESSAGE].setDataByte1(map(this->getSmoothValue(), 0, 1023, 0, 128));
+			break;
+
+			case midi::ControlChange:
+				_midiMessages[ACTION_MESSAGE].setDataByte2(map(this->getSmoothValue(), 0, 1023, 0, 128));
+			break;			
+		}      
+		
+		return &(_midiMessages[ACTION_MESSAGE]);                
 	}
+
+	return NULL;
 }
 
 /*
 * Returns the number of MIDI messages that the component can send
 */
-uint8_t MIDIPotentiometer::getNumMessages()
+template<class T>
+uint8_t MIDIPotentiometer<T>::getNumMessages()
 {
     return MIDI_POTENTIOMETER_NUM_MESSAGES;
 }
@@ -83,7 +116,8 @@ uint8_t MIDIPotentiometer::getNumMessages()
 /*
 * Returns the MIDI messages that the component can send
 */
-MIDIMessage * MIDIPotentiometer::getMessages()
+template<class T>
+MIDIMessage * MIDIPotentiometer<T>::getMessages()
 {
     return _midiMessages;
 }
@@ -91,7 +125,35 @@ MIDIMessage * MIDIPotentiometer::getMessages()
 /*
 * Returns the size of the MIDI data
 */
-uint8_t MIDIPotentiometer::getDataSize()
+template<class T>
+uint8_t MIDIPotentiometer<T>::getDataSize()
 {
 	return sizeof(uint8_t) * 4;
+}
+
+/*
+* Returns true if the potentiometer was moved
+*/
+template<class T>
+uint8_t MIDIPotentiometer<T>::wasActivated()
+{
+	return this->wasChanged();
+}
+
+/*
+* Returns the list with the MIDI messages the component can handle
+*/
+template<class T>
+uint8_t * MIDIPotentiometer<T>::getAvailableMessageTypes()
+{
+    return _availableMessageTypes;
+}
+
+/*
+* Returns the numbers of available MIDI messages the component can handle
+*/
+template<class T>
+uint8_t MIDIPotentiometer<T>::getNumAvailableMessageTypes()
+{
+    return MIDI_POTENTIOMETER_AVAILABLE_MESSAGES;
 }
