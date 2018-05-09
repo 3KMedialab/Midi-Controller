@@ -21,6 +21,18 @@
 
 #include <MIDIUtils.h>
 
+// Musical modes intervals
+const uint8_t intervals [7][7] = {
+
+    {0, 2, 4, 5, 7, 9, 11}, // Ionian
+    {0, 2, 3, 5, 7, 9, 10}, // Dorian
+    {0, 1, 3, 5, 7, 8, 10}, // Phrygian
+    {0, 2, 4, 6, 7, 8, 10}, // Lydian
+    {0, 2, 4, 5, 7, 9, 10}, // Mixolydian
+    {0, 2, 3, 5, 7, 8, 10}, // Aeolian
+    {0, 1, 3, 5, 6, 8, 10}  // Locrian
+};
+
 /*
 * Return the octave of a note
 * midiNote: note which octave will be returned
@@ -70,4 +82,33 @@ String MIDIUtils::getNoteName(uint8_t midiNote)
        case B:   return F("B");
        default:  return F("N/A");        
     }
-}  
+}
+
+/*
+* Return true if a note belongs to a scale. False otherwise
+* midiNote: note to determine if belongs to a scale
+* rootNote: is the key of the scale
+* mode: musical mode of the scale
+*
+* EXAMPLE: how to generate G Aeolian scale
+* rootNote = 7
+* mode = Aeolian
+* resulting scale = ((7+0)%12, (7+2)%12, (7+3)%12, (7+5)%12, (7+7)%12, (7+8)%12, (7+10)%12) -> (7, 9, 10, 0, 2, 3, 5) 
+*/
+uint8_t MIDIUtils::isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mode)
+{
+    if (mode == Chromatic)
+    {
+        return 1;
+    }        
+
+    for (int i=0; i<7; i++)
+    {
+        if ( (rootNote + intervals[mode][i]) % 12 == midiNote % 12 )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}

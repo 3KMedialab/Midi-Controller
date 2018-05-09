@@ -332,10 +332,14 @@ void MIDIController::processSelectValuePot()
                     {
                         // set the new note value in to the component
                         uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
-                        displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
 
-                        // print the new note value on the screen
-                        _screenManager.refreshNoteValue(note);                      
+                        if (MIDIUtils::isNoteInScale(note, rootNote, mode))
+                        {
+                            displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
+
+                            // print the new note value on the screen
+                            _screenManager.refreshNoteValue(note);
+                        }                                             
                    
                         break;
                     }

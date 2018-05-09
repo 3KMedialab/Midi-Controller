@@ -78,7 +78,10 @@ class MIDIController
 
     enum State {CONTROLLER, EDIT};                                                                      // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL}; // Controller substatus list
-    char _state, _subState;                                                                             // Controller current status and substatus  
+    char _state, _subState;                                                                             // Controller current status and substatus
+
+    uint8_t rootNote = MIDIUtils::C;                                                                    // Root note of the scale
+    uint8_t mode = MIDIUtils::Aeolian;                                                                   // Mode of the scale 
 
     void processMidiComponent(IMIDIComponent * component);
     void sendMIDIMessage(MIDIMessage * message);
