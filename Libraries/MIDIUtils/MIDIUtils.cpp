@@ -112,3 +112,26 @@ uint8_t MIDIUtils::isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mod
 
     return 0;
 }
+
+/*
+* Return the name of a musical mode
+* mode: mode number which name will be returned
+*/
+String MIDIUtils::getModeName(uint8_t mode)
+{
+    //Use a switch statement to determine mode name. 
+    switch(mode)
+    {
+      //Note: each case returns so break keyword is not needed here
+     
+       case Ionian:     return F("Ionian");    
+       case Dorian:     return F("Dorian");
+       case Phrygian:   return F("Phrygian"); 
+       case Lydian:     return F("Lydian"); 
+       case Mixolydian: return F("Mixolydian"); 
+       case Aeolian:    return F("Aeolian"); 
+       case Locrian:    return F("Locrian"); 
+       case Chromatic:  return F("Chromatic"); 
+       default:         return F("N/A");        
+    }
+}

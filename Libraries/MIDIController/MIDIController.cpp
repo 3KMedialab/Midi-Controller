@@ -60,6 +60,10 @@ void MIDIController::begin()
    _memoryManager.initialize(_midiComponents, _numMIDIComponents);
    _screenManager.initialize(I2C_ADDRESS, ROW_LENGTH, ROWS);
 
+   // load from EEPROM the Global Configuration parameters
+   _memoryManager.loadGlobalConfiguration(&_globalConfig);
+   _wasGlobalConfigSaved = 0;
+
    // load from EEPROM the default page of MIDI messages into the MIDI components
    _currentPage = 1;    
    _memoryManager.loadMIDIComponents(_currentPage, _midiComponents, _numMIDIComponents);
@@ -74,7 +78,7 @@ void MIDIController::begin()
    _lastTimeClock = 0;
 
    _screenManager.cleanScreen();
-   _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
+   _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
 
    // Controller initial state and substate
    _state = CONTROLLER;
@@ -100,13 +104,13 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage -= 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
                 }
 
             break;
 
             // display the previous MIDI message of the component loaded into the Screen Manager
-            case EDIT:
+            case EDIT_PAGE:
                 
                 if (_subState != DEFAULT_EDIT_MSG && _screenManager.getDisplayedMessageIndex() > 1)
                 {
@@ -133,13 +137,13 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage += 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
                 }   
             
             break;
            
             // display the next MIDI message of the component loaded into the Screen Manager
-            case EDIT:
+            case EDIT_PAGE:
             
                 if (_subState != DEFAULT_EDIT_MSG && (_screenManager.getDisplayedMessageIndex() < _screenManager.getDisplayedMIDIComponent()->getNumMessages()))
                 {
@@ -192,7 +196,7 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
         }
         
         // assign the MIDI messages information to the screen and display the first MIDI message
-        case EDIT:
+        case EDIT_PAGE:
         {
             if (component->wasActivated())
             {
@@ -218,19 +222,19 @@ void MIDIController::sendMIDIMessage(MIDIMessage * message)
     switch(message->getType())
     {
         case midi::ControlChange:
-           _mMidi.sendControlChange(message->getDataByte1(), message->getDataByte2(), message->getChannel());
+           _mMidi.sendControlChange(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
         break;
 
         case midi::ProgramChange:
-           _mMidi.sendProgramChange(message->getDataByte1(), message->getChannel());
+           _mMidi.sendProgramChange(message->getDataByte1(), _globalConfig.getMIDIChannel());
         break;
 
         case midi::NoteOn:
-           _mMidi.sendNoteOn(message->getDataByte1(), message->getDataByte2(), message->getChannel());
+           _mMidi.sendNoteOn(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
         break;
 
         case midi::NoteOff:
-           _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), message->getChannel());
+           _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
         break;
 
         case midi::InvalidType:        
@@ -279,7 +283,7 @@ void MIDIController::loadPage(uint8_t page)
 
 /*
 * Process the potentiometer that set the value for controller's 
-* tempo or set the values for MIDI messages on edit mode
+* tempo or set the values on edit mode
 */
 void MIDIController::processSelectValuePot()
 {        
@@ -291,7 +295,7 @@ void MIDIController::processSelectValuePot()
             case CONTROLLER:
             {
                 _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
-                _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
+                _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
                 
                 // calculate the blink frequency of the LED
                 uint32_t microsecondsPerMinute = 60000000;
@@ -302,7 +306,7 @@ void MIDIController::processSelectValuePot()
             } 
 
             // select a value for a midi message part
-            case EDIT:
+            case EDIT_PAGE:
             {
                 // get the component displayed on screen currently
                 IMIDIComponent * displayedComponent = _screenManager.getDisplayedMIDIComponent();             
@@ -333,7 +337,7 @@ void MIDIController::processSelectValuePot()
                         // set the new note value in to the component
                         uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
 
-                        if (MIDIUtils::isNoteInScale(note, rootNote, mode))
+                        if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
                         {
                             displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(note);
 
@@ -385,12 +389,68 @@ void MIDIController::processSelectValuePot()
 
                 break;
             }
+
+            // select a value for a Global Configuration Parameter 
+            case EDIT_GLOBAL_CONFIG:
+
+                switch (_subState)
+                {
+                    // select the musical mode value
+                    case EDIT_GLOBAL_MODE:
+                    {
+                        // get the current mode 
+                        uint8_t currentMode = _globalConfig.getMode();
+
+                        _globalConfig.setMode(map(_selectValuePot.getSmoothValue(),0,1023,MIDIUtils::Ionian,MIDIUtils::Chromatic + 1));
+
+                        if (currentMode != _globalConfig.getMode())
+                        {
+                            _screenManager.refreshModeData(_globalConfig.getMode());
+                        }
+
+                        break;
+                    }
+
+                    // select the root note value
+                    case EDIT_GLOBAL_ROOT_NOTE:
+                    {
+                        // get the current root note 
+                        uint8_t currentRootNote = _globalConfig.getRootNote();
+
+                        _globalConfig.setRootNote(map(_selectValuePot.getSmoothValue(),0,1023,MIDIUtils::C,MIDIUtils::B + 1));
+
+                        if (currentRootNote != _globalConfig.getRootNote())
+                        {
+                            _screenManager.refreshRootNoteData(_globalConfig.getRootNote());
+                        }
+
+                        break;
+                    }
+                    
+                    // select the MIDI channel value
+                    case EDIT_GLOBAL_MIDI_CH:
+
+                        // get the current root note 
+                        uint8_t currentMIDIChannel = _globalConfig.getMIDIChannel();
+
+                        _globalConfig.setMIDIChannel(map(_selectValuePot.getSmoothValue(),0,1023,MIDIUtils::CHANNEL1,MIDIUtils::CHANNEL16 + 1));
+
+                        if (currentMIDIChannel != _globalConfig.getMIDIChannel())
+                        {
+                            _screenManager.refreshMIDIChannelData(_globalConfig.getMIDIChannel());
+                        }
+
+                        break;
+                    break;
+                }
+            
+            break;
         }  
     }
 }
 
 /*
-* Process the button that controls MIDI clock when CONTROLLER mode is on, or that move the cursor through the screen
+* Process the button that controls MIDI clock when CONTROLLER mode is on, or  move the cursor through the screen
 * when EDIT mode is on
 */
 void MIDIController::processMultiplePurposeButton()
@@ -406,9 +466,14 @@ void MIDIController::processMultiplePurposeButton()
                 updateMIDIClockState();
             break;
 
-           case EDIT:
+           case EDIT_PAGE:
                 moveCursorToValue();                          
            break;
+
+           case EDIT_GLOBAL_CONFIG:
+                moveCursorToGLobalConfigParameter();                          
+           break;
+           
         }    
     }  
 }
@@ -440,7 +505,7 @@ void MIDIController::updateMIDIClockState()
 * Move the cursor to the different MIDI parameters while controller is on EDIT mode
 */
 void MIDIController::moveCursorToValue()
-{
+{    
     // get the current MIDI message type displayed on the screen, set the next subState and move the cursor to the next value to edit 
     switch (_screenManager.getDisplayedMessageType())
     {                    
@@ -535,6 +600,36 @@ void MIDIController::moveCursorToValue()
 }    
 
 /*
+* Move the cursor to the different parameters on EDIT_GLOBAL_CONFIG mode
+*/
+void MIDIController::moveCursorToGLobalConfigParameter()
+{
+    switch (_subState)
+    {
+        case EDIT_GLOBAL_MODE:
+
+            _subState = EDIT_GLOBAL_ROOT_NOTE;
+            _screenManager.moveCursorToRootNote();
+
+        break;
+
+        case EDIT_GLOBAL_ROOT_NOTE:
+
+            _subState = EDIT_GLOBAL_MIDI_CH;
+            _screenManager.moveCursorToMIDIChannel();
+
+        break;
+
+        case EDIT_GLOBAL_MIDI_CH:
+                
+            _subState = EDIT_GLOBAL_MODE;
+            _screenManager.moveCursorToMode();
+
+        break;
+    }
+}   
+
+/*
 * Send a MIDI clock tick and blink the LED
 */
 void MIDIController::sendMIDIClock()
@@ -572,7 +667,7 @@ void MIDIController::processEditModeButton()
 
     if (_editButton.wasReleased())
     {
-        if (!_wasPageSaved)
+        if (!_wasPageSaved && !_wasGlobalConfigSaved)
         {
             switch (_state)
             {
@@ -583,7 +678,7 @@ void MIDIController::processEditModeButton()
                     if (_subState == MIDI_CLOCK_ON)
                         sendMIDIRealTime(midi::Stop);        
     
-                    _state = EDIT;
+                    _state = EDIT_PAGE;
                     _subState = DEFAULT_EDIT_MSG;                
                         
                     _midiLed.setState(HIGH); 
@@ -591,20 +686,31 @@ void MIDIController::processEditModeButton()
                 
                 break;
     
-                // LED doesn't blink, default message is displayed on screen 
-                case EDIT:
+                // Enter in edit page components mode: LED doesn't blink, default message is displayed on screen 
+                case EDIT_PAGE:
+    
+                    _state = EDIT_GLOBAL_CONFIG;
+                    _subState = EDIT_GLOBAL_MODE;    
+                
+                    _midiLed.setState(HIGH);
+                    _screenManager.printEditGlobalConfig(_globalConfig);      
+                    
+                break;
+
+                // Enter in global config edit mode: LED doesn't blink, default message is displayed on screen 
+                case EDIT_GLOBAL_CONFIG:
     
                     _state = CONTROLLER;
                     _subState = MIDI_CLOCK_OFF;    
                 
                     _midiLed.setState(LOW);          
-                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);      
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);      
                     
-                break;
-            }
-        }       
+                break;                         
+            }        
+        }           
    
-        // after saving a page, set controller status to CONTROLLER
+        // after saving a page or global configuration, set controller status to CONTROLLER
         else
         {
             _state = CONTROLLER;
@@ -613,29 +719,45 @@ void MIDIController::processEditModeButton()
             _midiLed.setState(LOW);          
 
             // display default message on screen
-            _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm);
+            _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
         
-            // Reset the flag for further button events
+            // Reset the flags for further button events
             _wasPageSaved = 0;
+            _wasGlobalConfigSaved = 0;
         }
     }
 
-    // save current page component's configuration and exits edit mode
+    // save current page component's configuration / global configuration and exits edit mode
     if (_editButton.pressedFor(PRESSED_FOR_WAIT))
     {   
-        // stop sending MIDI Clock signal in case of the controller was sending such signal
-        if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
-            sendMIDIRealTime(midi::Stop);        
-        
-        // saves the current page
-        savePage(_currentPage); 
-        _wasPageSaved = 1;        
+        switch (_state)
+        {
+            case EDIT_PAGE:
 
-        // prints the corresponding message and wait to continue 
-        _screenManager.printSavedMessage();
-        delay(2000);
-        
+                // saves the current page
+                savePage(_currentPage); 
+                _wasPageSaved = 1;        
+
+                // prints a message and waits to continue 
+                _screenManager.printSavedMessage();
+                delay(2000);               
+            
+            break;
+
+            case EDIT_GLOBAL_CONFIG:
+
+                // saves the global configuration values
+                _memoryManager.saveGlobalConfiguration(_globalConfig); 
+                _wasGlobalConfigSaved = 1;        
+
+                // prints a message and waits to continue 
+                _screenManager.printSavedMessage();
+                delay(2000);
+
+            break;
+
+        }
         _state = CONTROLLER;
-        _subState = MIDI_CLOCK_OFF;
+        _subState = MIDI_CLOCK_OFF;              
     }
 }

@@ -34,6 +34,7 @@
 #include <Button.h>
 #include <Potentiometer.h>
 #include <Led.h>
+#include <GlobalConfig.h>
 
 typedef midi::MidiInterface<HardwareSerial> MidiInterface;
 
@@ -58,6 +59,7 @@ class MIDIController
     MemoryManager _memoryManager;                                                                       // object to manage interactions between the controller and the EEPROM
     uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
     uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.
+    uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
 
     ScreenManager _screenManager;                                                                       // object to manage interactions between the controller and the screen   
 
@@ -76,12 +78,11 @@ class MIDIController
     
     MidiInterface& _mMidi;                                                                              // object to manage the MIDI functionality
 
-    enum State {CONTROLLER, EDIT};                                                                      // Controller status list
-    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL}; // Controller substatus list
+    enum State {CONTROLLER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
+    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL}; // Controller substatus list
     char _state, _subState;                                                                             // Controller current status and substatus
 
-    uint8_t rootNote = MIDIUtils::C;                                                                    // Root note of the scale
-    uint8_t mode = MIDIUtils::Aeolian;                                                                   // Mode of the scale 
+    GlobalConfig _globalConfig = GlobalConfig();                                                        // Object containing the global configuration
 
     void processMidiComponent(IMIDIComponent * component);
     void sendMIDIMessage(MIDIMessage * message);
@@ -91,5 +92,6 @@ class MIDIController
     void loadPage(uint8_t page);
     void updateMIDIClockState();
     void moveCursorToValue();
+    void moveCursorToGLobalConfigParameter();
 };
 #endif

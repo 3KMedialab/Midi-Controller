@@ -44,7 +44,7 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
 * page: current selected page of messages
 * tempo: current selected tempo in BPMs
 */
-void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
+void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf)
 {
     char buffer[10];
     String s ="";
@@ -55,25 +55,26 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
     //Set the cursor on the top left of the screen
     _screen.home();
     
-    // prints the pages information
-    getMessage(MSG_PAGE, buffer); 
-    s.concat(buffer); 
+    // prints the pages and tempo information 
     s.concat(page);
     s.concat(F("/"));
     s.concat(numPages);
+    s.concat(F(" "));
+    s.concat(tempo);   
+    s.concat(F(" "));
+    getMessage(MSG_BPM, buffer);  
+    s.concat(buffer);  
     _screen.print(s);
        
     clearRangeOnCurentLine(0, s.length(), _screen.getLCDCols());
     
     s = "";
 
-    // prints the tempo information
+    // prints the mode and root note information
     _screen.setCursor(0,1);
-    getMessage(MSG_TEMPO, buffer);  
-    s.concat(buffer);
-    s.concat(tempo);   
-    getMessage(MSG_BPM, buffer);  
-    s.concat(buffer);
+    s.concat(MIDIUtils::getNoteName(globalConf.getRootNote()));  
+    s.concat(F(" "));
+    s.concat(MIDIUtils::getModeName(globalConf.getMode()));
     _screen.print(s);
 
     clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
@@ -101,6 +102,51 @@ void ScreenManager::printSelectComponentMessage()
             _screen.setCursor(0,1);
         }
     }        
+}
+
+/*
+* Display edit global configuration screen
+* GlobalConfig: information to be printed on the screen 
+*/
+void ScreenManager::printEditGlobalConfig(GlobalConfig globalConf)
+{
+    char buffer[10];
+    String s ="";
+
+    cleanScreen();
+    
+    //Set the cursor on the top left of the screen
+    _screen.home();
+
+    // No MIDI component is assigned to the Screen Manager
+    _displayedMIDIComponent = NULL;
+
+    // prints the musical mode
+    getMessage(MSG_MODE, buffer);  
+    s.concat(buffer);
+    s.concat(MIDIUtils::getModeName(globalConf.getMode()));
+    _screen.print(s);    
+    
+    s = "";
+
+    // prints the root note
+    _screen.setCursor(0,1);
+    getMessage(MSG_KEY, buffer); 
+    s.concat(buffer);   
+    s.concat(MIDIUtils::getNoteName(globalConf.getRootNote()));   
+    _screen.print(s);
+    
+    s = "";
+    
+    // prints the MIDI Channel  
+    _screen.setCursor(EDIT_GLOBAL_CHANNEL_POS,1);
+    getMessage(MSG_CHANNEL, buffer);
+    s.concat(buffer);
+    s.concat(globalConf.getMIDIChannel());    
+    _screen.print(s);
+
+    _screen.setCursor(EDIT_GLOBAL_MODE_POS,0);
+    _screen.blink();
 }
 
 /*
@@ -497,6 +543,36 @@ void ScreenManager::moveCursorToChannel()
 }
 
 /*
+* Move the screen cursor to the start position of the root note parameter
+*/ 
+void ScreenManager::moveCursorToRootNote()
+{
+    char buffer[10];
+    
+    getMessage(MSG_KEY, buffer);  
+    _screen.setCursor(strlen(buffer),1);   
+}
+
+/*
+* Move the screen cursor to the start position of the MIDI Channel parameter
+*/ 
+void ScreenManager::moveCursorToMIDIChannel()
+{
+   char buffer[10];
+    
+   getMessage(MSG_CHANNEL, buffer);  
+   _screen.setCursor(EDIT_GLOBAL_CHANNEL_POS + strlen(buffer), 1);   
+}
+
+/*
+* Move the screen cursor to the start position of the musical mode parameter
+*/ 
+void ScreenManager::moveCursorToMode()
+{
+   _screen.setCursor(EDIT_GLOBAL_MODE_POS,0);   
+}
+
+/*
 * Display the new note name and octave without refreshing all the screen data
 * note: note value which name and octave will be displayed.
 */
@@ -587,6 +663,65 @@ void ScreenManager::refreshChannelValue(uint8_t channel)
     }
     
     moveCursorToChannel();
+
+    _screen.blink();
+}
+
+/*
+* Display the new global configuration musical mode value without refreshing all the screen data
+* mode: musical mode value that will be displayed.
+*/
+void ScreenManager::refreshModeData(uint8_t mode)
+{
+    _screen.noBlink();
+    
+    String modeName = String(MIDIUtils::getModeName(mode));
+    _screen.print(modeName);
+
+    clearRangeOnCurentLine(0,EDIT_GLOBAL_MODE_POS + modeName.length(), _screen.getLCDCols());
+    moveCursorToMode();
+
+    _screen.blink();
+}
+
+/*
+* Display the new global configuration root note value without refreshing all the screen data
+* rootNote: root note value that will be displayed.
+*/
+void ScreenManager::refreshRootNoteData(uint8_t rootNote)
+{
+    char buffer[5];
+
+    _screen.noBlink();
+    
+    getMessage(MSG_KEY, buffer);
+    
+    String rootNoteName = String(MIDIUtils::getNoteName(rootNote));
+    _screen.print(rootNoteName);
+
+    clearRangeOnCurentLine(1, EDIT_GLOBAL_KEY_POS + strlen(buffer) + rootNoteName.length(), EDIT_GLOBAL_CHANNEL_POS);
+    moveCursorToRootNote();
+
+    _screen.blink();
+}
+
+/*
+* Display the new global configuration MIDI channel value without refreshing all the screen data
+* midiChannel: MIDI channel value that will be displayed.
+*/
+void ScreenManager::refreshMIDIChannelData(uint8_t midiChannel)
+{
+    char buffer[5];
+
+    _screen.noBlink();
+
+    getMessage(MSG_CHANNEL, buffer);
+   
+    String midiChannelName = String (midiChannel, DEC);
+    _screen.print(midiChannelName);   
+
+    clearRangeOnCurentLine(1, EDIT_GLOBAL_CHANNEL_POS + strlen(buffer) + midiChannelName.length(), _screen.getLCDCols());
+    moveCursorToMIDIChannel();
 
     _screen.blink();
 }
