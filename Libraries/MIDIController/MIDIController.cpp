@@ -371,20 +371,7 @@ void MIDIController::processSelectValuePot()
                         _screenManager.refreshCCValue(ccValue);   
                         
                         break;
-                    }
-
-                    case EDIT_CHANNEL:
-                    {
-                        //set the new channel value into the component
-                        uint8_t channelValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 17);
-                        displayedComponent->getMessages()[displayedMessageIndex].setChannel(channelValue);
-                        
-                        // print the new channel value on the screen
-                        _screenManager.refreshChannelValue(channelValue);   
-                        
-                        break;
-                    }
-                    break;                   
+                    }       
                 }
 
                 break;
@@ -429,7 +416,7 @@ void MIDIController::processSelectValuePot()
                     
                     // select the MIDI channel value
                     case EDIT_GLOBAL_MIDI_CH:
-
+                    {
                         // get the current root note 
                         uint8_t currentMIDIChannel = _globalConfig.getMIDIChannel();
 
@@ -441,7 +428,7 @@ void MIDIController::processSelectValuePot()
                         }
 
                         break;
-                    break;
+                    }                   
                 }
             
             break;
@@ -522,17 +509,10 @@ void MIDIController::moveCursorToValue()
 
                 case EDIT_CC:
 
-                    _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannel();
-
-                break;
-
-                case EDIT_CHANNEL:
-                
                     _subState = EDIT_MIDI_TYPE;
                     _screenManager.moveCursorToMsgType();
 
-                break;
+                break;                
             }
         
         break;
@@ -541,19 +521,8 @@ void MIDIController::moveCursorToValue()
 
             switch (_subState)
             {
-                case EDIT_MIDI_TYPE:
-
-                    _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannel();
-
-                break;                          
-
-                case EDIT_CHANNEL:
-                
-                    _subState = EDIT_MIDI_TYPE;
-                    _screenManager.moveCursorToMsgType();
-
-                break;
+                _subState = EDIT_MIDI_TYPE;
+                _screenManager.moveCursorToMsgType();               
             }
             
         break;
@@ -579,24 +548,16 @@ void MIDIController::moveCursorToValue()
 
                 case EDIT_VELOCITY:
                 
-                    _subState = EDIT_CHANNEL;
-                    _screenManager.moveCursorToChannel();
-                
-                break;
-                
-                case EDIT_CHANNEL:
-                
                     _subState = EDIT_MIDI_TYPE;
                     _screenManager.moveCursorToMsgType();
-
+                
                 break;
             }            
         break;
 
         case midi::InvalidType:
         break;
-    }
-    
+    }    
 }    
 
 /*

@@ -280,11 +280,7 @@ void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
     getMessage(MSG_VELOCITY, buffer);  
     aux= String(buffer);
     aux.concat(message.getDataByte2());
-    _screen.print(aux);   
-   
-    //print channel
-    _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS,1);
-    printMIDIChannel(message.getChannel());
+    _screen.print(aux);
 }
 
 /*
@@ -302,10 +298,6 @@ void ScreenManager::printCCMIDIData(MIDIMessage message)
     aux.concat(buffer);
     aux.concat(message.getDataByte1());
     _screen.print(aux);
-    
-    //print channel
-    _screen.setCursor(CC_CHANNEL_POS,1);  
-    printMIDIChannel(message.getChannel());
 }
 
 /*
@@ -314,11 +306,7 @@ void ScreenManager::printCCMIDIData(MIDIMessage message)
 */
 void ScreenManager::printPCMIDIData(MIDIMessage message)
 {
-    char buffer[10];    
-
-    //print channel
-    _screen.setCursor(PROGRAM_CHANNEL_POS,1); 
-    printMIDIChannel(message.getChannel());     
+    clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
 }
 
 /*
@@ -507,42 +495,6 @@ void ScreenManager::moveCursorToCC()
 }
 
 /*
-* Move the screen cursor to the start position of the channel value
-*/ 
-void ScreenManager::moveCursorToChannel()
-{
-    char buffer[10]; 
-
-    // set the cursor regarding the MIDImessage type
-    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
-    {
-        case midi::NoteOn:
-        case midi::NoteOff:
-              
-            getMessage(MSG_CHANNEL, buffer);  
-            _screen.setCursor(NOTE_ON_OFF_CHANNEL_POS + strlen(buffer),1);
-        
-        break;
-    
-       
-        case midi::ControlChange:
-                        
-            getMessage(MSG_CHANNEL, buffer);
-            _screen.setCursor(CC_CHANNEL_POS + strlen(buffer),1);
-        
-        break;
-                
-
-        case midi::ProgramChange:
-
-            getMessage(MSG_CHANNEL, buffer);
-            _screen.setCursor(PROGRAM_CHANNEL_POS + strlen(buffer),1);        
-          
-        break;    
-    }
-}
-
-/*
 * Move the screen cursor to the start position of the root note parameter
 */ 
 void ScreenManager::moveCursorToRootNote()
@@ -604,7 +556,7 @@ void ScreenManager::refreshVelocityValue(uint8_t velocity)
     _screen.print(velocityValue);
  
     getMessage(MSG_VELOCITY, buffer);
-    clearRangeOnCurentLine(1, VELOCITY_POS + strlen(buffer) + velocityValue.length(), NOTE_ON_OFF_CHANNEL_POS);
+    clearRangeOnCurentLine(1, VELOCITY_POS + strlen(buffer) + velocityValue.length(), _screen.getLCDCols());
     moveCursorToVelocity();
 
     _screen.blink();
@@ -624,45 +576,8 @@ void ScreenManager::refreshCCValue(uint8_t cc)
     _screen.print(ccValue);
 
     getMessage(MSG_CC, buffer);
-    clearRangeOnCurentLine(1, CC_POS + strlen(buffer) + ccValue.length(), CC_CHANNEL_POS);
+    clearRangeOnCurentLine(1, CC_POS + strlen(buffer) + ccValue.length(), _screen.getLCDCols());
     moveCursorToCC();
-
-    _screen.blink();
-}
-
-/*
-* Display the new channel value without refreshing all the screen data
-* channel: channel value that will be displayed.
-*/
-void ScreenManager::refreshChannelValue(uint8_t channel)
-{    
-    char buffer[5];
-
-    _screen.noBlink();
-
-    String channelValue = String (channel, DEC);
-    _screen.print(channelValue);
-    
-    getMessage(MSG_CHANNEL, buffer);
-
-    // clean line regarding the MIDImessage type
-    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
-    {
-        case midi::NoteOn:
-        case midi::NoteOff:
-            clearRangeOnCurentLine(1, NOTE_ON_OFF_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols()); 
-        break;    
-       
-        case midi::ControlChange:
-            clearRangeOnCurentLine(1, CC_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols());   
-        break;                
-
-        case midi::ProgramChange:
-            clearRangeOnCurentLine(1, PROGRAM_CHANNEL_POS + strlen(buffer) + channelValue.length(), _screen.getLCDCols()); 
-        break;    
-    }
-    
-    moveCursorToChannel();
 
     _screen.blink();
 }

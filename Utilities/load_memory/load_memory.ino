@@ -28,43 +28,40 @@
 
 /**************************************************************/
 /* CONFIGURATION FOR 9 MIDI BUTTONS AND 3 MIDI POTENTIOMETERS */
-/* NUM PAGES: 9                                              */
-/* NUM MESSAGES: 252                                          */
 /**************************************************************/
 #define MEMORY_SIZE 1024
-#define MESSAGES 252
 
 #define MIDI_BUTTONS_NUM 9
-#define MIDI_BUTTONS_SIZE 4 * 2
+#define MIDI_BUTTONS_SIZE 3 * 2
 
 #define MIDI_POTS_NUM 3
-#define MIDI_POTS_SIZE 4
+#define MIDI_POTS_SIZE 3
 
 // create the global configuration object
 GlobalConfig _config = GlobalConfig(1, MIDIUtils::Aeolian, MIDIUtils::C);
 
 // PAGE DATA
-MIDIMessage b1m1(midi::NoteOn, NOTE_C3, 127, 1);
-MIDIMessage b1m2(midi::NoteOff, NOTE_C3, 127, 1);
-MIDIMessage b2m1(midi::NoteOn, NOTE_Cb3, 127, 1);
-MIDIMessage b2m2(midi::NoteOff, NOTE_Cb3, 127, 1);
-MIDIMessage b3m1(midi::NoteOn, NOTE_D3, 127, 1);
-MIDIMessage b3m2(midi::NoteOff, NOTE_D3, 127, 1);
-MIDIMessage b4m1(midi::NoteOn, NOTE_Db3, 127, 1);
-MIDIMessage b4m2(midi::NoteOff, NOTE_Db3, 127, 1);
-MIDIMessage b5m1(midi::NoteOn, NOTE_E3, 127, 1);
-MIDIMessage b5m2(midi::NoteOff, NOTE_E3, 127, 1);
-MIDIMessage b6m1(midi::NoteOn, NOTE_F3, 127, 1);
-MIDIMessage b6m2(midi::NoteOff, NOTE_F3, 127, 1);
-MIDIMessage b7m1(midi::NoteOn, NOTE_Fb3, 127, 1);
-MIDIMessage b7m2(midi::NoteOff, NOTE_Fb3, 127, 1);
-MIDIMessage b8m1(midi::NoteOn, NOTE_G3, 127, 1);
-MIDIMessage b8m2(midi::NoteOff, NOTE_G3, 127, 1);
-MIDIMessage b9m1(midi::NoteOn, NOTE_Gb3, 127, 1);
-MIDIMessage b9m2(midi::NoteOff, NOTE_Gb3, 127, 1);
-MIDIMessage p1m(midi::ControlChange, midi::BreathController, 0, 1);
-MIDIMessage p2m(midi::ControlChange, midi::BreathController, 0, 2);
-MIDIMessage p3m(midi::ControlChange, midi::BreathController, 0, 3);
+MIDIMessage b1m1(midi::NoteOn, NOTE_C3, 127);
+MIDIMessage b1m2(midi::NoteOff, NOTE_C3, 127);
+MIDIMessage b2m1(midi::NoteOn, NOTE_Cb3, 127);
+MIDIMessage b2m2(midi::NoteOff, NOTE_Cb3, 127);
+MIDIMessage b3m1(midi::NoteOn, NOTE_D3, 127);
+MIDIMessage b3m2(midi::NoteOff, NOTE_D3, 127);
+MIDIMessage b4m1(midi::NoteOn, NOTE_Db3, 127);
+MIDIMessage b4m2(midi::NoteOff, NOTE_Db3, 127);
+MIDIMessage b5m1(midi::NoteOn, NOTE_E3, 127);
+MIDIMessage b5m2(midi::NoteOff, NOTE_E3, 127);
+MIDIMessage b6m1(midi::NoteOn, NOTE_F3, 127);
+MIDIMessage b6m2(midi::NoteOff, NOTE_F3, 127);
+MIDIMessage b7m1(midi::NoteOn, NOTE_Fb3, 127);
+MIDIMessage b7m2(midi::NoteOff, NOTE_Fb3, 127);
+MIDIMessage b8m1(midi::NoteOn, NOTE_G3, 127);
+MIDIMessage b8m2(midi::NoteOff, NOTE_G3, 127);
+MIDIMessage b9m1(midi::NoteOn, NOTE_Gb3, 127);
+MIDIMessage b9m2(midi::NoteOff, NOTE_Gb3, 127);
+MIDIMessage p1m(midi::ControlChange, midi::BreathController, 0);
+MIDIMessage p2m(midi::ControlChange, midi::BreathController, 0);
+MIDIMessage p3m(midi::ControlChange, midi::BreathController, 0);
 
 uint16_t address = 0;
 uint8_t pageSize = (MIDI_BUTTONS_NUM * MIDI_BUTTONS_SIZE) + (MIDI_POTS_NUM * MIDI_POTS_SIZE);
@@ -120,6 +117,10 @@ void setup(void)
 
   address = 0;
 
+  // Print calculated num pages
+  Serial.println("MAX NUM PAGES:");
+  Serial.println(maxNumPages, DEC);
+  
   // Print the global configuration
   Serial.println("MIDI CHANNEL:");
   Serial.println(EEPROM.read(address), DEC);
@@ -134,14 +135,13 @@ void setup(void)
   address++;
 
   // Print the stored messages
-  for (int i = 0; i < (((MIDI_BUTTONS_NUM * 2) + (MIDI_BUTTONS_NUM))*maxNumPages) * 4; i++)
+  for (int i = 0; i < maxNumPages * ((MIDI_BUTTONS_NUM * 2) + MIDI_POTS_NUM); i++)
   {
-    if (i % 4 == 0)
+    if (i % 3 == 0)
     {
       Serial.print("MESSAGE: ");
-      Serial.println(i / 4, DEC);
+      Serial.println(i / 3, DEC);
     }
-
     Serial.println(EEPROM.read(address), DEC);
     address++;
 
@@ -160,9 +160,7 @@ void saveMIDIMessage(uint16_t * address, MIDIMessage message)
   EEPROM.update((*address), message.getDataByte1());
   (*address) += sizeof(uint8_t);
   EEPROM.update((*address), message.getDataByte2());
-  (*address) += sizeof(uint8_t);
-  EEPROM.update((*address), message.getChannel());
-  (*address) += sizeof(uint8_t);
+  (*address) += sizeof(uint8_t); 
 }
 
 

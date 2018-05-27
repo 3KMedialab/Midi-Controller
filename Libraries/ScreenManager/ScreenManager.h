@@ -113,8 +113,8 @@ class ScreenManager
     uint8_t _currentMIDIMessageDisplayed;                                   // MIDI message currently displayed on the screen
     LiquidCrystal_I2C _screen;                                              // LCD screen object
 
-    enum {NOTE_POS=0, VELOCITY_POS=5, NOTE_ON_OFF_CHANNEL_POS=11};          // Screen start position of the Note On/Off message parameters 
-    enum {CC_POS=0, CC_CHANNEL_POS=7};                                      // Screen start position of the CC message parameters 
+    enum {NOTE_POS=0, VELOCITY_POS=5};                                      // Screen start position of the Note On/Off message parameters 
+    enum {CC_POS=0,};                                                       // Screen start position of the CC message parameters 
     enum {PROGRAM_CHANNEL_POS=0};                                           // Screen start position of the Program Change message parameters 
     enum {EDIT_GLOBAL_MODE_POS=5, EDIT_GLOBAL_KEY_POS=0, EDIT_GLOBAL_CHANNEL_POS=7}; // Screen start position of the Global Config parameters
 };

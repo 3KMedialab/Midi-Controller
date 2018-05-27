@@ -79,7 +79,7 @@ class MIDIController
     MidiInterface& _mMidi;                                                                              // object to manage the MIDI functionality
 
     enum State {CONTROLLER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
-    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, EDIT_CHANNEL}; // Controller substatus list
+    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC}; // Controller substatus list
     char _state, _subState;                                                                             // Controller current status and substatus
 
     GlobalConfig _globalConfig = GlobalConfig();                                                        // Object containing the global configuration

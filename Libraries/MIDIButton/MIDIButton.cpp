@@ -147,7 +147,7 @@ MIDIMessage * MIDIButton<C>::getMessages()
 template<class C>
 uint8_t MIDIButton<C>::getDataSize()
 {
-    return (sizeof(uint8_t) * 4) * MIDI_BUTTON_NUM_MESSAGES;
+    return (sizeof(uint8_t) * 3) * MIDI_BUTTON_NUM_MESSAGES;
 }
 
 /*

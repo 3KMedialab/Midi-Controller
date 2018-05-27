@@ -128,7 +128,7 @@ MIDIMessage * MIDIPotentiometer<T>::getMessages()
 template<class T>
 uint8_t MIDIPotentiometer<T>::getDataSize()
 {
-	return sizeof(uint8_t) * 4;
+	return sizeof(uint8_t) * 3;
 }
 
 /*

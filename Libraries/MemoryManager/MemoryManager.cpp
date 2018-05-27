@@ -107,9 +107,7 @@ void MemoryManager::saveMIDIMessage(uint16_t * address, MIDIMessage message)
     EEPROM.update((*address),message.getDataByte1());
     (*address) += sizeof(uint8_t);
     EEPROM.update((*address),message.getDataByte2());
-    (*address) += sizeof(uint8_t);
-    EEPROM.update((*address),message.getChannel());
-    (*address) += sizeof(uint8_t);
+    (*address) += sizeof(uint8_t);    
 }
 
 /*
@@ -160,9 +158,7 @@ void MemoryManager::loadMIDIMessage(uint16_t * address, MIDIMessage * message)
     message->setDataByte1(EEPROM.read((*address)));
     (*address) += sizeof(uint8_t);
     message->setDataByte2(EEPROM.read((*address)));
-    (*address) += sizeof(uint8_t);
-    message->setChannel(EEPROM.read((*address)));
-    (*address) += sizeof(uint8_t);
+    (*address) += sizeof(uint8_t);    
 }
 
 /*
