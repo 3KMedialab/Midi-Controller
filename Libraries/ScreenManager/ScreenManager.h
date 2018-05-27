@@ -34,17 +34,16 @@
 #define MSG_BPM 2
 #define MSG_EDIT 3
 #define MSG_CHANNEL 4
-#define MSG_NOTE_ON 5
-#define MSG_NOTE_OFF 6
-#define MSG_CTRL_CHANGE 7
-#define MSG_CC 8
-#define MSG_PGRM_CHANGE 9
-#define MSG_PGM 10
-#define MSG_VELOCITY 11
-#define MSG_SAVED 12
-#define MSG_EMPTY_MIDI_TYPE 13
-#define MSG_MODE 14
-#define MSG_KEY 15
+#define MSG_NOTE_ON_OFF 5
+#define MSG_CTRL_CHANGE 6
+#define MSG_CC 7
+#define MSG_PGRM_CHANGE 8
+#define MSG_PGM 9
+#define MSG_VELOCITY 10
+#define MSG_SAVED 11
+#define MSG_EMPTY_MIDI_TYPE 12
+#define MSG_MODE 13
+#define MSG_KEY 14
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Pag:";
@@ -52,8 +51,7 @@ const char msg_Tempo[] PROGMEM = "Tempo: ";
 const char msg_Bpm[] PROGMEM = "BPM";
 const char msg_Edit[] PROGMEM = {'S','E','L','E','C','T',' ','A','\n','C','O','M','P','O','N','E','N','T','\0'};
 const char msg_MsgChannel[] PROGMEM = "Ch:";
-const char msg_NoteOn[] PROGMEM = "Note On";
-const char msg_NoteOff[] PROGMEM = "Note Off";
+const char msg_NoteOnOff[] PROGMEM = "Note On/Off";
 const char msg_CtrlChange[] PROGMEM = "Ctrl Change";
 const char msg_CC[] PROGMEM = "CC:";
 const char msg_PgrmChange[] PROGMEM = "Pgrm Change";
@@ -64,7 +62,7 @@ const char msg_empty_midi_type[] PROGMEM = "No Msg";
 const char msg_mode[] PROGMEM = "Mode:";
 const char msg_key[] PROGMEM = "Key:";
 
-const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key};
+const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key};
 
 class ScreenManager
 {

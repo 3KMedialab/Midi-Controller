@@ -223,14 +223,9 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
         switch((_displayedMIDIComponent->getMessages()[msgIndex-1]).getType())
         {
             case midi::NoteOn:
-                getMessage(MSG_NOTE_ON, buffer);  
-                _screen.print(buffer);            
-                printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
-            break;
-
             case midi::NoteOff:
-                getMessage(MSG_NOTE_OFF, buffer);  
-                _screen.print(buffer);
+                getMessage(MSG_NOTE_ON_OFF, buffer);  
+                _screen.print(buffer);            
                 printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
             break;
 
@@ -384,12 +379,9 @@ void ScreenManager::refreshMIDIData()
     switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
     {
         case midi::NoteOn:
-            getMessage(MSG_NOTE_ON, buffer);             
-        break;
-
         case midi::NoteOff:
-            getMessage(MSG_NOTE_OFF, buffer);                    
-        break;
+            getMessage(MSG_NOTE_ON_OFF, buffer);             
+        break;        
 
         case midi::ControlChange:
             getMessage(MSG_CTRL_CHANGE, buffer);                   

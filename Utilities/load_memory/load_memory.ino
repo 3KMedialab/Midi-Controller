@@ -32,7 +32,7 @@
 #define MEMORY_SIZE 1024
 
 #define MIDI_BUTTONS_NUM 9
-#define MIDI_BUTTONS_SIZE 3 * 2
+#define MIDI_BUTTONS_SIZE 3
 
 #define MIDI_POTS_NUM 3
 #define MIDI_POTS_SIZE 3
@@ -41,24 +41,15 @@
 GlobalConfig _config = GlobalConfig(1, MIDIUtils::Aeolian, MIDIUtils::C);
 
 // PAGE DATA
-MIDIMessage b1m1(midi::NoteOn, NOTE_C3, 127);
-MIDIMessage b1m2(midi::NoteOff, NOTE_C3, 127);
-MIDIMessage b2m1(midi::NoteOn, NOTE_Cb3, 127);
-MIDIMessage b2m2(midi::NoteOff, NOTE_Cb3, 127);
-MIDIMessage b3m1(midi::NoteOn, NOTE_D3, 127);
-MIDIMessage b3m2(midi::NoteOff, NOTE_D3, 127);
-MIDIMessage b4m1(midi::NoteOn, NOTE_Db3, 127);
-MIDIMessage b4m2(midi::NoteOff, NOTE_Db3, 127);
-MIDIMessage b5m1(midi::NoteOn, NOTE_E3, 127);
-MIDIMessage b5m2(midi::NoteOff, NOTE_E3, 127);
-MIDIMessage b6m1(midi::NoteOn, NOTE_F3, 127);
-MIDIMessage b6m2(midi::NoteOff, NOTE_F3, 127);
-MIDIMessage b7m1(midi::NoteOn, NOTE_Fb3, 127);
-MIDIMessage b7m2(midi::NoteOff, NOTE_Fb3, 127);
-MIDIMessage b8m1(midi::NoteOn, NOTE_G3, 127);
-MIDIMessage b8m2(midi::NoteOff, NOTE_G3, 127);
-MIDIMessage b9m1(midi::NoteOn, NOTE_Gb3, 127);
-MIDIMessage b9m2(midi::NoteOff, NOTE_Gb3, 127);
+MIDIMessage b1m(midi::NoteOn, NOTE_C3, 127);
+MIDIMessage b2m(midi::NoteOn, NOTE_Cb3, 127);
+MIDIMessage b3m(midi::NoteOn, NOTE_D3, 127);
+MIDIMessage b4m(midi::NoteOn, NOTE_Db3, 127);
+MIDIMessage b5m(midi::NoteOn, NOTE_E3, 127);
+MIDIMessage b6m(midi::NoteOn, NOTE_F3, 127);
+MIDIMessage b7m(midi::NoteOn, NOTE_Fb3, 127);
+MIDIMessage b8m(midi::NoteOn, NOTE_G3, 127);
+MIDIMessage b9m(midi::NoteOn, NOTE_Gb3, 127);
 MIDIMessage p1m(midi::ControlChange, midi::BreathController, 0);
 MIDIMessage p2m(midi::ControlChange, midi::BreathController, 0);
 MIDIMessage p3m(midi::ControlChange, midi::BreathController, 0);
@@ -83,32 +74,15 @@ void setup(void)
   for (int i = 0; i < maxNumPages; i++)
   {
     // PAGE DATA
-    saveMIDIMessage(&address, b1m1);
-    saveMIDIMessage(&address, b1m2);
-
-    saveMIDIMessage(&address, b2m1);
-    saveMIDIMessage(&address, b2m2);
-
-    saveMIDIMessage(&address, b3m1);
-    saveMIDIMessage(&address, b3m2);
-
-    saveMIDIMessage(&address, b4m1);
-    saveMIDIMessage(&address, b4m2);
-
-    saveMIDIMessage(&address, b5m1);
-    saveMIDIMessage(&address, b5m2);
-
-    saveMIDIMessage(&address, b6m1);
-    saveMIDIMessage(&address, b6m2);
-
-    saveMIDIMessage(&address, b7m1);
-    saveMIDIMessage(&address, b7m2);
-
-    saveMIDIMessage(&address, b8m1);
-    saveMIDIMessage(&address, b8m2);
-
-    saveMIDIMessage(&address, b9m1);
-    saveMIDIMessage(&address, b9m2);
+    saveMIDIMessage(&address, b1m); 
+    saveMIDIMessage(&address, b2m);
+    saveMIDIMessage(&address, b3m);
+    saveMIDIMessage(&address, b4m);
+    saveMIDIMessage(&address, b5m);
+    saveMIDIMessage(&address, b6m);
+    saveMIDIMessage(&address, b7m);
+    saveMIDIMessage(&address, b8m);
+    saveMIDIMessage(&address, b9m);
 
     saveMIDIMessage(&address, p1m);
     saveMIDIMessage(&address, p2m);
@@ -135,13 +109,14 @@ void setup(void)
   address++;
 
   // Print the stored messages
-  for (int i = 0; i < maxNumPages * ((MIDI_BUTTONS_NUM * 2) + MIDI_POTS_NUM); i++)
+  for (int i = 0; i < maxNumPages * (MIDI_BUTTONS_NUM + MIDI_POTS_NUM); i++)
   {
     if (i % 3 == 0)
     {
       Serial.print("MESSAGE: ");
       Serial.println(i / 3, DEC);
     }
+    Serial.println(i);
     Serial.println(EEPROM.read(address), DEC);
     address++;
 

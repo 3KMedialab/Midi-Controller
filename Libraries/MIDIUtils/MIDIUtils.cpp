@@ -20,9 +20,10 @@
  */
 
 #include <MIDIUtils.h>
+#include <avr/pgmspace.h>
 
 // Musical modes intervals
-const uint8_t intervals [7][7] = {
+const uint8_t intervals [7][7] PROGMEM = {
 
     {0, 2, 4, 5, 7, 9, 11}, // Ionian
     {0, 2, 3, 5, 7, 9, 10}, // Dorian
@@ -104,7 +105,7 @@ uint8_t MIDIUtils::isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mod
 
     for (int i=0; i<7; i++)
     {
-        if ( (rootNote + intervals[mode][i]) % 12 == midiNote % 12 )
+        if ( (rootNote + pgm_read_byte (&(intervals[mode][i]))) % 12 == midiNote % 12 )
         {
             return 1;
         }
