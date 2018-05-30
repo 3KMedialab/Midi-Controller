@@ -32,7 +32,7 @@ class MIDIUtils
     enum {C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B};
      
     // Musical modes
-    enum {Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, Chromatic};
+    enum {Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, Maj_Blues, Min_Blues, Chromatic};
 
     // MIDI channels
     enum {CHANNEL1 = 1, CHANNEL2, CHANNEL3, CHANNEL4, CHANNEL5, CHANNEL6, CHANNEL7, CHANNEL8, CHANNEL9, CHANNEL10, CHANNEL11, CHANNEL12, CHANNEL13, CHANNEL14, CHANNEL15, CHANNEL16};

@@ -23,7 +23,7 @@
 #include <avr/pgmspace.h>
 
 // Musical modes intervals
-const uint8_t intervals [7][7] PROGMEM = {
+const uint8_t intervals [9][7] PROGMEM = {
 
     {0, 2, 4, 5, 7, 9, 11}, // Ionian
     {0, 2, 3, 5, 7, 9, 10}, // Dorian
@@ -31,7 +31,9 @@ const uint8_t intervals [7][7] PROGMEM = {
     {0, 2, 4, 6, 7, 8, 10}, // Lydian
     {0, 2, 4, 5, 7, 9, 10}, // Mixolydian
     {0, 2, 3, 5, 7, 8, 10}, // Aeolian
-    {0, 1, 3, 5, 6, 8, 10}  // Locrian
+    {0, 1, 3, 5, 6, 8, 10}, // Locrian
+    {0, 2, 3, 4, 7, 9, 0},  // Major Blues
+    {0, 3, 5, 6, 7, 10, 0}  // Minor Blues
 };
 
 /*
@@ -132,6 +134,8 @@ String MIDIUtils::getModeName(uint8_t mode)
        case Mixolydian: return F("Mixolydian"); 
        case Aeolian:    return F("Aeolian"); 
        case Locrian:    return F("Locrian"); 
+       case Maj_Blues:  return F("Maj Blues"); 
+       case Min_Blues:  return F("Min Blues"); 
        case Chromatic:  return F("Chromatic"); 
        default:         return F("N/A");        
     }
