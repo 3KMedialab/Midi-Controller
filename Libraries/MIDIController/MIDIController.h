@@ -60,6 +60,7 @@ class MIDIController
     uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
     uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.
     uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
+    uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
 
     ScreenManager _screenManager;                                                                       // object to manage interactions between the controller and the screen   
 

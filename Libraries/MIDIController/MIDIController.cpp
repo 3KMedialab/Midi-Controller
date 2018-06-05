@@ -63,6 +63,7 @@ void MIDIController::begin()
    // load from EEPROM the Global Configuration parameters
    _memoryManager.loadGlobalConfiguration(&_globalConfig);
    _wasGlobalConfigSaved = 0;
+   _accesToGloabalEdit = 0;
 
    // load from EEPROM the default page of MIDI messages into the MIDI components
    _currentPage = 1;    
@@ -650,22 +651,28 @@ void MIDIController::processEditModeButton()
                 // Enter in edit page components mode: LED doesn't blink, default message is displayed on screen 
                 case EDIT_PAGE:
     
-                    _state = EDIT_GLOBAL_CONFIG;
-                    _subState = EDIT_GLOBAL_MODE;    
+                    _state = CONTROLLER;
+                    _subState = MIDI_CLOCK_OFF;    
                 
-                    _midiLed.setState(HIGH);
-                    _screenManager.printEditGlobalConfig(_globalConfig);      
+                    _midiLed.setState(LOW);          
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);       
                     
                 break;
 
                 // Enter in global config edit mode: LED doesn't blink, default message is displayed on screen 
                 case EDIT_GLOBAL_CONFIG:
-    
-                    _state = CONTROLLER;
-                    _subState = MIDI_CLOCK_OFF;    
+
+                    if (_accesToGloabalEdit)
+                        _accesToGloabalEdit = 0;
+                    
+                    else
+                    {
+                        _state = CONTROLLER;
+                        _subState = MIDI_CLOCK_OFF;    
                 
-                    _midiLed.setState(LOW);          
-                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);      
+                        _midiLed.setState(LOW);          
+                        _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);     
+                    }
                     
                 break;                         
             }        
@@ -693,6 +700,18 @@ void MIDIController::processEditModeButton()
     {   
         switch (_state)
         {
+            case CONTROLLER:
+
+                _state = EDIT_GLOBAL_CONFIG;
+                _subState = EDIT_GLOBAL_MODE;    
+
+                _accesToGloabalEdit = 1;
+                
+                _midiLed.setState(HIGH);
+                _screenManager.printEditGlobalConfig(_globalConfig);      
+
+            break;    
+
             case EDIT_PAGE:
 
                 // saves the current page
@@ -701,24 +720,32 @@ void MIDIController::processEditModeButton()
 
                 // prints a message and waits to continue 
                 _screenManager.printSavedMessage();
-                delay(2000);               
+                delay(2000);      
+
+                _state = CONTROLLER;
+                _subState = MIDI_CLOCK_OFF;           
             
             break;
 
             case EDIT_GLOBAL_CONFIG:
 
-                // saves the global configuration values
-                _memoryManager.saveGlobalConfiguration(_globalConfig); 
-                _wasGlobalConfigSaved = 1;        
+                if (!_accesToGloabalEdit)
+                {
+                    // saves the global configuration parameters
+                    _memoryManager.saveGlobalConfiguration(_globalConfig); 
+                    _wasGlobalConfigSaved = 1;        
 
-                // prints a message and waits to continue 
-                _screenManager.printSavedMessage();
-                delay(2000);
+                    // prints a message and waits to continue 
+                    _screenManager.printSavedMessage();
+                    delay(2000);
+
+                    _state = CONTROLLER;
+                    _subState = MIDI_CLOCK_OFF;
+                }                 
 
             break;
 
         }
-        _state = CONTROLLER;
-        _subState = MIDI_CLOCK_OFF;              
+            
     }
 }
