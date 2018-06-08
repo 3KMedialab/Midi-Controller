@@ -33,14 +33,12 @@
 *  pullup could be used.)                                              
 */
 template<class C>
-MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : C (pin, puEnable, invert, dbTime)
+MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime, MIDIMessage * message) : C (pin, puEnable, invert, dbTime)
 {   
-    _midiMessages[ON_PRESSED_MESSAGE] = *onPressedMessage;
-    _midiMessages[ON_RELEASED_MESSAGE] = *onReleasedMessage;
-
+    _midiMessages[ACTION_MESSAGE] = message;
+   
     _availableMessageTypes[0] = midi::NoteOn;
-    _availableMessageTypes[1] = midi::NoteOff;    
-    _availableMessageTypes[2] = midi::InvalidType;
+    _availableMessageTypes[1] = midi::InvalidType;
 }
 
 /*
@@ -57,8 +55,7 @@ template<class C>
 MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_t dbTime) : C (pin, puEnable, invert, dbTime)
 {
     _availableMessageTypes[0] = midi::NoteOn;
-    _availableMessageTypes[1] = midi::NoteOff;
-    _availableMessageTypes[2] = midi::InvalidType;
+    _availableMessageTypes[1] = midi::InvalidType;
 }
 
 /*
@@ -74,14 +71,12 @@ MIDIButton<C>::MIDIButton(uint8_t pin, uint8_t puEnable, uint8_t invert, uint32_
 *  pullup could be used.)                                              
 */
 template<class C>
-MIDIButton<C>::MIDIButton(Multiplexer * mux, uint8_t channel, uint8_t invert, uint32_t dbTime, MIDIMessage * onPressedMessage, MIDIMessage * onReleasedMessage) : C (mux, channel, invert, dbTime)
+MIDIButton<C>::MIDIButton(Multiplexer * mux, uint8_t channel, uint8_t invert, uint32_t dbTime, MIDIMessage * message) : C (mux, channel, invert, dbTime)
 {
-    _midiMessages[ON_PRESSED_MESSAGE] = *onPressedMessage;
-    _midiMessages[ON_RELEASED_MESSAGE] = *onReleasedMessage;
+    _midiMessages[ACTION_MESSAGE] = message;    
 
     _availableMessageTypes[0] = midi::NoteOn;
-    _availableMessageTypes[1] = midi::NoteOff;
-    _availableMessageTypes[2] = midi::InvalidType;
+    _availableMessageTypes[1] = midi::InvalidType;
 }
 
 /*
@@ -98,8 +93,7 @@ template<class C>
 MIDIButton<C>::MIDIButton(Multiplexer * mux, uint8_t channel, uint8_t invert, uint32_t dbTime) : C (mux, channel, invert, dbTime)
 {
     _availableMessageTypes[0] = midi::NoteOn;
-    _availableMessageTypes[1] = midi::NoteOff;
-    _availableMessageTypes[2] = midi::InvalidType;
+    _availableMessageTypes[1] = midi::InvalidType;
 }
 
 /*
@@ -112,15 +106,26 @@ MIDIMessage * MIDIButton<C>::getMessageToSend()
     
     if (this->wasPressed())
     {
-        return &(_midiMessages[ON_PRESSED_MESSAGE]);              
+        if (_midiMessages[ACTION_MESSAGE].getType() == midi::NoteOff)
+        {           
+            _midiMessages[ACTION_MESSAGE].setType(midi::NoteOn);
+        }
+
+        return &(_midiMessages[ACTION_MESSAGE]);
     }
     
     if (this->wasReleased())
     {
-        return &(_midiMessages[ON_RELEASED_MESSAGE]);              
+        if (_midiMessages[ACTION_MESSAGE].getType() == midi::NoteOn)
+        {           
+            _midiMessages[ACTION_MESSAGE].setType(midi::NoteOff);
+        }              
+
+        return &(_midiMessages[ACTION_MESSAGE]);
     }    
     
     return NULL;
+    
 }
 
 /*
@@ -147,7 +152,7 @@ MIDIMessage * MIDIButton<C>::getMessages()
 template<class C>
 uint8_t MIDIButton<C>::getDataSize()
 {
-    return (sizeof(uint8_t) * 4) * MIDI_BUTTON_NUM_MESSAGES;
+    return (sizeof(uint8_t) * 3) * MIDI_BUTTON_NUM_MESSAGES;
 }
 
 /*

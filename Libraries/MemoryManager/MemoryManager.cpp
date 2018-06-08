@@ -34,7 +34,29 @@ void MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDI
     }
 
     // calculate the maximum number of pages
-    _maxNumPages = 1024 / _pageSize;
+    _maxNumPages = (MEMORY_SIZE - GlobalConfig::getSize())  / _pageSize;
+}
+
+/*
+* Load the global configuration parameters from EEPROM
+* globalConfig: object in which the configuration will be loaded
+*/
+void MemoryManager::loadGlobalConfiguration(GlobalConfig * globalConfig)
+{
+    globalConfig->setMIDIChannel(EEPROM.read(0));
+    globalConfig->setMode(EEPROM.read(1));
+    globalConfig->setRootNote(EEPROM.read(2));
+}
+
+/*
+* Save the global configuration parameters to EEPROM
+* globalConfig: configuration to be saved
+*/
+void MemoryManager::saveGlobalConfiguration(GlobalConfig globalConfig)
+{
+    EEPROM.update(0, globalConfig.getMIDIChannel());
+    EEPROM.update(1, globalConfig.getMode());
+    EEPROM.update(2, globalConfig.getRootNote());
 }
 
 /*
@@ -46,11 +68,11 @@ void MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDI
 void MemoryManager::saveMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents)
 {
     //get the begin address of the page
-    uint16_t address = 0;
+    uint16_t address = GlobalConfig::getSize();
     
     if (page > 1)
     {
-        address = _pageSize * (page-1); 
+        address += _pageSize * (page-1); 
     }
 
     // save the MIDI messages assigned to each MIDI component into the EEPROM
@@ -85,9 +107,7 @@ void MemoryManager::saveMIDIMessage(uint16_t * address, MIDIMessage message)
     EEPROM.update((*address),message.getDataByte1());
     (*address) += sizeof(uint8_t);
     EEPROM.update((*address),message.getDataByte2());
-    (*address) += sizeof(uint8_t);
-    EEPROM.update((*address),message.getChannel());
-    (*address) += sizeof(uint8_t);
+    (*address) += sizeof(uint8_t);    
 }
 
 /*
@@ -99,11 +119,11 @@ void MemoryManager::saveMIDIMessage(uint16_t * address, MIDIMessage message)
 void MemoryManager::loadMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents)
 {
     //get the begin address of the page
-    uint16_t address = 0;
+    uint16_t address = GlobalConfig::getSize();
     
     if (page > 1)
     {
-        address = _pageSize * (page-1); 
+        address += _pageSize * (page-1); 
     }
 
     // save the MIDI messages assigned to each MIDI component into the EEPROM
@@ -138,9 +158,7 @@ void MemoryManager::loadMIDIMessage(uint16_t * address, MIDIMessage * message)
     message->setDataByte1(EEPROM.read((*address)));
     (*address) += sizeof(uint8_t);
     message->setDataByte2(EEPROM.read((*address)));
-    (*address) += sizeof(uint8_t);
-    message->setChannel(EEPROM.read((*address)));
-    (*address) += sizeof(uint8_t);
+    (*address) += sizeof(uint8_t);    
 }
 
 /*

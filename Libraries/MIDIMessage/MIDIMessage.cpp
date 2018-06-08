@@ -27,12 +27,11 @@
 * dataByte2: second byte of data of the message.
 * channel: the channel over the message will be send.
 */
-MIDIMessage::MIDIMessage(uint8_t type, uint8_t dataByte1, uint8_t dataByte2, uint8_t channel)
+MIDIMessage::MIDIMessage(uint8_t type, uint8_t dataByte1, uint8_t dataByte2)
 {  
   _type = type;
   _dataByte1 = dataByte1;
-  _dataByte2 = dataByte2;
-  _channel = channel;
+  _dataByte2 = dataByte2; 
 }
 
 /*
@@ -42,8 +41,7 @@ MIDIMessage::MIDIMessage()
 {  
   _type = 0;
   _dataByte1 = 0;
-  _dataByte2 = 0;
-  _channel = 0;
+  _dataByte2 = 0; 
 }
 
 /*
@@ -62,11 +60,6 @@ uint8_t MIDIMessage::getDataByte1()
 uint8_t MIDIMessage::getDataByte2()
 {
   return _dataByte2;
-}         
-
-uint8_t MIDIMessage::getChannel()
-{
-  return _channel;
 }
 
 /*
@@ -85,9 +78,4 @@ void MIDIMessage::setDataByte1(uint8_t dataByte1)
 void MIDIMessage::setDataByte2(uint8_t dataByte2)
 {
   _dataByte2 = dataByte2;
-}
-
-void MIDIMessage::setChannel(uint8_t channel)
-{
-  _channel = channel;
 }
