@@ -63,7 +63,7 @@ void MIDIController::begin()
    // load from EEPROM the Global Configuration parameters
    _memoryManager.loadGlobalConfiguration(&_globalConfig);
    _wasGlobalConfigSaved = 0;
-   _accesToGloabalEdit = 0;
+   _accessToGlobalEdit = 0;
 
    // load from EEPROM the default page of MIDI messages into the MIDI components
    _currentPage = 1;    
@@ -655,24 +655,25 @@ void MIDIController::processEditModeButton()
                     _subState = MIDI_CLOCK_OFF;    
                 
                     _midiLed.setState(LOW);          
-                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);       
+                    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);        
                     
                 break;
 
-                // Enter in global config edit mode: LED doesn't blink, default message is displayed on screen 
                 case EDIT_GLOBAL_CONFIG:
 
-                    if (_accesToGloabalEdit)
-                        _accesToGloabalEdit = 0;
+                    if (_accessToGlobalEdit)
+                        _accessToGlobalEdit = 0;
                     
+                    // we were in global edit mode, then exit to CONTROLLER mode
                     else
                     {
                         _state = CONTROLLER;
                         _subState = MIDI_CLOCK_OFF;    
                 
                         _midiLed.setState(LOW);          
-                        _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);     
-                    }
+                        _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);   
+
+                    }                     
                     
                 break;                         
             }        
@@ -695,23 +696,25 @@ void MIDIController::processEditModeButton()
         }
     }
 
-    // save current page component's configuration / global configuration and exits edit mode
+    // save current page component's configuration / global configuration and exits edit mode or access to edit global config
     if (_editButton.pressedFor(PRESSED_FOR_WAIT))
     {   
         switch (_state)
         {
+            // access to global config edit mode
             case CONTROLLER:
 
                 _state = EDIT_GLOBAL_CONFIG;
                 _subState = EDIT_GLOBAL_MODE;    
 
-                _accesToGloabalEdit = 1;
+                _accessToGlobalEdit = 1;
                 
                 _midiLed.setState(HIGH);
-                _screenManager.printEditGlobalConfig(_globalConfig);      
+                _screenManager.printEditGlobalConfig(_globalConfig);
 
-            break;    
+            break;
 
+            // save current page being edited
             case EDIT_PAGE:
 
                 // saves the current page
@@ -720,18 +723,19 @@ void MIDIController::processEditModeButton()
 
                 // prints a message and waits to continue 
                 _screenManager.printSavedMessage();
-                delay(2000);      
+                delay(2000);
 
                 _state = CONTROLLER;
-                _subState = MIDI_CLOCK_OFF;           
+                _subState = MIDI_CLOCK_OFF;                   
             
             break;
 
+            // save current global config parameters
             case EDIT_GLOBAL_CONFIG:
 
-                if (!_accesToGloabalEdit)
+                if (!_accessToGlobalEdit)
                 {
-                    // saves the global configuration parameters
+                    // saves the global configuration values
                     _memoryManager.saveGlobalConfiguration(_globalConfig); 
                     _wasGlobalConfigSaved = 1;        
 
@@ -741,11 +745,10 @@ void MIDIController::processEditModeButton()
 
                     _state = CONTROLLER;
                     _subState = MIDI_CLOCK_OFF;
-                }                 
+                }    
 
-            break;
+            break;            
 
-        }
-            
+        }                  
     }
 }

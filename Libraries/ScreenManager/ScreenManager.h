@@ -27,46 +27,50 @@
 #include <MIDI.h>
 #include <IMIDIComponent.h>
 #include <MIDIUtils.h>
+#include <GlobalConfig.h>
 
 #define MSG_PAGE 0
 #define MSG_TEMPO 1
 #define MSG_BPM 2
 #define MSG_EDIT 3
 #define MSG_CHANNEL 4
-#define MSG_NOTE_ON 5
-#define MSG_NOTE_OFF 6
-#define MSG_CTRL_CHANGE 7
-#define MSG_CC 8
-#define MSG_PGRM_CHANGE 9
-#define MSG_PGM 10
-#define MSG_VELOCITY 11
-#define MSG_SAVED 12
-#define MSG_EMPTY_MIDI_TYPE 13
+#define MSG_NOTE_ON_OFF 5
+#define MSG_CTRL_CHANGE 6
+#define MSG_CC 7
+#define MSG_PGRM_CHANGE 8
+#define MSG_PGM 9
+#define MSG_VELOCITY 10
+#define MSG_SAVED 11
+#define MSG_EMPTY_MIDI_TYPE 12
+#define MSG_MODE 13
+#define MSG_KEY 14
 
 // Messages that will be displayed on the screen
-const char msg_Page[] PROGMEM = "Page: ";
+const char msg_Page[] PROGMEM = "Pag:";
 const char msg_Tempo[] PROGMEM = "Tempo: ";
-const char msg_Bpm[] PROGMEM = " BPM";
+const char msg_Bpm[] PROGMEM = "BPM";
 const char msg_Edit[] PROGMEM = {'S','E','L','E','C','T',' ','A','\n','C','O','M','P','O','N','E','N','T','\0'};
 const char msg_MsgChannel[] PROGMEM = "Ch:";
-const char msg_NoteOn[] PROGMEM = "Note On";
-const char msg_NoteOff[] PROGMEM = "Note Off";
+const char msg_NoteOnOff[] PROGMEM = "Note On/Off";
 const char msg_CtrlChange[] PROGMEM = "Ctrl Change";
 const char msg_CC[] PROGMEM = "CC:";
 const char msg_PgrmChange[] PROGMEM = "Pgrm Change";
 const char msg_PGM[] PROGMEM = "PGM:";
 const char msg_Velocity[] PROGMEM = "V:";
-const char msg_saved[] PROGMEM = "PAGE SAVED!";
+const char msg_saved[] PROGMEM = "SAVED OK!";
 const char msg_empty_midi_type[] PROGMEM = "No Msg";
+const char msg_mode[] PROGMEM = "Mode:";
+const char msg_key[] PROGMEM = "Key:";
 
-const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOn, msg_NoteOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type};
+const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key};
 
 class ScreenManager
 {
   public:   
     void initialize(uint8_t i2cAddress, uint8_t rowLength, uint8_t rows);
-    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo);
+    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf);
     void printSelectComponentMessage();
+    void printEditGlobalConfig(GlobalConfig globalConf);
     void printSavedMessage();
     void cleanScreen();
     uint8_t isComponentDisplayed();
@@ -83,10 +87,16 @@ class ScreenManager
     void moveCursorToMsgType();
     void refreshNoteValue(uint8_t note);
     void moveCursorToNote();
+    void moveCursorToRootNote();
+    void moveCursorToMIDIChannel();
+    void moveCursorToMode();
     void refreshVelocityValue(uint8_t velocity);
     void refreshCCValue(uint8_t cc);
     void refreshChannelValue(uint8_t channel);
     void moveCursorToVelocity();
+    void refreshModeData(uint8_t mode);
+    void refreshRootNoteData(uint8_t rootNote);
+    void refreshMIDIChannelData(uint8_t midiChannel);
 
 
   private:
@@ -101,8 +111,9 @@ class ScreenManager
     uint8_t _currentMIDIMessageDisplayed;                                   // MIDI message currently displayed on the screen
     LiquidCrystal_I2C _screen;                                              // LCD screen object
 
-    enum {NOTE_POS=0, VELOCITY_POS=5, NOTE_ON_OFF_CHANNEL_POS=11};          // Screen start position of the Note On/Off message parameters 
-    enum {CC_POS=0, CC_CHANNEL_POS=7};                                      // Screen start position of the CC message parameters 
+    enum {NOTE_POS=0, VELOCITY_POS=5};                                      // Screen start position of the Note On/Off message parameters 
+    enum {CC_POS=0,};                                                       // Screen start position of the CC message parameters 
     enum {PROGRAM_CHANNEL_POS=0};                                           // Screen start position of the Program Change message parameters 
+    enum {EDIT_GLOBAL_MODE_POS=5, EDIT_GLOBAL_KEY_POS=0, EDIT_GLOBAL_CHANNEL_POS=7}; // Screen start position of the Global Config parameters
 };
 #endif

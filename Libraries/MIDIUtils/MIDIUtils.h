@@ -27,11 +27,20 @@
 class MIDIUtils
 {
   public:
+
+    // Root keys
+    enum {C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B};
+     
+    // Musical modes
+    enum {Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, Maj_Blues, Min_Blues, Chromatic};
+
+    // MIDI channels
+    enum {CHANNEL1 = 1, CHANNEL2, CHANNEL3, CHANNEL4, CHANNEL5, CHANNEL6, CHANNEL7, CHANNEL8, CHANNEL9, CHANNEL10, CHANNEL11, CHANNEL12, CHANNEL13, CHANNEL14, CHANNEL15, CHANNEL16};
+
     static String getOctave(uint8_t midiNote);
     static uint8_t getNoteNumber(uint8_t midiNote);
-    static String getNoteName(uint8_t midiNote);    
-
-  private:
-    enum{C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B};
+    static String getNoteName(uint8_t midiNote);
+    static uint8_t isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mode);     
+    static String getModeName(uint8_t mode);      
 };
 #endif

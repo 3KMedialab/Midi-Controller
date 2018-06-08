@@ -22,6 +22,9 @@
 
 #include <EEPROM.h>
 #include <IMIDIComponent.h> 
+#include <GlobalConfig.h>
+
+#define MEMORY_SIZE 1024
 
 class MemoryManager
 {
@@ -29,6 +32,8 @@ class MemoryManager
     void initialize(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
     void saveMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
     void loadMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
+    void loadGlobalConfiguration(GlobalConfig * globalConfig);
+    void saveGlobalConfiguration(GlobalConfig globalConfig);
     uint8_t getMaxPages();
 
   private:

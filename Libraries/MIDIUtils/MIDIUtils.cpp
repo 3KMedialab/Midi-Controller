@@ -20,6 +20,21 @@
  */
 
 #include <MIDIUtils.h>
+#include <avr/pgmspace.h>
+
+// Musical modes intervals
+const uint8_t intervals [9][7] PROGMEM = {
+
+    {0, 2, 4, 5, 7, 9, 11}, // Ionian
+    {0, 2, 3, 5, 7, 9, 10}, // Dorian
+    {0, 1, 3, 5, 7, 8, 10}, // Phrygian
+    {0, 2, 4, 6, 7, 8, 10}, // Lydian
+    {0, 2, 4, 5, 7, 9, 10}, // Mixolydian
+    {0, 2, 3, 5, 7, 8, 10}, // Aeolian
+    {0, 1, 3, 5, 6, 8, 10}, // Locrian
+    {0, 2, 3, 4, 7, 9, 0},  // Major Blues
+    {0, 3, 5, 6, 7, 10, 0}  // Minor Blues
+};
 
 /*
 * Return the octave of a note
@@ -70,4 +85,58 @@ String MIDIUtils::getNoteName(uint8_t midiNote)
        case B:   return F("B");
        default:  return F("N/A");        
     }
-}  
+}
+
+/*
+* Return true if a note belongs to a scale. False otherwise
+* midiNote: note to determine if belongs to a scale
+* rootNote: is the key of the scale
+* mode: musical mode of the scale
+*
+* EXAMPLE: how to generate G Aeolian scale
+* rootNote = 7
+* mode = Aeolian
+* resulting scale = ((7+0)%12, (7+2)%12, (7+3)%12, (7+5)%12, (7+7)%12, (7+8)%12, (7+10)%12) -> (7, 9, 10, 0, 2, 3, 5) 
+*/
+uint8_t MIDIUtils::isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mode)
+{
+    if (mode == Chromatic)
+    {
+        return 1;
+    }        
+
+    for (int i=0; i<7; i++)
+    {
+        if ( (rootNote + pgm_read_byte (&(intervals[mode][i]))) % 12 == midiNote % 12 )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
+* Return the name of a musical mode
+* mode: mode number which name will be returned
+*/
+String MIDIUtils::getModeName(uint8_t mode)
+{
+    //Use a switch statement to determine mode name. 
+    switch(mode)
+    {
+      //Note: each case returns so break keyword is not needed here
+     
+       case Ionian:     return F("Ionian");    
+       case Dorian:     return F("Dorian");
+       case Phrygian:   return F("Phrygian"); 
+       case Lydian:     return F("Lydian"); 
+       case Mixolydian: return F("Mixolydian"); 
+       case Aeolian:    return F("Aeolian"); 
+       case Locrian:    return F("Locrian"); 
+       case Maj_Blues:  return F("Maj Blues"); 
+       case Min_Blues:  return F("Min Blues"); 
+       case Chromatic:  return F("Chromatic"); 
+       default:         return F("N/A");        
+    }
+}

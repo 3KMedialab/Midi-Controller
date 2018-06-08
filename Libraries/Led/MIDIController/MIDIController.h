@@ -60,7 +60,7 @@ class MIDIController
     uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
     uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.
     uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
-    uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
+    uint8_t _accessToGlobalEdit;                                                                        // flag that indicates wether we have entered into the global edit mode or not.
 
     ScreenManager _screenManager;                                                                       // object to manage interactions between the controller and the screen   
 
@@ -69,7 +69,7 @@ class MIDIController
     Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);                     // button that activates/deactivates the edit mode.
     
     Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                          // potentiometer for set the tempo in BPM of the controller.
-    Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
+    Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                          // Led that blinks when MIDI information is being sent
     Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
     uint16_t _bpm;                                                                                      // Current MIDI controller tempo in BPMs.   
     uint32_t _delayLedMS;                                                                               // Variable that holds the delay between led blinks
