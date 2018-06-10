@@ -41,6 +41,6 @@ class MIDIUtils
     static uint8_t getNoteNumber(uint8_t midiNote);
     static String getNoteName(uint8_t midiNote);
     static uint8_t isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mode);     
-    static String getModeName(uint8_t mode);      
+    static String getModeName(uint8_t mode);    
 };
 #endif

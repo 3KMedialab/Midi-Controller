@@ -1,5 +1,7 @@
 #ifndef ControllerConfig_h
 #define ControllerConfig_h
+
+#include "Arduino.h"
 //-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
 
 /*************************************************
@@ -33,6 +35,11 @@
 
  // Input Digital Pin for edit mode button
  const uint8_t EDIT_MODE_BUTTON_PIN = 7;
+
+/*************************************************
+ * SEQUENCER BUTTONS CONFIG
+ *************************************************/
+const uint8_t PLAYBACK_BUTTON_PIN = 12;
 
 /*************************************************
  * MIDI BUTTONS CONFIGURATION

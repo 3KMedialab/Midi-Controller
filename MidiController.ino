@@ -21,6 +21,7 @@
 
 #include <Pitches.h>
 #include <MIDIController.h>
+#include <Sequencer.h>
 #include <MIDIButton.h>
 #include <MIDIButton.cpp>
 #include <MIDIPotentiometer.h>
@@ -28,7 +29,7 @@
 #include <Multiplexer.h>
 #include <MuxButton.h>
 #include <MuxPotentiometer.h>
-  
+
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
 
@@ -88,10 +89,12 @@ IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&b3,&b4,
 
 // Creates the MIDI Controller object
 MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
- 
+//MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
+
  void setup(void)
  {
    //Initializes MIDI interface
+   Serial.begin(9600);
     controller.begin();
  }
  
@@ -102,25 +105,22 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
 
     // Send MIDI clock
     controller.sendMIDIClock();
-    
+
+    // Play sequence
+    controller.playBackSequence();
+      
     // Process the select value potentiometer
     controller.processSelectValuePot();
-
-    // Send MIDI clock
-    controller.sendMIDIClock();
     
     // Process the MIDI components 
     controller.processMIDIComponents();
-
-    // Send MIDI clock
-    controller.sendMIDIClock();
     
     // Process the page inc/dec buttons
     controller.processIncDecButtons();
 
-    // Send MIDI clock
-    controller.sendMIDIClock();
-
     // Process set edit mode on/off button
     controller.processEditModeButton();
+
+    // Process sequencer playback button
+    controller.processPlayBackButton();
   }

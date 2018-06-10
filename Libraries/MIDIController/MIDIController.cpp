@@ -34,7 +34,7 @@ MIDIController::MIDIController(MidiInterface& inInterface, IMIDIComponent ** mid
 : _mMidi(inInterface)
 {
     _midiComponents = midiComponents;
-    _numMIDIComponents = numMIDIComponents;     
+    _numMIDIComponents = numMIDIComponents;
 }
 
 /*
@@ -75,11 +75,16 @@ void MIDIController::begin()
 
    // variable that controls the bpm led blink frequency
    _lastTime = 0;
-
    _lastTimeClock = 0;
 
    _screenManager.cleanScreen();
    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
+
+   // sequencer initialization
+   _sequencer.setPlayBackOn(0);
+   _sequencer.setLastTimePlayBack(0);
+   _sequencer.setPlayBackStep(0);
+   _sequencer.setMIDIChannel(_globalConfig.getMIDIChannel());
 
    // Controller initial state and substate
    _state = CONTROLLER;
@@ -244,6 +249,19 @@ void MIDIController::sendMIDIMessage(MIDIMessage * message)
 }
 
 /*
+* Send a MIDI message regarding its type
+* message: the MIDI message to be sent.
+*/
+/*void MIDIController::sendMIDIMessage(MIDIMessage * message)
+{ 
+    Serial.println("MESSAGE");
+    Serial.println(message->getDataByte1(),DEC);
+    Serial.println(message->getDataByte2(),DEC);
+    Serial.println( _globalConfig.getMIDIChannel(),DEC);  
+   
+}*/
+
+/*
 * Send MIDI clock signal
 */
 void MIDIController::sendMIDIRealTime(uint8_t inType)
@@ -298,10 +316,14 @@ void MIDIController::processSelectValuePot()
                 _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
                 _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
                 
-                // calculate the blink frequency of the LED
-                uint32_t microsecondsPerMinute = 60000000;
-                _delayLedMS = (microsecondsPerMinute / _bpm) / 2;    
-                _delayClockTickMS = (microsecondsPerMinute / _bpm) / 24;   
+                // calculate the blink frequency of the LED               
+                _delayLedMS = (MICROSECONDS_PER_MINUTE / _bpm) / 2;
+
+                // calculate the frequency of the MIDI Clock signal
+                _delayClockTickMS = (MICROSECONDS_PER_MINUTE / _bpm) / 24;
+
+                // calculate the step delay of the sequencer
+                _sequencer.setStepDelay((MICROSECONDS_PER_MINUTE / _bpm) / 2);   
             
                 break;
             } 
@@ -617,6 +639,27 @@ void MIDIController::sendMIDIClock()
              _lastTime =  currentTime;
          }        
      }
+}
+
+/*
+* Playback current sequence assigned to the sequencer
+*/
+void MIDIController::playBackSequence()
+{
+    _sequencer.playBackSequence(micros());
+}
+
+/*
+* Process the button that start/stop the sequencer setPlayBackOn
+*/
+void MIDIController::processPlayBackButton()
+{
+    _playBackButton.read();
+
+    if (_playBackButton.wasPressed())
+    {
+        _sequencer.updatePlaybackStatus();
+    }
 }
 
 /*
