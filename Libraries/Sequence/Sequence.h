@@ -8,7 +8,7 @@ class Sequence
 {
   public:   
     Sequence();
-    enum {MAX_LENGTH = 16};
+    enum {MAX_LENGTH = 8};
     
     Step * getSteps();
     Step getStep(uint8_t position);

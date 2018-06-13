@@ -21,7 +21,7 @@
 
 #include <Pitches.h>
 #include <MIDIController.h>
-#include <Sequencer.h>
+#include <MidiWorker.h>
 #include <MIDIButton.h>
 #include <MIDIButton.cpp>
 #include <MIDIPotentiometer.h>
@@ -87,14 +87,20 @@ MIDIPotentiometer<MuxPotentiometer> p3(&muxMIDIPots1, MIDI_POT3_MUX1_CHANNEL, WI
 // MIDI components assigned to the controller
 IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&b3,&b4,&b5,&b6,&b7,&b8,&b9,&p1,&p2,&p3};
 
+// MIDI processing handler
+MidiWorker worker(MIDI);
+
 // Creates the MIDI Controller object
-MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
-//MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
+//MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
+MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
 
  void setup(void)
  {
-   //Initializes MIDI interface
-   Serial.begin(9600);
+    //Initializes MIDI interface
+    //worker.begin();
+    Serial.begin(9600);
+    
+    //Serial.begin(9600);  
     controller.begin();
  }
  
@@ -121,6 +127,6 @@ MIDIController controller(MIDI, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
     // Process set edit mode on/off button
     controller.processEditModeButton();
 
-    // Process sequencer playback button
-    controller.processPlayBackButton();
+    // Process change operation mode button
+    controller.processOperationModeButton();
   }

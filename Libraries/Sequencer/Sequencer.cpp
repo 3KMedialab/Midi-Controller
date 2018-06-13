@@ -1,18 +1,14 @@
 #include "Sequencer.h"
 
-Sequencer::Sequencer (Sequence * sequence)
+Sequencer::Sequencer (MidiWorker * midiWorker, Sequence * sequence)
 {
+    _midiWorker = midiWorker;
     _sequence = sequence;
 }
 
 void Sequencer::setSequence(Sequence * sequence)
 {
     _sequence = sequence;
-}
-
-void Sequencer::setPlayBackOn(uint8_t playBackState)
-{
-    _playBackOn = playBackState;
 }
 
 void Sequencer::setStepDelay(uint32_t delay)
@@ -65,21 +61,43 @@ uint8_t Sequencer::getMIDIChannel()
     return _midiChannel;
 }
 
-void Sequencer::updatePlaybackStatus()
+void Sequencer::startPlayBack()
 {
-    _playBackOn = !_playBackOn;
+    _playBackOn = 1;
+}
+
+void Sequencer::stopPlayBack()
+{
+    _playBackOn = 0;
+    _playBackStep = 0;
 }
 
 void Sequencer::playBackSequence(uint32_t currentTime)
 {
     if (_playBackOn)
-    {
+    {     
         if (currentTime - _lastTimePlayBack >= _stepDelay)
         {
-            _lastTimePlayBack = currentTime;  
+            // stop last played step
+            _message.setType(midi::NoteOff);
+            
+            if (_playBackStep == 0)
+            {
+               _message.setDataByte1(_sequence->getStep(_sequence->getLength() - 1).getNote());
+            }
 
-            //Stop playback current step
-           // _mMidi.sendNoteOff(_sequence->getStep(_playBackStep).getNote(), 127, _midiChannel);
+            else
+            {
+                _message.setDataByte1(_sequence->getStep(_playBackStep - 1).getNote());
+            }            
+            
+            _midiWorker->sendMIDIMessage(&_message, _midiChannel);       
+
+            // Play current step            
+            _message.setType(midi::NoteOn);
+            _message.setDataByte1(_sequence->getStep(_playBackStep).getNote());
+            _message.setDataByte2(127);
+            _midiWorker->sendMIDIMessage(&_message, _midiChannel);  
 
             // Move pointer to next step
             _playBackStep++;
@@ -87,11 +105,9 @@ void Sequencer::playBackSequence(uint32_t currentTime)
             if (_playBackStep >= _sequence->getLength() - 1)
             {
                 _playBackStep = 0;
-            }                            
- 
-            // Play next step            
-            //_mMidi.sendNoteOn(_sequence->getStep(_playBackStep).getNote(), 127, _midiChannel);
-                        
+            }
+
+            _lastTimePlayBack = currentTime;                       
         }
     }
 }

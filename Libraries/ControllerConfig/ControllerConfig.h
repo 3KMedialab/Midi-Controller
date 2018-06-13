@@ -39,7 +39,7 @@
 /*************************************************
  * SEQUENCER BUTTONS CONFIG
  *************************************************/
-const uint8_t PLAYBACK_BUTTON_PIN = 12;
+const uint8_t OPERATION_MODE_BUTTON_PIN = 12;
 
 /*************************************************
  * MIDI BUTTONS CONFIGURATION

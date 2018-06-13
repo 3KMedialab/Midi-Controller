@@ -30,9 +30,9 @@
 * midiComponents: the array of MIDI components the controller will manage.
 * numMIDIComponents: number of MIDI components assigned to the controller
 */
-MIDIController::MIDIController(MidiInterface& inInterface, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
-: _mMidi(inInterface)
+MIDIController::MIDIController(MidiWorker * midiWorker, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents) 
 {
+    _midiWorker = midiWorker;
     _midiComponents = midiComponents;
     _numMIDIComponents = numMIDIComponents;
 }
@@ -53,10 +53,7 @@ MIDIController::MIDIController(IMIDIComponent ** midiComponents, uint8_t numMIDI
 * Initializes the MIDI controller
 */
 void MIDIController::begin()
-{
-   // Initializes the MIDI interface
-   _mMidi.begin();
-
+{  
    _memoryManager.initialize(_midiComponents, _numMIDIComponents);
    _screenManager.initialize(I2C_ADDRESS, ROW_LENGTH, ROWS);
 
@@ -81,14 +78,16 @@ void MIDIController::begin()
    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
 
    // sequencer initialization
-   _sequencer.setPlayBackOn(0);
+   _sequencer.stopPlayBack();
    _sequencer.setLastTimePlayBack(0);
-   _sequencer.setPlayBackStep(0);
    _sequencer.setMIDIChannel(_globalConfig.getMIDIChannel());
 
    // Controller initial state and substate
    _state = CONTROLLER;
-   _subState = MIDI_CLOCK_OFF; 
+   _subState = MIDI_CLOCK_OFF;
+
+   // sending MIDI Clock is initialised to FALSE
+   _isMIDIClockOn = 0;
 }
 
 /*
@@ -193,7 +192,7 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
                 if (message->getType() != midi::InvalidType)
                 {
                     _midiLed.setState(HIGH);
-                    sendMIDIMessage(message);
+                    _midiWorker->sendMIDIMessage(message, _globalConfig.getMIDIChannel());                    
                     _midiLed.setState(LOW);
                 } 
             }
@@ -217,69 +216,6 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
             break;
         }
     }   
-}
-
-/*
-* Send a MIDI message regarding its type
-* message: the MIDI message to be sent.
-*/
-void MIDIController::sendMIDIMessage(MIDIMessage * message)
-{ 
-    switch(message->getType())
-    {
-        case midi::ControlChange:
-           _mMidi.sendControlChange(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
-        break;
-
-        case midi::ProgramChange:
-           _mMidi.sendProgramChange(message->getDataByte1(), _globalConfig.getMIDIChannel());
-        break;
-
-        case midi::NoteOn:
-           _mMidi.sendNoteOn(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
-        break;
-
-        case midi::NoteOff:
-           _mMidi.sendNoteOff(message->getDataByte1(), message->getDataByte2(), _globalConfig.getMIDIChannel());
-        break;
-
-        case midi::InvalidType:        
-        break;
-    }
-}
-
-/*
-* Send a MIDI message regarding its type
-* message: the MIDI message to be sent.
-*/
-/*void MIDIController::sendMIDIMessage(MIDIMessage * message)
-{ 
-    Serial.println("MESSAGE");
-    Serial.println(message->getDataByte1(),DEC);
-    Serial.println(message->getDataByte2(),DEC);
-    Serial.println( _globalConfig.getMIDIChannel(),DEC);  
-   
-}*/
-
-/*
-* Send MIDI clock signal
-*/
-void MIDIController::sendMIDIRealTime(uint8_t inType)
-{
-    switch(inType)
-    {
-        case midi::Start:
-            _mMidi.sendRealTime(midi::Start);
-        break;
-
-        case midi::Clock:
-            _mMidi.sendRealTime(midi::Clock);
-        break;
-        
-        case midi::Stop:
-            _mMidi.sendRealTime(midi::Stop);
-        break;
-    }
 }
 
 /*
@@ -310,8 +246,9 @@ void MIDIController::processSelectValuePot()
     {
         switch (_state)
         {
-            // set controller's tempo and calculate delays for led blinking and MIDI clock signal sending
+            // set controller's tempo and calculate delays for led blinking, MIDI clock signal sending and step sequence playing
             case CONTROLLER:
+            case SEQUENCER:
             {
                 _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
                 _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
@@ -460,8 +397,8 @@ void MIDIController::processSelectValuePot()
 }
 
 /*
-* Process the button that controls MIDI clock when CONTROLLER mode is on, or  move the cursor through the screen
-* when EDIT mode is on
+* Process the button that controls MIDI clock when CONTROLLER mode is on, or move the cursor through the screen
+* when EDIT mode is on, or star / stop sequencer playbak
 */
 void MIDIController::processMultiplePurposeButton()
 {
@@ -484,6 +421,9 @@ void MIDIController::processMultiplePurposeButton()
                 moveCursorToGLobalConfigParameter();                          
            break;
            
+           case SEQUENCER:
+                updateSequencerPlayBackStatus();                         
+           break;
         }    
     }  
 }
@@ -491,24 +431,69 @@ void MIDIController::processMultiplePurposeButton()
 /*
 * Control the MIDI clock sending status
 */
-
 void MIDIController::updateMIDIClockState()
 {               
     _subState == MIDI_CLOCK_OFF ? _subState=MIDI_CLOCK_ON : _subState=MIDI_CLOCK_OFF;  
+
+    Serial.print(F("STATUS: "));
+    Serial.println(_state,DEC);
+    Serial.print(F("SUBSTATUS: "));
+    Serial.println(_subState,DEC);
             
     switch (_subState)
     {
         // send start real time message
         case MIDI_CLOCK_ON:
-            sendMIDIRealTime(midi::Start);  
+            _isMIDIClockOn = 1;
+            _midiWorker->sendMIDIStartClock();
         break;
 
         // send stop realtime message
         case MIDI_CLOCK_OFF:
-            sendMIDIRealTime(midi::Stop);
-            _midiLed.setState(LOW);  
+            _isMIDIClockOn = 0;
+            _midiWorker->sendMIDIStopClock();
+
+            // led stop blinking if controller is not sending MIDI Clock and sequencer is not playing the sequence
+            if (!_sequencer.isPlayBackOn())
+            {
+                _midiLed.setState(LOW);
+            }
+              
         break;
     }           
+}
+
+/*
+* Activate/Deactivate the sequencer Playback
+*/
+void MIDIController::updateSequencerPlayBackStatus()
+{           
+    _subState == PLAYBACK_OFF ? _subState=PLAYBACK_ON : _subState=PLAYBACK_OFF;    
+
+    Serial.print(F("STATUS: "));
+    Serial.println(_state,DEC);
+    Serial.print(F("SUBSTATUS: "));
+    Serial.println(_subState,DEC);
+            
+    switch (_subState)
+    {
+        // send start real time message
+        case PLAYBACK_ON:
+            _sequencer.startPlayBack();
+        break;
+
+        // send stop realtime message
+        case PLAYBACK_OFF:
+             _sequencer.stopPlayBack();
+            
+            // led stop blinking if controller is not sending MIDI Clock and sequencer is not playing the sequence
+            if (!_isMIDIClockOn)
+            {
+                _midiLed.setState(LOW);
+            }
+
+        break;        
+    } 
 }
 
 /*
@@ -623,9 +608,9 @@ void MIDIController::sendMIDIClock()
      // send MIDI clock signal regarding the tempo
      if (currentTime - _lastTimeClock >= _delayClockTickMS)
      {                       
-         if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
+         if (_isMIDIClockOn)
          {    
-             sendMIDIRealTime(midi::Clock);
+             _midiWorker->sendMIDIClock();
              _lastTimeClock = currentTime;
          }    
      }
@@ -633,7 +618,7 @@ void MIDIController::sendMIDIClock()
      // controls led blinking regarding the tempo
      if (currentTime - _lastTime >= _delayLedMS)
      {
-         if (_state == CONTROLLER && _subState == MIDI_CLOCK_ON)
+         if (_isMIDIClockOn)
          {          
              _midiLed.setState(!_midiLed.getState());
              _lastTime =  currentTime;
@@ -650,15 +635,27 @@ void MIDIController::playBackSequence()
 }
 
 /*
-* Process the button that start/stop the sequencer setPlayBackOn
+* Process the button that set the mode operation: MIDI Controller or Sequencer
 */
-void MIDIController::processPlayBackButton()
+void MIDIController::processOperationModeButton()
 {
-    _playBackButton.read();
+    _operationModeButton.read();
 
-    if (_playBackButton.wasPressed())
+    if (_operationModeButton.wasPressed())
     {
-        _sequencer.updatePlaybackStatus();
+        switch (_state)
+        {
+            // Set the operation mode to Sequencer
+            case CONTROLLER:
+                _state = SEQUENCER;     
+                _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF;  
+            break;
+
+            case SEQUENCER:
+                 _state = CONTROLLER;             
+                 _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF;    
+            break;
+        }
     }
 }
 
@@ -681,7 +678,7 @@ void MIDIController::processEditModeButton()
 
                     // stop sending MIDI Clock signal in case of the controller was sending such signal
                     if (_subState == MIDI_CLOCK_ON)
-                        sendMIDIRealTime(midi::Stop);        
+                        _midiWorker->sendMIDIStopClock();        
     
                     _state = EDIT_PAGE;
                     _subState = DEFAULT_EDIT_MSG;                
