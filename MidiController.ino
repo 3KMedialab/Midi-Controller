@@ -106,14 +106,20 @@ MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  
  void loop(void)
   {
-    // Process multiple purpose button for activate/deactivate MIDI clock signal or move to the next value to edit
-    controller.processMultiplePurposeButton();
+    // Update the status of the synchronisation manager
+    controller.updateSyncStatus();
 
     // Send MIDI clock
     controller.sendMIDIClock();
 
     // Play sequence
     controller.playBackSequence();
+
+    // Blink BPM indicator
+    controller.updateBpmIndicatorStatus();
+
+    // Process multiple purpose button for activate/deactivate MIDI clock signal or move to the next value to edit
+    controller.processMultiplePurposeButton();    
       
     // Process the select value potentiometer
     controller.processSelectValuePot();

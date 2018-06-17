@@ -4,6 +4,9 @@ Sequencer::Sequencer (MidiWorker * midiWorker, Sequence * sequence)
 {
     _midiWorker = midiWorker;
     _sequence = sequence;
+    _lastTimePlayBack = 0;
+    _playBackOn = 0;
+    _playBackStep = 0;
 }
 
 void Sequencer::setSequence(Sequence * sequence)
@@ -11,14 +14,9 @@ void Sequencer::setSequence(Sequence * sequence)
     _sequence = sequence;
 }
 
-void Sequencer::setStepDelay(uint32_t delay)
+void Sequencer::setBpm(uint8_t bpm)
 {
-    _stepDelay = delay;
-}
-
-void Sequencer::setLastTimePlayBack(uint32_t time)
-{
-    _lastTimePlayBack = time;
+    _bpm = bpm;
 }
 
 void Sequencer::setPlayBackStep(uint8_t currentStep)
@@ -34,16 +32,6 @@ void Sequencer::setMIDIChannel(uint8_t channel)
 Sequence * Sequencer::getSequence()
 {
     return _sequence;
-}
-
-uint32_t Sequencer::getStepDelay()
-{
-    return _stepDelay;
-}
-
-uint32_t Sequencer::getLastTimePlayBack()
-{
-    return _lastTimePlayBack;
 }
 
 uint8_t Sequencer::getPlayBackStep()
@@ -70,13 +58,14 @@ void Sequencer::stopPlayBack()
 {
     _playBackOn = 0;
     _playBackStep = 0;
+    _lastTimePlayBack = 0;
 }
 
 void Sequencer::playBackSequence(uint32_t currentTime)
 {
     if (_playBackOn)
     {     
-        if (currentTime - _lastTimePlayBack >= _stepDelay)
+        if (currentTime - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / _bpm))
         {
             // stop last played step
             _message.setType(midi::NoteOff);
@@ -99,10 +88,10 @@ void Sequencer::playBackSequence(uint32_t currentTime)
             _message.setDataByte2(127);
             _midiWorker->sendMIDIMessage(&_message, _midiChannel);  
 
-            // Move pointer to next step
+            // Move sequence to next step
             _playBackStep++;
 
-            if (_playBackStep >= _sequence->getLength() - 1)
+            if (_playBackStep >= _sequence->getLength())
             {
                 _playBackStep = 0;
             }

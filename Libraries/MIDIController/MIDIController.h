@@ -37,6 +37,7 @@
 #include <GlobalConfig.h>
 #include <Sequencer.h>
 #include <Sequence.h>
+#include <SyncManager.h>
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
@@ -55,6 +56,8 @@ class MIDIController
     void playBackSequence();
     void processOperationModeButton();
     void sendMIDIClock();
+    void updateBpmIndicatorStatus();
+    void updateSyncStatus();
 
   private:
     uint8_t _numMIDIComponents;                                                                         // number of MIDI components the controller will manage
@@ -77,8 +80,6 @@ class MIDIController
     Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
     Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
     uint16_t _bpm;                                                                                      // Current MIDI controller tempo in BPMs.   
-    uint32_t _delayLedMS;                                                                               // Variable that holds the delay between led blinks
-    uint32_t _delayClockTickMS;                                                                         // Variable that holds the delay between MIDI clock ticks
     uint32_t _lastTime;                                                                                 // Led blink timer
     uint32_t _lastTimeClock;                                                                            // MIDI clock tick timer  
     uint8_t _isMIDIClockOn;                                                                             // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
@@ -87,6 +88,8 @@ class MIDIController
 
     Sequence sequence = Sequence();
     Sequencer _sequencer = Sequencer(_midiWorker,&sequence);
+
+    SyncManager _syncManager = SyncManager(BAR_LENGTH);
 
     enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 

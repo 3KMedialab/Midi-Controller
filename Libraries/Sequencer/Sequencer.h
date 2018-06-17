@@ -7,6 +7,8 @@
 #include "MIDIMessage.h"
 #include "MIDI.h"
 
+#define MICROSECONDS_PER_MINUTE 60000000
+
 class Sequencer
 {
   public:      
@@ -14,8 +16,6 @@ class Sequencer
     Sequencer (MidiWorker * midiWorker, Sequence * sequence);    
 
     Sequence * getSequence();
-    uint32_t getStepDelay();
-    uint32_t getLastTimePlayBack();
     uint8_t isPlayBackOn();
     uint8_t getPlayBackStep();
     uint8_t getMIDIChannel();
@@ -23,8 +23,7 @@ class Sequencer
     void setSequence(Sequence * sequence);
     void startPlayBack();
     void stopPlayBack();
-    void setStepDelay(uint32_t delay);
-    void setLastTimePlayBack(uint32_t time);
+    void setBpm(uint8_t bpm);
     void setPlayBackStep(uint8_t currentStep);
     void setMIDIChannel(uint8_t channel);
 
@@ -34,7 +33,7 @@ class Sequencer
 
     Sequence * _sequence;
     uint8_t _playBackOn;
-    uint32_t _stepDelay;          // holds the delay between steps playback
+    uint32_t _bpm;          
     uint32_t _lastTimePlayBack;
     uint8_t _playBackStep;
     uint8_t _midiChannel;

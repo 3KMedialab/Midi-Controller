@@ -68,7 +68,7 @@ void MIDIController::begin()
    _wasPageSaved = 0;
 
    // set the default tempo
-   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);  
+   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);   
 
    // variable that controls the bpm led blink frequency
    _lastTime = 0;
@@ -78,8 +78,7 @@ void MIDIController::begin()
    _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
 
    // sequencer initialization
-   _sequencer.stopPlayBack();
-   _sequencer.setLastTimePlayBack(0);
+   _sequencer.setBpm(_bpm);
    _sequencer.setMIDIChannel(_globalConfig.getMIDIChannel());
 
    // Controller initial state and substate
@@ -252,15 +251,12 @@ void MIDIController::processSelectValuePot()
             {
                 _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
                 _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
-                
-                // calculate the blink frequency of the LED               
-                _delayLedMS = (MICROSECONDS_PER_MINUTE / _bpm) / 2;
 
-                // calculate the frequency of the MIDI Clock signal
-                _delayClockTickMS = (MICROSECONDS_PER_MINUTE / _bpm) / 24;
+                // set the new bpm value into the sync manager and the step sequencer 
+                _syncManager.setBpm(_bpm);              
 
                 // calculate the step delay of the sequencer
-                _sequencer.setStepDelay((MICROSECONDS_PER_MINUTE / _bpm) / 2);   
+                _sequencer.setBpm(_bpm);
             
                 break;
             } 
@@ -602,28 +598,16 @@ void MIDIController::moveCursorToGLobalConfigParameter()
 * Send a MIDI clock tick and blink the LED
 */
 void MIDIController::sendMIDIClock()
-{
-    uint32_t currentTime = micros();
-    
-     // send MIDI clock signal regarding the tempo
-     if (currentTime - _lastTimeClock >= _delayClockTickMS)
-     {                       
-         if (_isMIDIClockOn)
-         {    
-             _midiWorker->sendMIDIClock();
-             _lastTimeClock = currentTime;
-         }    
-     }
- 
-     // controls led blinking regarding the tempo
-     if (currentTime - _lastTime >= _delayLedMS)
-     {
-         if (_isMIDIClockOn)
-         {          
-             _midiLed.setState(!_midiLed.getState());
-             _lastTime =  currentTime;
-         }        
-     }
+{   
+    // send MIDI clock signal regarding the tempo
+    if (_syncManager.getSyncTimeStamp() - _lastTimeClock >= ((MICROSECONDS_PER_MINUTE / _bpm) / 24))
+    {                       
+        if (_isMIDIClockOn)
+        {    
+            _midiWorker->sendMIDIClock();
+            _lastTimeClock = _syncManager.getSyncTimeStamp();
+        }    
+    }   
 }
 
 /*
@@ -631,7 +615,23 @@ void MIDIController::sendMIDIClock()
 */
 void MIDIController::playBackSequence()
 {
-    _sequencer.playBackSequence(micros());
+    _sequencer.playBackSequence(_syncManager.getSyncTimeStamp());
+}
+
+/*
+* Update led bpm status
+*/
+void MIDIController::updateBpmIndicatorStatus()
+{
+    // controls led blinking regarding the tempo
+    if (_syncManager.getSyncTimeStamp() - _lastTime >= ((MICROSECONDS_PER_MINUTE / _bpm) / 2))
+    {
+        if (_isMIDIClockOn || _sequencer.isPlayBackOn())
+        {          
+            _midiLed.setState(!_midiLed.getState());
+            _lastTime =  _syncManager.getSyncTimeStamp();
+        }        
+    }
 }
 
 /*
@@ -674,16 +674,11 @@ void MIDIController::processEditModeButton()
             switch (_state)
             {
                 // stop sending MIDI Clock, LED blinks permanently and defaut edit message is displayed on screen
-                case CONTROLLER:
-
-                    // stop sending MIDI Clock signal in case of the controller was sending such signal
-                    if (_subState == MIDI_CLOCK_ON)
-                        _midiWorker->sendMIDIStopClock();        
+                case CONTROLLER:                     
     
                     _state = EDIT_PAGE;
-                    _subState = DEFAULT_EDIT_MSG;                
-                        
-                    _midiLed.setState(HIGH); 
+                    _subState = DEFAULT_EDIT_MSG;                        
+                  
                     _screenManager.printSelectComponentMessage();
                 
                 break;
@@ -692,9 +687,8 @@ void MIDIController::processEditModeButton()
                 case EDIT_PAGE:
     
                     _state = CONTROLLER;
-                    _subState = MIDI_CLOCK_OFF;    
-                
-                    _midiLed.setState(LOW);          
+                    _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF; 
+
                     _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);       
                     
                 break;
@@ -708,9 +702,8 @@ void MIDIController::processEditModeButton()
                     else
                     {
                         _state = CONTROLLER;
-                        _subState = MIDI_CLOCK_OFF;    
-                
-                        _midiLed.setState(LOW);          
+                        _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF;                
+                              
                         _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);     
                     }
                     
@@ -721,11 +714,6 @@ void MIDIController::processEditModeButton()
         // after saving a page or global configuration, set controller status to CONTROLLER
         else
         {
-            _state = CONTROLLER;
-            _subState = MIDI_CLOCK_OFF;
-
-            _midiLed.setState(LOW);          
-
             // display default message on screen
             _screenManager.printDefault(_currentPage, _memoryManager.getMaxPages(), _bpm, _globalConfig);
         
@@ -745,14 +733,17 @@ void MIDIController::processEditModeButton()
                 _state = EDIT_GLOBAL_CONFIG;
                 _subState = EDIT_GLOBAL_MODE;    
 
-                _accesToGloabalEdit = 1;
-                
-                _midiLed.setState(HIGH);
+                _accesToGloabalEdit = 1;               
+
                 _screenManager.printEditGlobalConfig(_globalConfig);      
 
             break;    
 
             case EDIT_PAGE:
+
+                _isMIDIClockOn = 0;
+                _sequencer.stopPlayBack();
+                _midiLed.setState(LOW);     
 
                 // saves the current page
                 savePage(_currentPage); 
@@ -771,6 +762,10 @@ void MIDIController::processEditModeButton()
 
                 if (!_accesToGloabalEdit)
                 {
+                    _isMIDIClockOn = 0;
+                    _sequencer.stopPlayBack();
+                    _midiLed.setState(LOW);  
+
                     // saves the global configuration parameters
                     _memoryManager.saveGlobalConfiguration(_globalConfig); 
                     _wasGlobalConfigSaved = 1;        
@@ -788,4 +783,13 @@ void MIDIController::processEditModeButton()
         }
             
     }
+}
+
+/*
+* Update the status of the synchronisation maanager
+*/
+void MIDIController::updateSyncStatus()
+{
+    _syncManager.updateSyncStatus();
+
 }

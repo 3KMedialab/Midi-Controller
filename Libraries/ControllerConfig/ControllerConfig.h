@@ -120,6 +120,7 @@ const uint8_t ROWS = 2;
 //-------------------------------- T E M P O  S E C T I O N ---------------------------------------------------------
 const uint8_t MIN_BPM = 10;
 const uint16_t MAX_BPM = 300;
+const uint8_t BAR_LENGTH = 4; // number of quarter notes within a bar
 //-------------------------------- E N D  O F  T E M P O  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M U L T I P L E X E R  S E C T I O N  ---------------------------------------------------------
