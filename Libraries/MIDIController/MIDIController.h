@@ -80,7 +80,8 @@ class MIDIController
     Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
     Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
     uint16_t _bpm;                                                                                      // Current MIDI controller tempo in BPMs.   
-    uint32_t _lastTime;                                                                                 // Led blink timer
+    uint32_t _lastTimeBlink;                                                                                 // Led blink timer
+    uint32_t _lastTimeBlinkFade;                                                                                 // Led blink fade timer
     uint32_t _lastTimeClock;                                                                            // MIDI clock tick timer  
     uint8_t _isMIDIClockOn;                                                                             // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
 
@@ -90,7 +91,8 @@ class MIDIController
     Sequencer _sequencer = Sequencer(_midiWorker,&sequence);
 
     SyncManager _syncManager = SyncManager(BAR_LENGTH);
-
+    uint8_t _waitForStart;
+    
     enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 
                   DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, PLAYBACK_ON, PLAYBACK_OFF}; // Controller substatus list

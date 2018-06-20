@@ -71,7 +71,8 @@ void MIDIController::begin()
    _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);   
 
    // variable that controls the bpm led blink frequency
-   _lastTime = 0;
+   _lastTimeBlink = 0;
+   _lastTimeBlinkFade = 0;
    _lastTimeClock = 0;
 
    _screenManager.cleanScreen();
@@ -87,6 +88,9 @@ void MIDIController::begin()
 
    // sending MIDI Clock is initialised to FALSE
    _isMIDIClockOn = 0;
+   
+   // wait for start flag is set to zero on controller initialization
+   _waitForStart = 0;
 }
 
 /*
@@ -404,10 +408,10 @@ void MIDIController::processMultiplePurposeButton()
     {
         switch (_state)
         {
-            // activate/deactivate MIDI clock signal sending
-            case CONTROLLER:                
-                updateMIDIClockState();
-            break;
+           // activate/deactivate MIDI clock signal sending
+           case CONTROLLER:                
+				updateMIDIClockState();
+           break;
 
            case EDIT_PAGE:
                 moveCursorToValue();                          
@@ -421,7 +425,27 @@ void MIDIController::processMultiplePurposeButton()
                 updateSequencerPlayBackStatus();                         
            break;
         }    
-    }  
+    }
+	
+	// button was not pressed -> check whether start sending MIDI clock or start sequencer playback is pending
+	else
+	{
+		if (_waitForStart)
+		{
+			switch (_state)
+			{
+				// activate/deactivate sending of MIDI clock signal
+				case CONTROLLER:                
+					updateMIDIClockState();
+				break;
+           
+				// start/stop sequence playback
+				case SEQUENCER:
+					updateSequencerPlayBackStatus();                         
+				break;
+			}    
+		}		
+	}
 }
 
 /*
@@ -429,30 +453,56 @@ void MIDIController::processMultiplePurposeButton()
 */
 void MIDIController::updateMIDIClockState()
 {               
-    _subState == MIDI_CLOCK_OFF ? _subState=MIDI_CLOCK_ON : _subState=MIDI_CLOCK_OFF;  
+    if (!_waitForStart)
+	{
+		_subState == MIDI_CLOCK_OFF ? _subState=MIDI_CLOCK_ON : _subState=MIDI_CLOCK_OFF;  
+	}
 
-    Serial.print(F("STATUS: "));
-    Serial.println(_state,DEC);
-    Serial.print(F("SUBSTATUS: "));
-    Serial.println(_subState,DEC);
-            
     switch (_subState)
     {
         // send start real time message
         case MIDI_CLOCK_ON:
-            _isMIDIClockOn = 1;
-            _midiWorker->sendMIDIStartClock();
+			
+			// check if sending MIDI clock can start
+			if (_syncManager.canStart())
+			{
+				_isMIDIClockOn = 1;
+				
+				if (!_syncManager.isActive())
+				{
+					_syncManager.activate();
+				}
+				
+				_waitForStart = 0;
+				
+				_midiWorker->sendMIDIStartClock();
+			}
+			
+			// sequencer is playing the sequence, so sending MIDI clock signal must wait for the start of the bar
+			else
+			{
+				_waitForStart = 1;
+			}
+				
         break;
 
         // send stop realtime message
         case MIDI_CLOCK_OFF:
+			
+			// if MIDI clock signal was not being sent it's not necessary to send the MIDI Stop message
+			if (!_waitForStart)
+			{
+				_midiWorker->sendMIDIStopClock();
+			}
+			
             _isMIDIClockOn = 0;
-            _midiWorker->sendMIDIStopClock();
-
-            // led stop blinking if controller is not sending MIDI Clock and sequencer is not playing the sequence
+			_waitForStart = 0;
+			
+			// stop the sync manager and stop bpm indicator if controller is not sending MIDI Clock and sequencer is not playing the sequence
             if (!_sequencer.isPlayBackOn())
             {
                 _midiLed.setState(LOW);
+				_syncManager.deactivate();
             }
               
         break;
@@ -463,29 +513,48 @@ void MIDIController::updateMIDIClockState()
 * Activate/Deactivate the sequencer Playback
 */
 void MIDIController::updateSequencerPlayBackStatus()
-{           
-    _subState == PLAYBACK_OFF ? _subState=PLAYBACK_ON : _subState=PLAYBACK_OFF;    
-
-    Serial.print(F("STATUS: "));
-    Serial.println(_state,DEC);
-    Serial.print(F("SUBSTATUS: "));
-    Serial.println(_subState,DEC);
+{    
+	if (!_waitForStart)
+	{
+		_subState == PLAYBACK_OFF ? _subState=PLAYBACK_ON : _subState=PLAYBACK_OFF;    
+	}
             
     switch (_subState)
     {
         // send start real time message
         case PLAYBACK_ON:
-            _sequencer.startPlayBack();
+		
+			// check if sequence playback can start
+			if (_syncManager.canStart())
+			{
+				_sequencer.startPlayBack();
+				
+				if (!_syncManager.isActive())
+				{
+					_syncManager.activate();
+				}
+				
+				_waitForStart = 0;
+			}
+			
+			// MIDI clock signal is being sent, so playback start must wait for the start of the bar
+			else
+			{
+				_waitForStart = 1;
+			}
+            
         break;
 
-        // send stop realtime message
         case PLAYBACK_OFF:
-             _sequencer.stopPlayBack();
+		
+            _sequencer.stopPlayBack();
+			_waitForStart = 0;
             
-            // led stop blinking if controller is not sending MIDI Clock and sequencer is not playing the sequence
+            // stop the sync manager and stop bpm indicator if controller is not sending MIDI Clock and sequencer is not playing the sequence
             if (!_isMIDIClockOn)
             {
                 _midiLed.setState(LOW);
+				_syncManager.deactivate();
             }
 
         break;        
@@ -623,15 +692,31 @@ void MIDIController::playBackSequence()
 */
 void MIDIController::updateBpmIndicatorStatus()
 {
-    // controls led blinking regarding the tempo
-    if (_syncManager.getSyncTimeStamp() - _lastTime >= ((MICROSECONDS_PER_MINUTE / _bpm) / 2))
-    {
-        if (_isMIDIClockOn || _sequencer.isPlayBackOn())
-        {          
-            _midiLed.setState(!_midiLed.getState());
-            _lastTime =  _syncManager.getSyncTimeStamp();
-        }        
-    }
+	if (_waitForStart)
+	{
+		if (_syncManager.getSyncTimeStamp() - _lastTimeBlinkFade >= ((MICROSECONDS_PER_MINUTE / _bpm) / 8))
+		{
+			_midiLed.setState(!_midiLed.getState());
+            _lastTimeBlinkFade = _syncManager.getSyncTimeStamp();
+		}
+	}
+	
+	else
+	{
+		if (_syncManager.getSyncTimeStamp() - _lastTimeBlink >= ((MICROSECONDS_PER_MINUTE / _bpm) / 2))
+		{
+			if (_isMIDIClockOn || _sequencer.isPlayBackOn())
+			{          
+				_midiLed.setState(!_midiLed.getState());
+				_lastTimeBlink = _syncManager.getSyncTimeStamp();
+			}
+			
+			else
+			{
+				_midiLed.setState(LOW);
+			}			
+		}		
+	}    
 }
 
 /*

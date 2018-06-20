@@ -6,7 +6,7 @@
 SyncManager::SyncManager(uint8_t barLength) 
 {
     _actived = 0;
-    _timeInBar = 1;
+    _timeInBar = 0;
     _changedTimeInBar = 1;
     _lastSyncTimeStamp = 0;
 
@@ -35,13 +35,23 @@ void SyncManager::setBpm(uint8_t bpm)
 
 void SyncManager::activate()
 {
+    Serial.println(F("******************************"));
+    Serial.println(F("SYNC MANAGER ACTIVATED!"));
+    Serial.print(F("BPM "));
+    Serial.println(_bpm,DEC);
+    Serial.println(F("******************************"));
+    
     _actived = 1;
 }
 
 void SyncManager::deactivate()
 {
+    Serial.println(F("******************************"));
+    Serial.println(F("SYNC MANAGER DEACTIVATED!"));
+    Serial.println(F("******************************"));
+
     _actived = 0;
-    _timeInBar = 1;
+    _timeInBar = 0;
     _changedTimeInBar = 1;
     _lastSyncTimeStamp = 0;
 }
@@ -61,7 +71,7 @@ void SyncManager::updateSyncStatus()
             // Move to next time of the bar
             _timeInBar++;
 
-            if (_timeInBar >= _barLength)
+            if (_timeInBar > _barLength)
             {
                 _timeInBar = 1;
             }
@@ -69,7 +79,12 @@ void SyncManager::updateSyncStatus()
             // new time =  true
             _changedTimeInBar = 1;
 
-            _lastSyncTimeStamp = _syncTimeStamp;        
+            _lastSyncTimeStamp = _syncTimeStamp;
+
+            Serial.println(F("******************************"));
+            Serial.print(F("TIME IN BAR: "));  
+            Serial.println(_timeInBar, DEC);      
+             Serial.println(F("******************************"));
         }
 
         else
