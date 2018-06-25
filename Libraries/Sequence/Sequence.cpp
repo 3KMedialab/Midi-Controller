@@ -6,7 +6,10 @@ Sequence::Sequence()
 
     for (int i=0;i<MAX_LENGTH;i++)
     {
-        _steps[i].setNote(60 + i);  
+        _steps[i].setNote(60 + i); 
+        _steps[i].setEnabled(1); 
+        _steps[i].setLegato(0);     
+           
     }
 }
 

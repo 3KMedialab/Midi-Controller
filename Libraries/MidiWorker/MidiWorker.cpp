@@ -90,8 +90,8 @@ void MidiWorker::sendMIDIStartClock()
 */
 void MidiWorker::sendMIDIClock()
 {
-    Serial.println(F("MESSAGE"));
-    Serial.println(F("CLOCK"));  
+    /*Serial.println(F("MESSAGE"));
+    Serial.println(F("CLOCK"));  */
 }
 
 /*

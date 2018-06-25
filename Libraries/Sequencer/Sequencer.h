@@ -13,34 +13,40 @@ class Sequencer
 {
   public:      
 
-    Sequencer (MidiWorker * midiWorker, Sequence * sequence);    
+    Sequencer (MidiWorker * midiWorker, Sequence * sequence, uint8_t mode, uint8_t stepSize);   
+    enum {FORWARD, BACKWARD, RANDOM}; 
+    enum {QUARTER=1, EIGHTH=2, SIXTEENTH=4, THIRTYSECOND=8};
 
     Sequence * getSequence();
     uint8_t isPlayBackOn();
-    uint8_t getPlayBackStep();
+    int8_t getPlayBackStep();
     uint8_t getMIDIChannel();
     
     void setSequence(Sequence * sequence);
+    void setBpm(uint8_t bpm);
+    void setPlayBackStep(int8_t currentStep);
+    void setMIDIChannel(uint8_t channel);
+    void setPlayBackMode(uint8_t mode);
+    void setStepSize(uint8_t size);
+
     void startPlayBack();
     void stopPlayBack();
-    void setBpm(uint8_t bpm);
-    void setPlayBackStep(uint8_t currentStep);
-    void setMIDIChannel(uint8_t channel);
-
     void playBackSequence(uint32_t currentTime);
 
   private:
+
+    void playBackForward();
+    void playBackBackward();
+    void playBackRandom();
 
     Sequence * _sequence;
     uint8_t _playBackOn;
     uint32_t _bpm;          
     uint32_t _lastTimePlayBack;
-    uint8_t _playBackStep;
+    int8_t _playBackStep;
     uint8_t _midiChannel;
     MidiWorker * _midiWorker;
-    MIDIMessage _message;
-
-
-  
+    uint8_t _playBackMode;    
+    uint8_t _stepSize;
 };
 #endif

@@ -88,7 +88,7 @@ class MIDIController
     MidiWorker * _midiWorker;                                                                           // object to manage the MIDI functionality
 
     Sequence sequence = Sequence();
-    Sequencer _sequencer = Sequencer(_midiWorker,&sequence);
+    Sequencer _sequencer = Sequencer(_midiWorker,&sequence, Sequencer::FORWARD, Sequencer::QUARTER);
 
     SyncManager _syncManager = SyncManager(BAR_LENGTH);
     uint8_t _waitForStart;

@@ -102,6 +102,8 @@ MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
     
     //Serial.begin(9600);  
     controller.begin();
+
+    randomSeed(analogRead(0));
  }
  
  void loop(void)

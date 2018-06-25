@@ -828,6 +828,7 @@ void MIDIController::processEditModeButton()
 
                 _isMIDIClockOn = 0;
                 _sequencer.stopPlayBack();
+                _syncManager.deactivate();
                 _midiLed.setState(LOW);     
 
                 // saves the current page
@@ -849,6 +850,7 @@ void MIDIController::processEditModeButton()
                 {
                     _isMIDIClockOn = 0;
                     _sequencer.stopPlayBack();
+                    _syncManager.deactivate();
                     _midiLed.setState(LOW);  
 
                     // saves the global configuration parameters

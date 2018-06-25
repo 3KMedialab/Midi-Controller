@@ -28,7 +28,7 @@ uint8_t SyncManager::getTimeInBar()
     return _timeInBar;
 }
 
-void SyncManager::setBpm(uint8_t bpm)
+void SyncManager::setBpm(uint16_t bpm)
 {
     _bpm = bpm;
 }
@@ -83,7 +83,9 @@ void SyncManager::updateSyncStatus()
 
             Serial.println(F("******************************"));
             Serial.print(F("TIME IN BAR: "));  
-            Serial.println(_timeInBar, DEC);      
+            Serial.println(_timeInBar, DEC);     
+            Serial.print(F("BPM: "));  
+            Serial.println(_bpm, DEC);     
              Serial.println(F("******************************"));
         }
 
