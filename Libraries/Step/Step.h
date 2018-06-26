@@ -6,7 +6,10 @@
 class Step
 {
   public:   
-    
+  
+  Step();
+	Step (uint8_t note, uint8_t enabled, uint8_t legato);
+	
     uint8_t getNote();
     uint8_t isEnabled();
     uint8_t isLegato();
@@ -14,6 +17,8 @@ class Step
     void setNote (uint8_t note);
     void setEnabled(uint8_t enabled);
     void setLegato(uint8_t legato);    
+	
+	static uint8_t getSize();
 
   private:
 

@@ -132,4 +132,9 @@ const uint8_t MUX1_MIDI_BUTTONS_CONTROL_PINS [MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS
 const uint8_t MUX1_MIDI_POTS_NUM_CONTROL_PINS = 3;
 const uint8_t MUX1_MIDI_POTS_CONTROL_PINS [MUX1_MIDI_POTS_NUM_CONTROL_PINS] = {2, 3, 4};*/
 //-------------------------------- E N D  O F  M U L T I P L E X E R  S E C T I O N ---------------------------------------------
+const uint8_t NUM_PAGES = 10;
+const uint8_t NUM_SEQUENCES = 10;
+//-------------------------------- M E M O R Y  S E C T I O N  ---------------------------------------------------------
+
+//-------------------------------- E N D  O F  M E M O R Y  S E C T I O N ---------------------------------------------
 #endif

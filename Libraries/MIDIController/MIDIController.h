@@ -36,7 +36,6 @@
 #include <Led.h>
 #include <GlobalConfig.h>
 #include <Sequencer.h>
-#include <Sequence.h>
 #include <SyncManager.h>
 
 #define MICROSECONDS_PER_MINUTE 60000000
@@ -44,8 +43,8 @@
 class MIDIController
 {
   public:   
-    MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents);
-    MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents);
+    MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents, Sequencer * sequencer);
+    MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents, Sequencer * sequencer);
       
     void begin(); 
     void processMIDIComponents(); 
@@ -66,6 +65,8 @@ class MIDIController
     MemoryManager _memoryManager;                                                                       // object to manage interactions between the controller and the EEPROM
     uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
     uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.
+	uint8_t _currentSequence;                                                                           // current sequence loaded into the sequencer
+    uint8_t _wasSequenceSaved;                                                                          // flag that indicates wether a sequence was saved or not.
     uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
     uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
 
@@ -86,9 +87,8 @@ class MIDIController
     uint8_t _isMIDIClockOn;                                                                             // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
 
     MidiWorker * _midiWorker;                                                                           // object to manage the MIDI functionality
-
-    Sequence sequence = Sequence();
-    Sequencer _sequencer = Sequencer(_midiWorker,&sequence, Sequencer::FORWARD, Sequencer::QUARTER);
+    
+    Sequencer * _sequencer;
 
     SyncManager _syncManager = SyncManager(BAR_LENGTH);
     uint8_t _waitForStart;

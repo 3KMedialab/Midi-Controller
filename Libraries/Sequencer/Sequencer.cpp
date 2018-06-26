@@ -1,9 +1,8 @@
 #include "Sequencer.h"
 
-Sequencer::Sequencer (MidiWorker * midiWorker, Sequence * sequence, uint8_t mode, uint8_t stepSize)
+Sequencer::Sequencer (MidiWorker * midiWorker, uint8_t mode, uint8_t stepSize)
 {
     _midiWorker = midiWorker;
-    _sequence = sequence;
     _lastTimePlayBack = 0;
     _playBackOn = 0;    
     _stepSize = stepSize;
@@ -17,14 +16,9 @@ Sequencer::Sequencer (MidiWorker * midiWorker, Sequence * sequence, uint8_t mode
         break;
 
         case BACKWARD:
-            _playBackStep = _sequence->getLength() - 1;
+            _playBackStep = LENGTH - 1;
         break;
     }
-}
-
-void Sequencer::setSequence(Sequence * sequence)
-{
-    _sequence = sequence;
 }
 
 void Sequencer::setBpm(uint8_t bpm)
@@ -56,7 +50,7 @@ void Sequencer::setPlayBackMode(uint8_t mode)
             break;
 
             case BACKWARD:
-                _playBackStep = _sequence->getLength() - 1;
+                _playBackStep = LENGTH - 1;
             break;
         }
     }
@@ -65,11 +59,6 @@ void Sequencer::setPlayBackMode(uint8_t mode)
 void Sequencer::setStepSize (uint8_t size)
 {
     _stepSize = size;
-}
-
-Sequence * Sequencer::getSequence()
-{
-    return _sequence;
 }
 
 int8_t Sequencer::getPlayBackStep()
@@ -85,6 +74,21 @@ uint8_t Sequencer::isPlayBackOn()
 uint8_t Sequencer::getMIDIChannel()
 {
     return _midiChannel;
+}
+
+uint8_t Sequencer::getSequenceLength()
+{
+    return LENGTH;
+}
+
+Step * Sequencer::getSequence()
+{
+    return _steps;
+}
+
+Step Sequencer::getSequenceStep(uint8_t pos)
+{
+    return _steps[pos];
 }
 
 void Sequencer::startPlayBack()
@@ -105,7 +109,7 @@ void Sequencer::stopPlayBack()
         break;
 
         case BACKWARD:
-            _playBackStep = _sequence->getLength() - 1;
+            _playBackStep = LENGTH - 1;
         break;
     }
 }
@@ -147,14 +151,14 @@ void Sequencer::playBackForward()
             
     if (_playBackStep == 0)
     {
-        msgNoteOff.setDataByte1(_sequence->getStep(_sequence->getLength() - 1).getNote());
-        isStepLegato = _sequence->getStep(_sequence->getLength() - 1).isLegato();
+        msgNoteOff.setDataByte1(_steps[LENGTH - 1].getNote());
+        isStepLegato = _steps[LENGTH - 1].isLegato();
     }
 
     else
     {
-        msgNoteOff.setDataByte1(_sequence->getStep(_playBackStep - 1).getNote());
-        isStepLegato = _sequence->getStep(_playBackStep - 1).isLegato();
+        msgNoteOff.setDataByte1(_steps[_playBackStep - 1].getNote());
+        isStepLegato = _steps[_playBackStep - 1].isLegato();
     }            
             
     if (!isStepLegato)
@@ -163,10 +167,10 @@ void Sequencer::playBackForward()
     }
 
     // Play current step if enabled
-    if (_sequence->getStep(_playBackStep).isEnabled())
+    if (_steps[_playBackStep].isEnabled())
     {
         msgNoteOn.setType(midi::NoteOn);
-        msgNoteOn.setDataByte1(_sequence->getStep(_playBackStep).getNote());
+        msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
     }
@@ -179,7 +183,7 @@ void Sequencer::playBackForward()
     // Move sequence to next step
     _playBackStep++;
 
-    if (_playBackStep >= _sequence->getLength())
+    if (_playBackStep >= LENGTH)
     {
         _playBackStep = 0;
     }    
@@ -194,16 +198,16 @@ void Sequencer::playBackBackward()
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
             
-    if (_playBackStep == _sequence->getLength() - 1)
+    if (_playBackStep == LENGTH - 1)
     {
-        msgNoteOff.setDataByte1(_sequence->getStep(0).getNote());
-        isStepLegato = _sequence->getStep(0).isLegato();
+        msgNoteOff.setDataByte1(_steps[0].getNote());
+        isStepLegato = _steps[0].isLegato();
     }
 
     else
     {
-        msgNoteOff.setDataByte1(_sequence->getStep(_playBackStep + 1).getNote());
-        isStepLegato = _sequence->getStep(_playBackStep + 1).isLegato();
+        msgNoteOff.setDataByte1(_steps[_playBackStep + 1].getNote());
+        isStepLegato = _steps[_playBackStep + 1].isLegato();
     }            
             
     if (!isStepLegato)
@@ -212,10 +216,10 @@ void Sequencer::playBackBackward()
     }
 
     // Play current step if enabled
-    if (_sequence->getStep(_playBackStep).isEnabled())
+    if (_steps[_playBackStep].isEnabled())
     {
         msgNoteOn.setType(midi::NoteOn);
-        msgNoteOn.setDataByte1(_sequence->getStep(_playBackStep).getNote());
+        msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
     }
@@ -230,7 +234,7 @@ void Sequencer::playBackBackward()
 
     if (_playBackStep < 0)
     {
-        _playBackStep = _sequence->getLength() - 1;
+        _playBackStep = LENGTH - 1;
     }        
 }
 
@@ -242,9 +246,9 @@ void Sequencer::playBackRandom()
 
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
-    msgNoteOff.setDataByte1(_sequence->getStep(_playBackStep).getNote());
+    msgNoteOff.setDataByte1(_steps[_playBackStep].getNote());
     
-    isStepLegato = _sequence->getStep(_playBackStep).isLegato();
+    isStepLegato = _steps[_playBackStep].isLegato();
                
     if (!isStepLegato)
     {
@@ -252,13 +256,13 @@ void Sequencer::playBackRandom()
     }
 
     // Calculate next step
-    _playBackStep = random(0, _sequence->getLength() - 1);
+    _playBackStep = random(0, LENGTH - 1);
 
     // Play current step if enabled
-    if (_sequence->getStep(_playBackStep).isEnabled())
+    if (_steps[_playBackStep].isEnabled())
     {
         msgNoteOn.setType(midi::NoteOn);
-        msgNoteOn.setDataByte1(_sequence->getStep(_playBackStep).getNote());
+        msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
     }

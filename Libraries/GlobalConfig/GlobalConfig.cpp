@@ -23,9 +23,10 @@
 /*
 * Constructor
 */
-GlobalConfig::GlobalConfig(uint8_t MIDIChannel, uint8_t mode, uint8_t rootNote)
+GlobalConfig::GlobalConfig(uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote)
 {
      _MIDIChannel = MIDIChannel;   
+	 _sequencerMIDIChannel = sequencerMIDIChannel;   
      _mode = mode; 
      _rootNote = rootNote;
 }
@@ -36,57 +37,52 @@ GlobalConfig::GlobalConfig(uint8_t MIDIChannel, uint8_t mode, uint8_t rootNote)
 GlobalConfig::GlobalConfig(){}
 
 /*
-* Setter method
+* Setter methods
 */
 void GlobalConfig::setMIDIChannel(uint8_t MIDIChannel)
 {
     _MIDIChannel = MIDIChannel;
 }
 
-/*
-* Setter method
-*/
+void GlobalConfig::setSequencerMIDIChannel(uint8_t sequencerMIDIChannel)
+{
+    _sequencerMIDIChannel = sequencerMIDIChannel;
+}
+
 void GlobalConfig::setMode(uint8_t mode)
 {
     _mode = mode;
 }
 
-/*
-* Setter method
-*/
 void GlobalConfig::setRootNote(uint8_t rootNote)
 {
     _rootNote = rootNote;
 }
 
 /*
-* Getter method
+* Getter methods
 */
 uint8_t GlobalConfig::getMIDIChannel()
 {
     return _MIDIChannel;    
 }
 
-/*
-* Getter method
-*/
+uint8_t GlobalConfig::getSequencerMIDIChannel()
+{
+    return _sequencerMIDIChannel;    
+}
+
 uint8_t GlobalConfig::getMode()
 {
     return _mode;    
 }
 
-/*
-* Getter method
-*/
 uint8_t GlobalConfig::getRootNote()
 {
     return _rootNote;    
 }
 
-/*
-* Return the size in bytes of this class
-*/
-static uint8_t GlobalConfig::getSize()
+uint8_t GlobalConfig::getSize()
 {
-    return sizeof(uint8_t) * 3;    
+    return sizeof(uint8_t) * 4;    
 }
