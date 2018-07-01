@@ -28,6 +28,7 @@
 #include <IMIDIComponent.h>
 #include <MIDIUtils.h>
 #include <GlobalConfig.h>
+#include <Step.h>
 
 #define MSG_PAGE 0
 #define MSG_TEMPO 1
@@ -44,9 +45,11 @@
 #define MSG_EMPTY_MIDI_TYPE 12
 #define MSG_MODE 13
 #define MSG_KEY 14
+#define MSG_SEQ 15
+#define MSG_STEP 16
 
 // Messages that will be displayed on the screen
-const char msg_Page[] PROGMEM = "Pag:";
+const char msg_Page[] PROGMEM = "Pg:";
 const char msg_Tempo[] PROGMEM = "Tempo: ";
 const char msg_Bpm[] PROGMEM = "BPM";
 const char msg_Edit[] PROGMEM = {'S','E','L','E','C','T',' ','A','\n','C','O','M','P','O','N','E','N','T','\0'};
@@ -61,14 +64,18 @@ const char msg_saved[] PROGMEM = "SAVED OK!";
 const char msg_empty_midi_type[] PROGMEM = "No Msg";
 const char msg_mode[] PROGMEM = "Mode:";
 const char msg_key[] PROGMEM = "Key:";
+const char msg_seq[] PROGMEM = "Sq:";
+const char msg_step[] PROGMEM = "Step:";
 
-const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key};
+
+const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, 
+msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key, msg_seq, msg_step};
 
 class ScreenManager
 {
   public:   
     void initialize(uint8_t i2cAddress, uint8_t rowLength, uint8_t rows);
-    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf);
+    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf, uint8_t isMidiClockOn);
     void printSelectComponentMessage();
     void printEditGlobalConfig(GlobalConfig globalConf);
     void printSavedMessage();
@@ -98,6 +105,9 @@ class ScreenManager
     void refreshRootNoteData(uint8_t rootNote);
     void refreshMIDIChannelData(uint8_t midiChannel);
 
+    // SEQUENCER METHODS
+    void printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo);
+    void updateDisplayedStep(Step step, uint8_t sequenceLength, uint8_t currentStep);
 
   private:
     void getMessage(uint8_t msgIndex, char * buffer);
@@ -107,7 +117,7 @@ class ScreenManager
     void printMIDIChannel(uint8_t channel);  
     void clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to);
     
-    IMIDIComponent * _displayedMIDIComponent;                               // MIDI component currently assigned to the screen
+    IMIDIComponent * _displayedMIDIComponent;                               // MIDI component currently assigned to the screen   
     uint8_t _currentMIDIMessageDisplayed;                                   // MIDI message currently displayed on the screen
     LiquidCrystal_I2C _screen;                                              // LCD screen object
 

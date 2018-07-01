@@ -29,7 +29,6 @@
 #include <Multiplexer.h>
 #include <MuxButton.h>
 #include <MuxPotentiometer.h>
-#include <Sequencer.h>
 
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
@@ -91,20 +90,15 @@ IMIDIComponent * components [NUM_MIDI_BUTTONS+NUM_MIDI_POTS] = {&b1,&b2,&b3,&b4,
 // MIDI processing handler
 MidiWorker worker(MIDI);
 
-// Sequencer
-Sequencer sequencer = Sequencer(&worker, Sequencer::FORWARD, Sequencer::QUARTER);
-
 // Creates the MIDI Controller object
-//MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS, &sequencer);
-MIDIController controller(components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS, &sequencer);
+MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
 
  void setup(void)
  {
     //Initializes MIDI interface
-    //worker.begin();
-    Serial.begin(9600);
-    
-    //Serial.begin(9600);  
+    worker.begin();
+    //Serial.begin(9600);    
+
     controller.begin();
 
     randomSeed(analogRead(0));

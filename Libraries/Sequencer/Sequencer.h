@@ -6,6 +6,9 @@
 #include "MIDIMessage.h"
 #include "MIDI.h"
 #include "Step.h"
+#include <MemoryManager.h>
+#include <ScreenManager.h>
+#include <ControllerConfig.h>
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
@@ -13,7 +16,7 @@ class Sequencer
 {
   public:      
 
-    Sequencer (MidiWorker * midiWorker, uint8_t mode, uint8_t stepSize);   
+    Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryManager, ScreenManager * screenManager);   
     enum {FORWARD, BACKWARD, RANDOM}; 
     enum {QUARTER=1, EIGHTH=2, SIXTEENTH=4, THIRTYSECOND=8};
     enum {LENGTH = 8};
@@ -22,18 +25,26 @@ class Sequencer
     int8_t getPlayBackStep();
     uint8_t getMIDIChannel();
     uint8_t getSequenceLength();
+    uint8_t getCurrentSequence();
     Step * getSequence();
     Step getSequenceStep(uint8_t pos);
     
-    void setBpm(uint8_t bpm);
+    void setMidiWorker (MidiWorker * midiWorker);
+    void setBpm(uint16_t * bpm);
     void setPlayBackStep(int8_t currentStep);
     void setMIDIChannel(uint8_t channel);
+    void setCurrentSequence(uint8_t numSequence);
     void setPlayBackMode(uint8_t mode);
     void setStepSize(uint8_t size);
 
+    void loadCurrentSequence();
+
     void startPlayBack();
     void stopPlayBack();
-    void playBackSequence(uint32_t currentTime);
+    uint8_t playBackSequence(uint32_t currentTime);
+
+    void printDefault();
+    void updateDisplayedStep();
 
   private:
 
@@ -42,13 +53,17 @@ class Sequencer
     void playBackRandom();
 
     uint8_t _playBackOn;
-    uint32_t _bpm;          
+    uint16_t * _bpm;          
     uint32_t _lastTimePlayBack;
     int8_t _playBackStep;
     uint8_t _midiChannel;
     MidiWorker * _midiWorker;
     uint8_t _playBackMode;    
     uint8_t _stepSize;
+    uint8_t _currentSequence;
     Step _steps[LENGTH]; 
+
+    MemoryManager * _memoryManager;
+    ScreenManager * _screenManager;
 };
 #endif

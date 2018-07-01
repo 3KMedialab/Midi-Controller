@@ -35,20 +35,20 @@ void SyncManager::setBpm(uint16_t bpm)
 
 void SyncManager::activate()
 {
-    Serial.println(F("******************************"));
+   /* Serial.println(F("******************************"));
     Serial.println(F("SYNC MANAGER ACTIVATED!"));
     Serial.print(F("BPM "));
     Serial.println(_bpm,DEC);
-    Serial.println(F("******************************"));
+    Serial.println(F("******************************"));*/
     
     _actived = 1;
 }
 
 void SyncManager::deactivate()
 {
-    Serial.println(F("******************************"));
+   /* Serial.println(F("******************************"));
     Serial.println(F("SYNC MANAGER DEACTIVATED!"));
-    Serial.println(F("******************************"));
+    Serial.println(F("******************************"));*/
 
     _actived = 0;
     _timeInBar = 0;
@@ -81,12 +81,12 @@ void SyncManager::updateSyncStatus()
 
             _lastSyncTimeStamp = _syncTimeStamp;
 
-            Serial.println(F("******************************"));
+           /* Serial.println(F("******************************"));
             Serial.print(F("TIME IN BAR: "));  
             Serial.println(_timeInBar, DEC);     
             Serial.print(F("BPM: "));  
             Serial.println(_bpm, DEC);     
-             Serial.println(F("******************************"));
+             Serial.println(F("******************************"));*/
         }
 
         else

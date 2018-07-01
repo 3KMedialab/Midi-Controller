@@ -1,12 +1,12 @@
 #include "Sequencer.h"
 
-Sequencer::Sequencer (MidiWorker * midiWorker, uint8_t mode, uint8_t stepSize)
-{
-    _midiWorker = midiWorker;
+Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryManager, ScreenManager * screenManager)
+{    
     _lastTimePlayBack = 0;
     _playBackOn = 0;    
     _stepSize = stepSize;
     _playBackMode = mode;
+    _currentSequence = 1;
 
     switch (_playBackMode)
     {
@@ -19,9 +19,12 @@ Sequencer::Sequencer (MidiWorker * midiWorker, uint8_t mode, uint8_t stepSize)
             _playBackStep = LENGTH - 1;
         break;
     }
+
+    _memoryManager = memoryManager;
+    _screenManager = screenManager;
 }
 
-void Sequencer::setBpm(uint8_t bpm)
+void Sequencer::setBpm(uint16_t * bpm)
 {
     _bpm = bpm;
 }
@@ -61,6 +64,16 @@ void Sequencer::setStepSize (uint8_t size)
     _stepSize = size;
 }
 
+void Sequencer::setCurrentSequence (uint8_t numSequence)
+{
+    _currentSequence = numSequence;    
+}
+
+void Sequencer::setMidiWorker(MidiWorker * midiWorker)
+{
+    _midiWorker = midiWorker;
+}
+
 int8_t Sequencer::getPlayBackStep()
 {
     return _playBackStep;
@@ -91,6 +104,16 @@ Step Sequencer::getSequenceStep(uint8_t pos)
     return _steps[pos];
 }
 
+uint8_t Sequencer::getCurrentSequence()
+{
+    return _currentSequence;
+}
+
+void Sequencer::loadCurrentSequence()
+{    
+    _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+}
+
 void Sequencer::startPlayBack()
 {
     _playBackOn = 1;
@@ -111,14 +134,14 @@ void Sequencer::stopPlayBack()
         case BACKWARD:
             _playBackStep = LENGTH - 1;
         break;
-    }
+    } 
 }
 
-void Sequencer::playBackSequence(uint32_t currentTime)
+uint8_t Sequencer::playBackSequence(uint32_t currentTime)
 { 
     if (_playBackOn)
     {     
-        if (currentTime - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / _bpm) / _stepSize)
+        if (currentTime - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / *_bpm) / _stepSize)
         {
             switch (_playBackMode)
             {
@@ -133,11 +156,15 @@ void Sequencer::playBackSequence(uint32_t currentTime)
                 case RANDOM:
                     playBackRandom();
                 break;
-            } 
+            }
 
-            _lastTimePlayBack = currentTime;                   
+            _lastTimePlayBack = currentTime;
+
+            return 1; // play next step is true                   
         }
     }
+
+    return 0;
 }
 
 void Sequencer::playBackForward()
@@ -272,4 +299,50 @@ void Sequencer::playBackRandom()
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
     }
 }
-   
+
+void Sequencer::printDefault()
+{
+    _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, *_bpm);
+    _screenManager->updateDisplayedStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+}
+
+void Sequencer::updateDisplayedStep()
+{
+    
+    switch (_playBackMode)
+    {
+        case FORWARD:
+
+            if (_playBackStep == 0)
+            {
+                _screenManager->updateDisplayedStep(_steps[LENGTH - 1], LENGTH, LENGTH);    
+            }          
+
+            else
+            {
+                _screenManager->updateDisplayedStep(_steps[_playBackStep - 1], LENGTH, _playBackStep);
+            }
+        
+        break;
+
+        case BACKWARD:
+
+            if (_playBackStep == LENGTH - 1)
+            {
+                _screenManager->updateDisplayedStep(_steps[0], LENGTH, 1);    
+            }          
+
+            else
+            {
+                _screenManager->updateDisplayedStep(_steps[_playBackStep + 1], LENGTH, _playBackStep + 2);
+            }
+        
+        break;
+
+        case RANDOM:
+
+            _screenManager->updateDisplayedStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+        
+        break;
+    }
+}

@@ -43,8 +43,8 @@
 class MIDIController
 {
   public:   
-    MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents, Sequencer * sequencer);
-    MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents, Sequencer * sequencer);
+    MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents);
+    MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents);
       
     void begin(); 
     void processMIDIComponents(); 
@@ -64,8 +64,7 @@ class MIDIController
 
     MemoryManager _memoryManager;                                                                       // object to manage interactions between the controller and the EEPROM
     uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
-    uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.
-	uint8_t _currentSequence;                                                                           // current sequence loaded into the sequencer
+    uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.	  
     uint8_t _wasSequenceSaved;                                                                          // flag that indicates wether a sequence was saved or not.
     uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
     uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
@@ -88,10 +87,11 @@ class MIDIController
 
     MidiWorker * _midiWorker;                                                                           // object to manage the MIDI functionality
     
-    Sequencer * _sequencer;
+    Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::QUARTER, &_memoryManager, &_screenManager);
 
     SyncManager _syncManager = SyncManager(BAR_LENGTH);
     uint8_t _waitForStart;
+    uint8_t _waitForLoadSequence;
     
     enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 

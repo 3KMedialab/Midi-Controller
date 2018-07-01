@@ -44,7 +44,7 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
 * page: current selected page of messages
 * tempo: current selected tempo in BPMs
 */
-void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf)
+void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf, uint8_t isMidiClockOn)
 {
     char buffer[10];
     String s ="";
@@ -56,6 +56,8 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo,
     _screen.home();
     
     // prints the pages and tempo information 
+    getMessage(MSG_PAGE, buffer);  
+    s.concat(buffer);
     s.concat(page);
     s.concat(F("/"));
     s.concat(numPages);
@@ -77,7 +79,20 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo,
     s.concat(MIDIUtils::getModeName(globalConf.getMode()));
     _screen.print(s);
 
-    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
+    if (!isMidiClockOn)
+    {
+        clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());
+    }
+
+    else
+    {
+        for (uint8_t i = s.length(); i < _screen.getLCDCols() - 1; i++)
+        {
+            _screen.print(F(" "));
+        }
+
+        _screen.print(F("o"));
+    }        
 }
 
 /*
@@ -646,4 +661,68 @@ void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to
     {
         _screen.print(F(" "));
     }
+}
+
+/**************************************************/
+/* SEQUENCER METHODS                              */
+/**************************************************/
+void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo)
+{
+    char buffer[10];
+    String s ="";    
+    
+    //Set the cursor on the top left of the screen
+    _screen.home();
+       
+    // prints the sequence number and tempo information 
+    getMessage(MSG_SEQ, buffer);  
+    s.concat(buffer);
+    s.concat(currentSequence);
+    s.concat(F("/"));
+    s.concat(totalSequences);  
+    s.concat(F(" "));
+    s.concat(tempo);   
+    s.concat(F(" "));
+    getMessage(MSG_BPM, buffer);  
+    s.concat(buffer);  
+    _screen.print(s);
+       
+    clearRangeOnCurentLine(0, s.length(), _screen.getLCDCols());   
+   
+}
+
+void ScreenManager::updateDisplayedStep(Step step, uint8_t sequenceLength, uint8_t currentStep)
+{
+    char buffer[10];
+    String s ="";    
+          
+    // prints the step number and note value (if active) and legato symbol (if is legato)
+    _screen.setCursor(0,1);
+    
+    getMessage(MSG_STEP, buffer);  
+    s.concat(buffer);
+    s.concat(currentStep);  
+    s.concat(F("/"));
+    s.concat(sequenceLength);
+    s.concat(F(" "));
+
+    if (!step.isEnabled())
+    {
+        s.concat(F("--"));
+    }
+
+    else
+    {
+        s.concat(MIDIUtils::getNoteName(step.getNote()));
+        s.concat(MIDIUtils::getOctave(step.getNote()));
+
+        if (step.isLegato())
+        {
+            s.concat(F("_"));
+        }
+    }
+
+    _screen.print(s);
+    
+    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
 }

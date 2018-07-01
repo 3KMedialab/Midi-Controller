@@ -16,7 +16,7 @@ void MidiWorker::begin()
 * Send a MIDI message regarding its type
 * message: the MIDI message to be sent.
 */
-/*void MidiWorker::sendMIDIMessage(MIDIMessage * message, uint8_t channel)
+void MidiWorker::sendMIDIMessage(MIDIMessage * message, uint8_t channel)
 { 
     switch(message->getType())
     {
@@ -39,13 +39,13 @@ void MidiWorker::begin()
         case midi::InvalidType:        
         break;
     }
-}*/
+}
 
 /*
 * Send a MIDI message regarding its type
 * message: the MIDI message to be sent.
 */
-void MidiWorker::sendMIDIMessage(MIDIMessage * message, uint8_t channel)
+/*void MidiWorker::sendMIDIMessage(MIDIMessage * message, uint8_t channel)
 { 
     Serial.println(F("MESSAGE"));
     Serial.println(message->getType(),DEC);
@@ -53,36 +53,14 @@ void MidiWorker::sendMIDIMessage(MIDIMessage * message, uint8_t channel)
     Serial.println(message->getDataByte2(),DEC);
     Serial.println(channel,DEC);  
    
-}
+}*/
 
 /*
 * Send start MIDI clock signal
 */
-/*void MidiWorker::sendMIDIStartClock()
-{  
-    _mMidi.sendRealTime(midi::Start);  
-}*/
-
-/*
-* Send MIDI clock signal
-*/
-/*void MidiWorker::sendMIDIClock()
-{
-    _mMidi.sendRealTime(midi::Clock);
-}*/
-
-/*
-* Send stop MIDI clock signal
-*/
-/*void MidiWorker::sendMIDIStopClock()
-{
-    _mMidi.sendRealTime(midi::Stop);
-}*/
-
 void MidiWorker::sendMIDIStartClock()
 {  
-    Serial.println(F("MESSAGE"));
-    Serial.println(F("START"));  
+    _mMidi.sendRealTime(midi::Start);  
 }
 
 /*
@@ -90,8 +68,7 @@ void MidiWorker::sendMIDIStartClock()
 */
 void MidiWorker::sendMIDIClock()
 {
-    /*Serial.println(F("MESSAGE"));
-    Serial.println(F("CLOCK"));  */
+    _mMidi.sendRealTime(midi::Clock);
 }
 
 /*
@@ -99,6 +76,29 @@ void MidiWorker::sendMIDIClock()
 */
 void MidiWorker::sendMIDIStopClock()
 {
+    _mMidi.sendRealTime(midi::Stop);
+}
+
+/*void MidiWorker::sendMIDIStartClock()
+{  
+    Serial.println(F("MESSAGE"));
+    Serial.println(F("START"));  
+}*/
+
+/*
+* Send MIDI clock signal
+*/
+/*void MidiWorker::sendMIDIClock()
+{
+    Serial.println(F("MESSAGE"));
+    Serial.println(F("CLOCK"));  
+}*/
+
+/*
+* Send stop MIDI clock signal
+*/
+/*void MidiWorker::sendMIDIStopClock()
+{
     Serial.println(F("MESSAGE"));
     Serial.println(F("STOP"));  
-}
+}*/
