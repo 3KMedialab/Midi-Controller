@@ -93,10 +93,11 @@ class MIDIController
     uint8_t _waitForStart;
     uint8_t _waitForLoadSequence;
     
-    enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG};                                             // Controller status list
+    enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG, SEQUENCER_EDIT_STEP};                                             // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 
-                  DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, PLAYBACK_ON, PLAYBACK_OFF}; // Controller substatus list
-    char _state, _subState;                                                                                        // Controller current status and substatus
+                  DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, PLAYBACK_ON, PLAYBACK_OFF,
+                  SEQUENCER_EDIT_STEP_NUM, SEQUENCER_EDIT_NOTE, SEQUENCER_EDIT_LEGATO, SEQUENCER_EDIT_ENABLED }; // Controller substatus list
+    uint8_t _state, _subState;                                                                                        // Controller current status and substatus
 
     GlobalConfig _globalConfig = GlobalConfig();                                                        // Object containing the global configuration
 
@@ -108,6 +109,7 @@ class MIDIController
     void updateMIDIClockState();
     void updateSequencerPlayBackStatus();
     void moveCursorToValue();
+    void moveCursorToStepValue();
     void moveCursorToGLobalConfigParameter();
 };
 #endif

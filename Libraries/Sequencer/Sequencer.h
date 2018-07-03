@@ -45,6 +45,14 @@ class Sequencer
 
     void printDefault();
     void updateDisplayedStep();
+    void printEditStepData();
+    void printPreviousStep();
+    void printNextStep();
+    void moveCursorToStepValue();
+    void moveCursorToNote();
+    void moveCursorToLegato();
+    void moveCursorToEnabled();
+    void moveCursorToStepNum();
 
   private:
 

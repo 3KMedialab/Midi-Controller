@@ -691,7 +691,7 @@ void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t total
    
 }
 
-void ScreenManager::updateDisplayedStep(Step step, uint8_t sequenceLength, uint8_t currentStep)
+void ScreenManager::updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep)
 {
     char buffer[10];
     String s ="";    
@@ -705,6 +705,71 @@ void ScreenManager::updateDisplayedStep(Step step, uint8_t sequenceLength, uint8
     s.concat(F("/"));
     s.concat(sequenceLength);
     s.concat(F(" "));
+    s.concat(getStepNoteValue(step));
+
+    _screen.print(s);
+    
+    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
+}
+
+void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength)
+{
+    char buffer[10];
+    String s ="";
+
+    // set to the screen manager the position of the step being edited
+    _currentDisplayedStep = currentStep;    
+    
+    //Set the cursor on the top left of the screen
+    _screen.home();
+       
+    // prints the step number and note value 
+    getMessage(MSG_STEP, buffer);  
+    s.concat(buffer);
+    s.concat(currentStep);  
+    s.concat(F("/"));
+    s.concat(sequenceLength);
+    _screen.print(s);
+
+    clearRangeOnCurentLine(0, s.length(), STEP_NOTE_POS);
+    s = "";
+
+    s.concat(getStepNoteValue(step));
+
+    _screen.print(s);       
+    
+   clearRangeOnCurentLine(0, STEP_NOTE_POS + s.length(), _screen.getLCDCols());   
+    s = "";
+
+    // prints step's enabled and legato values    
+    _screen.setCursor(0,1);
+    
+    getMessage(MSG_STEP_LEGATO, buffer);  
+    s.concat(buffer);
+
+    step.isLegato() ? s.concat(F("Yes")) : s.concat(F("No"));
+
+    _screen.print(s);       
+    clearRangeOnCurentLine(1, s.length(), STEP_ENABLED_POS); 
+    
+    s = "";
+
+    getMessage(MSG_STEP_ENABLED, buffer);  
+    s.concat(buffer);
+
+    step.isEnabled() ? s.concat(F("Yes")) : s.concat(F("No"));  
+
+    _screen.print(s);       
+    clearRangeOnCurentLine(1, s.length() + STEP_ENABLED_POS, _screen.getLCDCols());
+
+    // move cursor to step num value position
+    _screen.setCursor(STEP_NUM_POS,0);
+    _screen.blink();   
+}
+
+String ScreenManager::getStepNoteValue (Step step)
+{
+    String s = "";
 
     if (!step.isEnabled())
     {
@@ -722,7 +787,30 @@ void ScreenManager::updateDisplayedStep(Step step, uint8_t sequenceLength, uint8
         }
     }
 
-    _screen.print(s);
+    return s;
+}
+
+uint8_t ScreenManager::getDisplayedStepNumber()
+{
+    return _currentDisplayedStep;
+}
+
+void ScreenManager::moveCursorToStepNote()
+{
+
+}
+
+void ScreenManager::moveCursorToStepLegato()
+{
+
+}
+
+void ScreenManager::moveCursorToStepEnabled()
+{
+
+}
+
+void ScreenManager::moveCursorToStepNum()
+{
     
-    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
 }

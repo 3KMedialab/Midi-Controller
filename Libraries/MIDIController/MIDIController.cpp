@@ -159,6 +159,13 @@ void MIDIController::processIncDecButtons()
                 }
 
             break; 
+
+            // display the previous step in the sequence
+            case SEQUENCER_EDIT_STEP:
+
+                _sequencer.printPreviousStep();                
+
+            break;
         }
     }
 
@@ -228,6 +235,13 @@ void MIDIController::processIncDecButtons()
                     _sequencer.printDefault();
                 }   
             
+            break;
+
+            // display the next step in the sequence
+            case SEQUENCER_EDIT_STEP:
+
+                _sequencer.printNextStep();                
+
             break;
         }
     }
@@ -501,22 +515,26 @@ void MIDIController::processMultiplePurposeButton()
     {
         switch (_state)
         {
-           // activate/deactivate MIDI clock signal sending
-           case CONTROLLER:                
+            // activate/deactivate MIDI clock signal sending
+            case CONTROLLER:                
 				updateMIDIClockState();
-           break;
+            break;
 
-           case EDIT_PAGE:
+            case EDIT_PAGE:
                 moveCursorToValue();                          
-           break;
+            break;
 
-           case EDIT_GLOBAL_CONFIG:
+            case EDIT_GLOBAL_CONFIG:
                 moveCursorToGLobalConfigParameter();                          
-           break;
+            break;
            
-           case SEQUENCER:
+            case SEQUENCER:
                 updateSequencerPlayBackStatus();                         
-           break;
+            break;
+
+            case SEQUENCER_EDIT_STEP:
+                moveCursorToStepValue();
+            break;
         }    
     }
 	
@@ -762,6 +780,40 @@ void MIDIController::moveCursorToGLobalConfigParameter()
     }
 }   
 
+void MIDIController::moveCursorToStepValue()
+{
+    switch (_subState)
+    {
+        case SEQUENCER_EDIT_STEP_NUM:
+
+            _subState = SEQUENCER_EDIT_NOTE;
+            _sequencer.moveCursorToNote();
+
+        break;
+
+        case SEQUENCER_EDIT_NOTE:
+
+            _subState = SEQUENCER_EDIT_LEGATO;
+            _sequencer.moveCursorToLegato();
+
+        break;
+
+        case SEQUENCER_EDIT_LEGATO:
+                
+            _subState = SEQUENCER_EDIT_ENABLED;
+            _sequencer.moveCursorToEnabled();
+                
+        break;
+
+        case SEQUENCER_EDIT_ENABLED:
+                
+            _subState = SEQUENCER_EDIT_STEP_NUM;
+            _sequencer.moveCursorToStepNum();
+                
+        break;
+    }
+}  
+
 /*
 * Send a MIDI clock tick and blink the LED
 */
@@ -869,7 +921,7 @@ void MIDIController::processEditModeButton()
         {
             switch (_state)
             {
-                // stop sending MIDI Clock, LED blinks permanently and defaut edit message is displayed on screen
+                // defaut edit message is displayed on screen
                 case CONTROLLER:                     
     
                     _state = EDIT_PAGE;
@@ -903,7 +955,26 @@ void MIDIController::processEditModeButton()
                         _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);     
                     }
                     
-                break;                         
+                break;
+
+                // defaut edit message is displayed on screen
+                case SEQUENCER:                     
+    
+                    _state = SEQUENCER_EDIT_STEP;
+                    _subState = SEQUENCER_EDIT_STEP_NUM;                       
+                  
+                    _sequencer.printEditStepData();
+                
+                break;
+
+                case SEQUENCER_EDIT_STEP:
+    
+                    _state = SEQUENCER;
+                    _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF; 
+
+                    _sequencer.printDefault();       
+                    
+                break;                       
             }        
         }           
    

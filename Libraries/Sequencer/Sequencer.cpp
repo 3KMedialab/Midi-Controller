@@ -303,7 +303,7 @@ void Sequencer::playBackRandom()
 void Sequencer::printDefault()
 {
     _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, *_bpm);
-    _screenManager->updateDisplayedStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+    _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
 }
 
 void Sequencer::updateDisplayedStep()
@@ -315,12 +315,12 @@ void Sequencer::updateDisplayedStep()
 
             if (_playBackStep == 0)
             {
-                _screenManager->updateDisplayedStep(_steps[LENGTH - 1], LENGTH, LENGTH);    
+                _screenManager->updateDisplayedPlaybackStep(_steps[LENGTH - 1], LENGTH, LENGTH);    
             }          
 
             else
             {
-                _screenManager->updateDisplayedStep(_steps[_playBackStep - 1], LENGTH, _playBackStep);
+                _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep - 1], LENGTH, _playBackStep);
             }
         
         break;
@@ -329,20 +329,61 @@ void Sequencer::updateDisplayedStep()
 
             if (_playBackStep == LENGTH - 1)
             {
-                _screenManager->updateDisplayedStep(_steps[0], LENGTH, 1);    
+                _screenManager->updateDisplayedPlaybackStep(_steps[0], LENGTH, 1);    
             }          
 
             else
             {
-                _screenManager->updateDisplayedStep(_steps[_playBackStep + 1], LENGTH, _playBackStep + 2);
+                _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep + 1], LENGTH, _playBackStep + 2);
             }
         
         break;
 
         case RANDOM:
 
-            _screenManager->updateDisplayedStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+            _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
         
         break;
     }
+}
+
+void Sequencer::printEditStepData()
+{
+    _screenManager->printEditStepData(_steps[0], 1, LENGTH);
+}
+
+void Sequencer::printPreviousStep()
+{
+    if (_screenManager->getDisplayedStepNumber() - 1 > 0)
+    {
+        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber() - 2], _screenManager->getDisplayedStepNumber() - 1, LENGTH);     
+    }
+}
+
+void Sequencer::printNextStep()
+{
+    if (_screenManager->getDisplayedStepNumber() - 1 < LENGTH - 1)
+    {
+        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber()], _screenManager->getDisplayedStepNumber() + 1, LENGTH);       
+    }
+}
+
+void Sequencer::moveCursorToNote()
+{
+    _screenManager->moveCursorToStepNote();
+}
+
+void Sequencer::moveCursorToLegato()
+{
+    _screenManager->moveCursorToStepLegato();
+}
+
+void Sequencer::moveCursorToEnabled()
+{
+    _screenManager->moveCursorToStepEnabled();
+}
+
+void Sequencer::moveCursorToStepNum()
+{
+    _screenManager->moveCursorToStepNum();
 }
