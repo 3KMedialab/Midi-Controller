@@ -6,9 +6,10 @@
 #include "MIDIMessage.h"
 #include "MIDI.h"
 #include "Step.h"
-#include <MemoryManager.h>
-#include <ScreenManager.h>
-#include <ControllerConfig.h>
+#include "MemoryManager.h"
+#include "ScreenManager.h"
+#include "ControllerConfig.h"
+#include "GlobalConfig.h"
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
@@ -27,8 +28,8 @@ class Sequencer
     uint8_t getSequenceLength();
     uint8_t getCurrentSequence();
     Step * getSequence();
-    Step getSequenceStep(uint8_t pos);
-    
+    Step getSequenceStep(uint8_t pos);    
+     
     void setMidiWorker (MidiWorker * midiWorker);
     void setBpm(uint16_t * bpm);
     void setPlayBackStep(int8_t currentStep);
@@ -36,8 +37,12 @@ class Sequencer
     void setCurrentSequence(uint8_t numSequence);
     void setPlayBackMode(uint8_t mode);
     void setStepSize(uint8_t size);
+    void setDisplayedStepNote(uint8_t note);
+    void setDisplayedStepLegato(uint8_t legato);
+    void setDisplayedStepEnabled(uint8_t enabled);
 
     void loadCurrentSequence();
+    void saveCurrentSequence();
 
     void startPlayBack();
     void stopPlayBack();
@@ -48,17 +53,21 @@ class Sequencer
     void printEditStepData();
     void printPreviousStep();
     void printNextStep();
+    void printEditConfig(GlobalConfig globalConfig);
     void moveCursorToStepValue();
     void moveCursorToNote();
     void moveCursorToLegato();
     void moveCursorToEnabled();
-    void moveCursorToStepNum();
+    void refreshDisplayedStepNote();
 
   private:
 
     void playBackForward();
     void playBackBackward();
     void playBackRandom();
+
+    String getPlayBackModeName();
+    String getStepSizeName();
 
     uint8_t _playBackOn;
     uint16_t * _bpm;          

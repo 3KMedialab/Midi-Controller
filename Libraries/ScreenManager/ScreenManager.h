@@ -49,6 +49,8 @@
 #define MSG_STEP 16
 #define MSG_STEP_LEGATO 17
 #define MSG_STEP_ENABLED 18
+#define MSG_PLAYBACK_MODE 19
+#define MSG_STEP_SIZE 20
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Pg:";
@@ -70,9 +72,12 @@ const char msg_seq[] PROGMEM = "Sq:";
 const char msg_step[] PROGMEM = "Step:";
 const char msg_step_legato[] PROGMEM = "Leg:";
 const char msg_step_enabled[] PROGMEM = "Ena:";
+const char msg_playback_mode[] PROGMEM = "Mode:";
+const char msg_step_size[] PROGMEM = "Size:";
 
 const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, 
-msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key, msg_seq, msg_step, msg_step_legato, msg_step_enabled};
+msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key, msg_seq, msg_step, msg_step_legato, msg_step_enabled,
+msg_playback_mode, msg_step_size};
 
 class ScreenManager
 {
@@ -110,12 +115,15 @@ class ScreenManager
 
     // SEQUENCER METHODS
     void printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo);
+    void printEditSequencerConfig (String playbackModeName, String stepSizeName, GlobalConfig globalConfig);
     void updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep);
     void printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength);
     void moveCursorToStepNote();
     void moveCursorToStepLegato();
     void moveCursorToStepEnabled();
-    void moveCursorToStepNum();
+    void refreshStepNoteValue(uint8_t note);
+    void refreshStepLegatoValue(uint8_t legato);
+    void refreshStepEnabledValue(uint8_t enabled);
 
     uint8_t getDisplayedStepNumber();
 
@@ -138,6 +146,7 @@ class ScreenManager
     enum {CC_POS=0,};                                                       // Screen start position of the CC message parameters 
     enum {PROGRAM_CHANNEL_POS=0};                                           // Screen start position of the Program Change message parameters 
     enum {EDIT_GLOBAL_MODE_POS=5, EDIT_GLOBAL_KEY_POS=0, EDIT_GLOBAL_CHANNEL_POS=7}; // Screen start position of the Global Config parameters
-    enum {STEP_NUM_POS=5, STEP_NOTE_POS=12, STEP_ENABLED_POS=9}; // Sequencer screen start position of the sequence step values
+    enum {STEP_NUM_POS=5, STEP_NOTE_POS=12, STEP_ENABLED_POS=9, STEP_LEGATO_POS=0}; // Sequencer screen start position of the sequence step values
+    enum {SEQUENCER_EDIT_PLAYBACK_MODE_POS=5, SEQUENCER_EDIT_STEP_SIZE=5, SEQUENCER_EDIT_MIDI_CHANNEL_POS=10 }; // Screen start position of the Sequencer Config parameters
 };
 #endif

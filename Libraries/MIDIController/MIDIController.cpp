@@ -74,6 +74,7 @@ void MIDIController::begin()
    _sequencer.setMidiWorker(_midiWorker);
    _wasSequenceSaved = 0;  
    _waitForStart = 0;
+   _accesToSequencerEdit = 0;
 
    // set the default tempo
    _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);   
@@ -163,6 +164,7 @@ void MIDIController::processIncDecButtons()
             // display the previous step in the sequence
             case SEQUENCER_EDIT_STEP:
 
+                _subState = SEQUENCER_EDIT_STEP_NOTE;
                 _sequencer.printPreviousStep();                
 
             break;
@@ -240,6 +242,7 @@ void MIDIController::processIncDecButtons()
             // display the next step in the sequence
             case SEQUENCER_EDIT_STEP:
 
+                _subState = SEQUENCER_EDIT_STEP_NOTE;
                 _sequencer.printNextStep();                
 
             break;
@@ -311,6 +314,25 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
                     _screenManager.displayComponentMIDIMessage(1); 
                     _subState = EDIT_MIDI_TYPE;
                 }            
+            }
+
+            break;
+        }
+
+        // assign the note of the selected MIDI component to the step currently being edited
+        case SEQUENCER_EDIT_STEP:
+        {
+            if (_subState == SEQUENCER_EDIT_STEP_NOTE)
+            {
+                MIDIMessage * message = component->getMessageToSend();
+            
+                if (message != NULL)
+                {
+                    if (message->getType() == midi::NoteOn)
+                    {
+                        _sequencer.setDisplayedStepNote(message->getDataByte1());
+                    } 
+                }
             }
 
             break;
@@ -498,6 +520,46 @@ void MIDIController::processSelectValuePot()
                     }                   
                 }
             
+            break;
+
+            // select a value for a step sequencer parameter 
+            case SEQUENCER_EDIT_STEP:
+
+                switch(_subState)
+                {
+                    // update the note assigned to the current edited step
+                    case SEQUENCER_EDIT_STEP_NOTE:
+                    {  
+                        uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
+
+                        if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
+                        {
+                            _sequencer.setDisplayedStepNote(note);                         
+                        }
+
+                        break;     
+                    }
+
+                    // update legato value assigned to the current edited step
+                    case SEQUENCER_EDIT_STEP_LEGATO:
+                    {
+                        uint8_t legatoValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 2);
+                        _sequencer.setDisplayedStepLegato(legatoValue);
+
+                        break;
+                    }
+
+                    // update enabled value assigned to the current edited step
+                    case SEQUENCER_EDIT_STEP_ENABLED:
+                    {
+                        uint8_t enabledValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 2);
+                        _sequencer.setDisplayedStepEnabled(enabledValue);
+
+                        break;
+                    }
+                }
+                
+
             break;
         }  
     }
@@ -782,33 +844,26 @@ void MIDIController::moveCursorToGLobalConfigParameter()
 
 void MIDIController::moveCursorToStepValue()
 {
-    switch (_subState)
-    {
-        case SEQUENCER_EDIT_STEP_NUM:
+    switch (_subState)    {    
 
-            _subState = SEQUENCER_EDIT_NOTE;
-            _sequencer.moveCursorToNote();
+        case SEQUENCER_EDIT_STEP_NOTE:
 
-        break;
-
-        case SEQUENCER_EDIT_NOTE:
-
-            _subState = SEQUENCER_EDIT_LEGATO;
+            _subState = SEQUENCER_EDIT_STEP_LEGATO;
             _sequencer.moveCursorToLegato();
 
         break;
 
-        case SEQUENCER_EDIT_LEGATO:
+        case SEQUENCER_EDIT_STEP_LEGATO:
                 
-            _subState = SEQUENCER_EDIT_ENABLED;
+            _subState = SEQUENCER_EDIT_STEP_ENABLED;
             _sequencer.moveCursorToEnabled();
                 
         break;
 
-        case SEQUENCER_EDIT_ENABLED:
+        case SEQUENCER_EDIT_STEP_ENABLED:
                 
-            _subState = SEQUENCER_EDIT_STEP_NUM;
-            _sequencer.moveCursorToStepNum();
+            _subState = SEQUENCER_EDIT_STEP_NOTE;
+            _sequencer.moveCursorToNote();
                 
         break;
     }
@@ -917,7 +972,7 @@ void MIDIController::processEditModeButton()
 
     if (_editButton.wasReleased())
     {
-        if (!_wasPageSaved && !_wasGlobalConfigSaved)
+        if (!_wasPageSaved && !_wasGlobalConfigSaved && !_wasSequenceSaved)
         {
             switch (_state)
             {
@@ -961,7 +1016,7 @@ void MIDIController::processEditModeButton()
                 case SEQUENCER:                     
     
                     _state = SEQUENCER_EDIT_STEP;
-                    _subState = SEQUENCER_EDIT_STEP_NUM;                       
+                    _subState = SEQUENCER_EDIT_STEP_NOTE;                       
                   
                     _sequencer.printEditStepData();
                 
@@ -974,19 +1029,50 @@ void MIDIController::processEditModeButton()
 
                     _sequencer.printDefault();       
                     
-                break;                       
+                break;
+
+                case SEQUENCER_EDIT_CONFIG:
+
+                    if (_accesToSequencerEdit)
+                        _accesToSequencerEdit = 0;
+                    
+                    else
+                    {
+                        _state = SEQUENCER;
+                        _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF; 
+
+                        _sequencer.printDefault();  
+                    }
+                    
+                break;                     
             }        
         }           
    
         // after saving a page or global configuration, set controller status to CONTROLLER
         else
         {
-            // display default message on screen
-            _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+            switch (_state)
+            {
+                case CONTROLLER:
+
+                    // display default message on screen
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
         
-            // Reset the flags for further button events
-            _wasPageSaved = 0;
-            _wasGlobalConfigSaved = 0;
+                    // Reset the flags for further button events
+                    _wasPageSaved = 0;
+                    _wasGlobalConfigSaved = 0;
+
+                break;
+
+                case SEQUENCER:
+
+                    _sequencer.printDefault();
+
+                    // Reset the flags for further button events
+                    _wasSequenceSaved = 0;
+
+                break;
+            }
         }
     }
 
@@ -1003,6 +1089,17 @@ void MIDIController::processEditModeButton()
                 _accesToGloabalEdit = 1;               
 
                 _screenManager.printEditGlobalConfig(_globalConfig);      
+
+            break;
+
+            case SEQUENCER:
+
+                _state = SEQUENCER_EDIT_CONFIG;
+                _subState = SEQUENCER_EDIT_PLAYBACK_MODE;    
+
+                _accesToSequencerEdit = 1;               
+
+                _sequencer.printEditConfig(_globalConfig);                      
 
             break;    
 
@@ -1049,8 +1146,49 @@ void MIDIController::processEditModeButton()
 
             break;
 
-        }
-            
+            case SEQUENCER_EDIT_STEP:
+
+                _isMIDIClockOn = 0;
+                _sequencer.stopPlayBack();
+                _syncManager.deactivate();
+                _midiLed.setState(LOW);     
+
+                // saves the current page
+                _sequencer.saveCurrentSequence(); 
+                _wasSequenceSaved = 1;        
+
+                // prints a message and waits to continue 
+                _screenManager.printSavedMessage();
+                delay(2000);      
+
+                _state = SEQUENCER;
+                _subState = PLAYBACK_OFF;     
+
+            break;
+
+            case SEQUENCER_EDIT_CONFIG:
+
+                if (!_accesToSequencerEdit)
+                {
+                    _isMIDIClockOn = 0;
+                    _sequencer.stopPlayBack();
+                    _syncManager.deactivate();
+                    _midiLed.setState(LOW);  
+
+                    // saves the global configuration parameters
+                    _memoryManager.saveGlobalConfiguration(_globalConfig); 
+                    _wasGlobalConfigSaved = 1;        
+
+                    // prints a message and waits to continue 
+                    _screenManager.printSavedMessage();
+                    delay(2000);
+
+                    _state = SEQUENCER;
+                    _subState = PLAYBACK_OFF;
+                }
+
+            break;
+        }            
     }
 }
 

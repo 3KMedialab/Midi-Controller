@@ -74,6 +74,30 @@ void Sequencer::setMidiWorker(MidiWorker * midiWorker)
     _midiWorker = midiWorker;
 }
 
+void Sequencer::setDisplayedStepNote(uint8_t note)
+{
+    _steps[_screenManager->getDisplayedStepNumber()-1].setNote(note);
+
+    // refresh note value on screen
+    _screenManager->refreshStepNoteValue(note);
+}
+
+void Sequencer::setDisplayedStepLegato(uint8_t legato)
+{
+    _steps[_screenManager->getDisplayedStepNumber()-1].setLegato(legato);
+
+    // refresh legato value on screen
+    _screenManager->refreshStepLegatoValue(legato);
+}
+
+void Sequencer::setDisplayedStepEnabled(uint8_t enabled)
+{
+    _steps[_screenManager->getDisplayedStepNumber()-1].setEnabled(enabled);
+
+    // refresh enabled value on screen
+    _screenManager->refreshStepEnabledValue(enabled);
+}
+
 int8_t Sequencer::getPlayBackStep()
 {
     return _playBackStep;
@@ -112,6 +136,11 @@ uint8_t Sequencer::getCurrentSequence()
 void Sequencer::loadCurrentSequence()
 {    
     _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+}
+
+void Sequencer::saveCurrentSequence()
+{
+    _memoryManager->saveSequence(_currentSequence, _steps, LENGTH);
 }
 
 void Sequencer::startPlayBack()
@@ -306,6 +335,11 @@ void Sequencer::printDefault()
     _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
 }
 
+void Sequencer::printEditConfig(GlobalConfig globalConfig)
+{
+    _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig);
+}
+
 void Sequencer::updateDisplayedStep()
 {
     
@@ -383,7 +417,26 @@ void Sequencer::moveCursorToEnabled()
     _screenManager->moveCursorToStepEnabled();
 }
 
-void Sequencer::moveCursorToStepNum()
+String Sequencer::getPlayBackModeName()
+{     
+    switch(_playBackMode)
+    {    
+       case FORWARD:    return F("Forward");    
+       case BACKWARD:   return F("Backward");
+       case RANDOM:     return F("Random"); 
+       default:         return F("N/A");        
+    }
+}
+
+String Sequencer::getStepSizeName()
 {
-    _screenManager->moveCursorToStepNum();
+    switch(_stepSize)
+    {    
+       case QUARTER:        return F("1/4");    
+       case EIGHTH:         return F("1/8");
+       case SIXTEENTH:      return F("1/16");
+       case THIRTYSECOND:   return F("1/32");
+       default:             return F("N/A");        
+    }
+
 }

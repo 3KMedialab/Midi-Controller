@@ -670,6 +670,9 @@ void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t total
 {
     char buffer[10];
     String s ="";    
+
+    // set to the screen manager the position of the step being edited
+    _currentDisplayedStep = 1;  
     
     //Set the cursor on the top left of the screen
     _screen.home();
@@ -734,11 +737,12 @@ void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t se
     clearRangeOnCurentLine(0, s.length(), STEP_NOTE_POS);
     s = "";
 
-    s.concat(getStepNoteValue(step));
-
+    s.concat(MIDIUtils::getNoteName(step.getNote()));
+    s.concat(MIDIUtils::getOctave(step.getNote()));
+    
     _screen.print(s);       
     
-   clearRangeOnCurentLine(0, STEP_NOTE_POS + s.length(), _screen.getLCDCols());   
+    clearRangeOnCurentLine(0, STEP_NOTE_POS + s.length(), _screen.getLCDCols());   
     s = "";
 
     // prints step's enabled and legato values    
@@ -762,8 +766,8 @@ void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t se
     _screen.print(s);       
     clearRangeOnCurentLine(1, s.length() + STEP_ENABLED_POS, _screen.getLCDCols());
 
-    // move cursor to step num value position
-    _screen.setCursor(STEP_NUM_POS,0);
+    // move cursor to step note value position
+    _screen.setCursor(STEP_NOTE_POS,0);
     _screen.blink();   
 }
 
@@ -796,21 +800,142 @@ uint8_t ScreenManager::getDisplayedStepNumber()
 }
 
 void ScreenManager::moveCursorToStepNote()
-{
-
+{   
+    _screen.setCursor(STEP_NOTE_POS, 0); 
 }
 
 void ScreenManager::moveCursorToStepLegato()
 {
+    char buffer[10];    
+
+    getMessage(MSG_STEP_LEGATO, buffer);  
+    _screen.setCursor(STEP_LEGATO_POS + strlen(buffer),1);   
 
 }
 
 void ScreenManager::moveCursorToStepEnabled()
 {
+    char buffer[10];    
+
+    getMessage(MSG_STEP_ENABLED, buffer);  
+    _screen.setCursor(STEP_ENABLED_POS + strlen(buffer),1);  
 
 }
 
-void ScreenManager::moveCursorToStepNum()
+void ScreenManager::refreshStepNoteValue(uint8_t note)
 {
+    _screen.noBlink(); 
     
+    String noteName = String(MIDIUtils::getNoteName(note));
+    noteName.concat(MIDIUtils::getOctave(note));
+    _screen.print(noteName);
+
+    clearRangeOnCurentLine(0, STEP_NOTE_POS + noteName.length(), _screen.getLCDCols());
+    moveCursorToStepNote();
+
+    _screen.blink();
+}
+
+void ScreenManager::refreshStepLegatoValue(uint8_t legato)
+{
+    char buffer[10];
+
+    _screen.noBlink();
+    
+    getMessage(MSG_STEP_LEGATO, buffer);
+    
+    String legatoValue = "";
+
+    if (legato == 0)
+    {
+        legatoValue.concat(F("No"));
+    }
+
+    else if (legato == 1)
+    {
+        legatoValue.concat(F("Yes"));
+    }
+
+    else
+    {
+        legatoValue.concat(F("--"));
+    }
+
+    _screen.print(legatoValue);
+
+    clearRangeOnCurentLine(1, STEP_LEGATO_POS + strlen(buffer) + legatoValue.length(), STEP_ENABLED_POS-1);
+    moveCursorToStepLegato();
+
+    _screen.blink();
+}
+
+void ScreenManager::refreshStepEnabledValue(uint8_t enabled)
+{
+    char buffer[10];
+
+    _screen.noBlink();
+    
+    getMessage(MSG_STEP_ENABLED, buffer);
+    
+    String enabledValue = "";
+
+    if (enabled == 0)
+    {
+        enabledValue.concat(F("No"));
+    }
+
+    else if (enabled == 1)
+    {
+        enabledValue.concat(F("Yes"));
+    }
+
+    else
+    {
+        enabledValue.concat(F("--"));
+    }
+
+    _screen.print(enabledValue);
+
+    clearRangeOnCurentLine(1, STEP_ENABLED_POS + strlen(buffer) + enabledValue.length(), _screen.getLCDCols());
+    moveCursorToStepEnabled();
+
+    _screen.blink();
+}
+
+void ScreenManager::printEditSequencerConfig (String playbackModeName, String stepSizeName, GlobalConfig globalConfig)
+{
+    char buffer[10];
+    String s ="";
+
+    cleanScreen();
+    
+    //Set the cursor on the top left of the screen
+    _screen.home();    
+
+    // prints the sequencer playback mode
+    getMessage(MSG_PLAYBACK_MODE, buffer);  
+    s.concat(buffer);
+    s.concat(playbackModeName);
+    _screen.print(s);    
+    
+    s = "";
+
+    // prints the step size
+    _screen.setCursor(0,1);
+    getMessage(MSG_STEP_SIZE, buffer); 
+    s.concat(buffer);   
+    s.concat(stepSizeName);   
+    _screen.print(s);
+    
+    s = "";
+    
+    // prints the MIDI Channel  
+    _screen.setCursor(SEQUENCER_EDIT_MIDI_CHANNEL_POS,1);
+    getMessage(MSG_CHANNEL, buffer);
+    s.concat(buffer);
+    s.concat(globalConfig.getSequencerMIDIChannel());    
+    _screen.print(s);
+
+    _screen.setCursor(SEQUENCER_EDIT_PLAYBACK_MODE_POS,0);
+    _screen.blink();
 }

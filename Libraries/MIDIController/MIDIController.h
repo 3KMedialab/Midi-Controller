@@ -68,6 +68,7 @@ class MIDIController
     uint8_t _wasSequenceSaved;                                                                          // flag that indicates wether a sequence was saved or not.
     uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
     uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
+    uint8_t _accesToSequencerEdit;                                                                      // flag that indicates wether we have just accesed to sequencer config edit or not.
 
     ScreenManager _screenManager;                                                                       // object to manage interactions between the controller and the screen   
 
@@ -93,10 +94,11 @@ class MIDIController
     uint8_t _waitForStart;
     uint8_t _waitForLoadSequence;
     
-    enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG, SEQUENCER_EDIT_STEP};                                             // Controller status list
+    enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG, SEQUENCER_EDIT_STEP, SEQUENCER_EDIT_CONFIG}; // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 
                   DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, PLAYBACK_ON, PLAYBACK_OFF,
-                  SEQUENCER_EDIT_STEP_NUM, SEQUENCER_EDIT_NOTE, SEQUENCER_EDIT_LEGATO, SEQUENCER_EDIT_ENABLED }; // Controller substatus list
+                  SEQUENCER_EDIT_STEP_NOTE, SEQUENCER_EDIT_STEP_LEGATO, SEQUENCER_EDIT_STEP_ENABLED,
+                  SEQUENCER_EDIT_PLAYBACK_MODE, SEQUENCER_EDIT_STEP_SIZE, SEQUENCER_EDIT_MIDI_CH}; // Controller substatus list
     uint8_t _state, _subState;                                                                                        // Controller current status and substatus
 
     GlobalConfig _globalConfig = GlobalConfig();                                                        // Object containing the global configuration
