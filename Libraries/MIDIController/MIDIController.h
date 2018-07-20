@@ -88,7 +88,7 @@ class MIDIController
 
     MidiWorker * _midiWorker;                                                                           // object to manage the MIDI functionality
     
-    Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::QUARTER, &_memoryManager, &_screenManager);
+    Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager);
 
     SyncManager _syncManager = SyncManager(BAR_LENGTH);
     uint8_t _waitForStart;
@@ -113,5 +113,6 @@ class MIDIController
     void moveCursorToValue();
     void moveCursorToStepValue();
     void moveCursorToGLobalConfigParameter();
+    void moveCursorToSequencerConfigParameter();
 };
 #endif

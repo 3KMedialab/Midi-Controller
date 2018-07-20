@@ -902,7 +902,7 @@ void ScreenManager::refreshStepEnabledValue(uint8_t enabled)
     _screen.blink();
 }
 
-void ScreenManager::printEditSequencerConfig (String playbackModeName, String stepSizeName, GlobalConfig globalConfig)
+void ScreenManager::printEditSequencerConfig (String playbackModeName, String stepSizeName, uint8_t midiChannel)
 {
     char buffer[10];
     String s ="";
@@ -933,9 +933,77 @@ void ScreenManager::printEditSequencerConfig (String playbackModeName, String st
     _screen.setCursor(SEQUENCER_EDIT_MIDI_CHANNEL_POS,1);
     getMessage(MSG_CHANNEL, buffer);
     s.concat(buffer);
-    s.concat(globalConfig.getSequencerMIDIChannel());    
+    s.concat(midiChannel);    
     _screen.print(s);
 
     _screen.setCursor(SEQUENCER_EDIT_PLAYBACK_MODE_POS,0);
+    _screen.blink();
+}
+
+void ScreenManager::moveCursorToPlayBackMode()
+{   
+    _screen.setCursor(SEQUENCER_EDIT_PLAYBACK_MODE_POS, 0);   
+}
+
+void ScreenManager::moveCursorToStepSize()
+{      
+    _screen.setCursor(SEQUENCER_EDIT_STEP_SIZE, 1);
+}
+
+void ScreenManager::moveCursorToSequencerMIDIChannel()
+{
+    char buffer[10];
+    
+    getMessage(MSG_CHANNEL, buffer);  
+    _screen.setCursor(SEQUENCER_EDIT_MIDI_CHANNEL_POS + strlen(buffer), 1);   
+}
+
+void ScreenManager::refreshDisplayedPlayBackMode(String playBackMode)
+{
+    char buffer[5];
+
+    _screen.noBlink();
+
+    getMessage(MSG_PLAYBACK_MODE, buffer);
+  
+    _screen.print(playBackMode);   
+
+    clearRangeOnCurentLine(0, strlen(buffer) + playBackMode.length(), _screen.getLCDCols());
+    moveCursorToPlayBackMode();
+
+    _screen.blink();
+}
+
+void ScreenManager::refreshDisplayedStepSizeValue(String stepSize)
+{
+    char buffer[5];
+
+    _screen.noBlink();
+
+    getMessage(MSG_STEP_SIZE, buffer);
+  
+    _screen.print(stepSize);   
+
+    clearRangeOnCurentLine(1, strlen(buffer) + stepSize.length(), SEQUENCER_EDIT_MIDI_CHANNEL_POS);
+    moveCursorToStepSize();
+
+    _screen.blink();
+}
+
+void ScreenManager::refreshDisplayedSequencerMidiChannel(uint8_t midiChannel)
+{
+    char buffer[5];
+    String s = "";
+    
+    _screen.noBlink();
+    getMessage(MSG_CHANNEL, buffer);
+    clearRangeOnCurentLine(1, SEQUENCER_EDIT_MIDI_CHANNEL_POS + strlen(buffer), _screen.getLCDCols());
+    moveCursorToSequencerMIDIChannel();
+ 
+    s.concat(midiChannel);
+    _screen.print(s);   
+    
+    moveCursorToSequencerMIDIChannel();
+
     _screen.blink();
 }

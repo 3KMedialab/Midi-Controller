@@ -557,9 +557,68 @@ void MIDIController::processSelectValuePot()
 
                         break;
                     }
-                }
-                
+                }                
 
+            break;
+
+            // select a value for a Sequencer Configuration Parameter 
+            case SEQUENCER_EDIT_CONFIG:
+
+                switch (_subState)
+                {
+                    // select the sequencer playback mode 
+                    case SEQUENCER_EDIT_PLAYBACK_MODE:
+                    {
+                        // get the current playback mode 
+                        uint8_t currentMode = _sequencer.getPlayBackMode();
+
+                        _sequencer.setPlayBackMode(map(_selectValuePot.getSmoothValue(), 0, 1023, 0, _sequencer.getPlayBackModeTypesNumber()));
+
+                        if (currentMode != _sequencer.getPlayBackMode())
+                        {
+                            _sequencer.refreshDisplayedPlayBackMode(_sequencer.getPlayBackMode());
+                        }
+
+                        break;
+                    }
+
+                    // select the root note value
+                    case SEQUENCER_EDIT_STEP_SIZE:
+                    {                        
+                        uint8_t currentStepSize = _sequencer.getStepSize();
+
+                        // set the new value of the step size if valid
+                        uint8_t newStepSize = map(_selectValuePot.getSmoothValue(), 0, 1023, Sequencer::QUARTER, Sequencer::THIRTYSECOND + 1); 
+                        
+                        if (_sequencer.isStepSizeValueValid(newStepSize))
+                        {
+                            _sequencer.setStepSize(newStepSize);
+
+                            if (currentStepSize != _sequencer.getStepSize())
+                            {
+                                _sequencer.refreshDisplayedStepSizeValue(_sequencer.getStepSize());
+                            }
+                        }                        
+
+                        break;
+                    }
+                    
+                    // select the sequencer MIDI channel value
+                    case SEQUENCER_EDIT_MIDI_CH:
+                    {                        
+                        uint8_t currentSeqMIDIChannel = _globalConfig.getSequencerMIDIChannel();
+
+                        _globalConfig.setSequencerMIDIChannel(map(_selectValuePot.getSmoothValue(), 0, 1023, MIDIUtils::CHANNEL1,MIDIUtils::CHANNEL16 + 1));
+
+                        if (currentSeqMIDIChannel != _globalConfig.getSequencerMIDIChannel())
+                        {
+                            _sequencer.refreshDisplayedMIDIChannel(_globalConfig.getSequencerMIDIChannel());
+                        }
+
+                        break;
+                    }                   
+                }
+            
             break;
         }  
     }
@@ -596,6 +655,10 @@ void MIDIController::processMultiplePurposeButton()
 
             case SEQUENCER_EDIT_STEP:
                 moveCursorToStepValue();
+            break;
+
+            case SEQUENCER_EDIT_CONFIG:
+                moveCursorToSequencerConfigParameter();
             break;
         }    
     }
@@ -870,6 +933,36 @@ void MIDIController::moveCursorToStepValue()
 }  
 
 /*
+* 
+*/
+void MIDIController::moveCursorToSequencerConfigParameter()
+{
+    switch (_subState)
+    {
+        case SEQUENCER_EDIT_PLAYBACK_MODE:
+
+            _subState = SEQUENCER_EDIT_STEP_SIZE;
+            _sequencer.moveCursorToStepSize();
+
+        break;
+
+        case SEQUENCER_EDIT_STEP_SIZE:
+
+            _subState = SEQUENCER_EDIT_MIDI_CH;
+            _sequencer.moveCursorToMIDIChannel();
+
+        break;
+
+        case SEQUENCER_EDIT_MIDI_CH:
+                
+            _subState = SEQUENCER_EDIT_PLAYBACK_MODE;
+            _sequencer.moveCursorToPlayBackMode();
+
+        break;
+    }
+}   
+
+/*
 * Send a MIDI clock tick and blink the LED
 */
 void MIDIController::sendMIDIClock()
@@ -1070,6 +1163,7 @@ void MIDIController::processEditModeButton()
 
                     // Reset the flags for further button events
                     _wasSequenceSaved = 0;
+                    _wasGlobalConfigSaved = 0;
 
                 break;
             }

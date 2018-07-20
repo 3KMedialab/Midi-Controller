@@ -59,7 +59,7 @@ void Sequencer::setPlayBackMode(uint8_t mode)
     }
 }
 
-void Sequencer::setStepSize (uint8_t size)
+void Sequencer::setStepSize(uint8_t size)
 {
     _stepSize = size;
 }
@@ -98,6 +98,21 @@ void Sequencer::setDisplayedStepEnabled(uint8_t enabled)
     _screenManager->refreshStepEnabledValue(enabled);
 }
 
+void Sequencer::refreshDisplayedPlayBackMode(uint8_t playBackMode)
+{
+    _screenManager->refreshDisplayedPlayBackMode(getPlayBackModeName(playBackMode));
+}
+
+void Sequencer::refreshDisplayedStepSizeValue(uint8_t stepSize)
+{
+    _screenManager->refreshDisplayedStepSizeValue(getStepSizeName(stepSize));
+}
+
+void Sequencer::refreshDisplayedMIDIChannel(uint8_t midiChannel)
+{
+    _screenManager->refreshDisplayedSequencerMidiChannel(midiChannel);
+}
+
 int8_t Sequencer::getPlayBackStep()
 {
     return _playBackStep;
@@ -106,6 +121,30 @@ int8_t Sequencer::getPlayBackStep()
 uint8_t Sequencer::isPlayBackOn()
 {
     return _playBackOn; 
+}
+
+uint8_t Sequencer::isStepSizeValueValid(uint8_t stepSizeValue)
+{
+    switch(stepSizeValue)
+    {
+        case QUARTER:
+        case EIGHTH:
+        case SIXTEENTH:
+        case THIRTYSECOND:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+uint8_t Sequencer::getPlayBackMode()
+{
+    return _playBackMode; 
+}
+
+uint8_t Sequencer::getPlayBackModeTypesNumber()
+{
+    return PLAYBACK_MODE_TYPES;
 }
 
 uint8_t Sequencer::getMIDIChannel()
@@ -126,6 +165,11 @@ Step * Sequencer::getSequence()
 Step Sequencer::getSequenceStep(uint8_t pos)
 {
     return _steps[pos];
+}
+
+uint8_t Sequencer::getStepSize()
+{
+    return _stepSize;
 }
 
 uint8_t Sequencer::getCurrentSequence()
@@ -337,7 +381,7 @@ void Sequencer::printDefault()
 
 void Sequencer::printEditConfig(GlobalConfig globalConfig)
 {
-    _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig);
+    _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig.getSequencerMIDIChannel());
 }
 
 void Sequencer::updateDisplayedStep()
@@ -417,6 +461,21 @@ void Sequencer::moveCursorToEnabled()
     _screenManager->moveCursorToStepEnabled();
 }
 
+void Sequencer::moveCursorToPlayBackMode()
+{
+    _screenManager->moveCursorToPlayBackMode();
+}
+
+void Sequencer::moveCursorToStepSize()
+{
+    _screenManager->moveCursorToStepSize();
+}
+
+void Sequencer::moveCursorToMIDIChannel()
+{
+    _screenManager->moveCursorToSequencerMIDIChannel();
+}
+
 String Sequencer::getPlayBackModeName()
 {     
     switch(_playBackMode)
@@ -438,5 +497,27 @@ String Sequencer::getStepSizeName()
        case THIRTYSECOND:   return F("1/32");
        default:             return F("N/A");        
     }
+}
 
+String Sequencer::getPlayBackModeName(uint8_t playBackMode)
+{     
+    switch(playBackMode)
+    {    
+       case FORWARD:    return F("Forward");    
+       case BACKWARD:   return F("Backward");
+       case RANDOM:     return F("Random"); 
+       default:         return F("N/A");        
+    }
+}
+
+String Sequencer::getStepSizeName(uint8_t stepSize)
+{
+    switch(stepSize)
+    {    
+       case QUARTER:        return F("1/4");    
+       case EIGHTH:         return F("1/8");
+       case SIXTEENTH:      return F("1/16");
+       case THIRTYSECOND:   return F("1/32");
+       default:             return F("N/A");        
+    }
 }

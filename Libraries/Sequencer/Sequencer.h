@@ -21,14 +21,19 @@ class Sequencer
     enum {FORWARD, BACKWARD, RANDOM}; 
     enum {QUARTER=1, EIGHTH=2, SIXTEENTH=4, THIRTYSECOND=8};
     enum {LENGTH = 8};
+    enum {PLAYBACK_MODE_TYPES = 3};
 
     uint8_t isPlayBackOn();
+    uint8_t isStepSizeValueValid(uint8_t stepSizeValue);
     int8_t getPlayBackStep();
+    uint8_t getPlayBackMode();
+    uint8_t getPlayBackModeTypesNumber();
     uint8_t getMIDIChannel();
     uint8_t getSequenceLength();
     uint8_t getCurrentSequence();
     Step * getSequence();
     Step getSequenceStep(uint8_t pos);    
+    uint8_t getStepSize();
      
     void setMidiWorker (MidiWorker * midiWorker);
     void setBpm(uint16_t * bpm);
@@ -40,6 +45,9 @@ class Sequencer
     void setDisplayedStepNote(uint8_t note);
     void setDisplayedStepLegato(uint8_t legato);
     void setDisplayedStepEnabled(uint8_t enabled);
+    void refreshDisplayedPlayBackMode(uint8_t playBackMode);
+    void refreshDisplayedStepSizeValue(uint8_t stepSize);
+    void refreshDisplayedMIDIChannel(uint8_t midiChannel);
 
     void loadCurrentSequence();
     void saveCurrentSequence();
@@ -58,6 +66,9 @@ class Sequencer
     void moveCursorToNote();
     void moveCursorToLegato();
     void moveCursorToEnabled();
+    void moveCursorToPlayBackMode();
+    void moveCursorToStepSize();
+    void moveCursorToMIDIChannel();
     void refreshDisplayedStepNote();
 
   private:
@@ -67,7 +78,9 @@ class Sequencer
     void playBackRandom();
 
     String getPlayBackModeName();
+    String getPlayBackModeName(uint8_t playBackMode);
     String getStepSizeName();
+    String getStepSizeName(uint8_t stepSize);
 
     uint8_t _playBackOn;
     uint16_t * _bpm;          

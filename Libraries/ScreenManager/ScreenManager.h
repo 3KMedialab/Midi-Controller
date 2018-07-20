@@ -115,15 +115,21 @@ class ScreenManager
 
     // SEQUENCER METHODS
     void printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo);
-    void printEditSequencerConfig (String playbackModeName, String stepSizeName, GlobalConfig globalConfig);
+    void printEditSequencerConfig (String playbackModeName, String stepSizeName, uint8_t midiChannel);
     void updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep);
     void printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength);
     void moveCursorToStepNote();
     void moveCursorToStepLegato();
     void moveCursorToStepEnabled();
+    void moveCursorToPlayBackMode();
+    void moveCursorToStepSize();
+    void moveCursorToSequencerMIDIChannel();
     void refreshStepNoteValue(uint8_t note);
     void refreshStepLegatoValue(uint8_t legato);
     void refreshStepEnabledValue(uint8_t enabled);
+    void refreshDisplayedPlayBackMode(String playBackMode);
+    void refreshDisplayedStepSizeValue(String stepSize);
+    void refreshDisplayedSequencerMidiChannel(uint8_t midiChannel);
 
     uint8_t getDisplayedStepNumber();
 
