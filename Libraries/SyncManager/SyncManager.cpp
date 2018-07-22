@@ -56,10 +56,13 @@ void SyncManager::deactivate()
     _lastSyncTimeStamp = 0;
 }
 
-void SyncManager::updateSyncStatus()
+void SyncManager::updateSyncTime()
 {
     _syncTimeStamp = micros();
+}
 
+void SyncManager::updateSyncStatus()
+{
     // if sync manager is enabled, calculate time in bar
     if (_actived)
     {

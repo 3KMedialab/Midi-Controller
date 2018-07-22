@@ -1286,6 +1286,11 @@ void MIDIController::processEditModeButton()
     }
 }
 
+void MIDIController::updateSyncTime()
+{
+    _syncManager.updateSyncTime();
+}
+
 /*
 * Update the status of the synchronisation maanager
 */

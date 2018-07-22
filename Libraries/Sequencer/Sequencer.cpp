@@ -194,9 +194,13 @@ void Sequencer::startPlayBack()
 
 void Sequencer::stopPlayBack()
 {
-    _playBackOn = 0;
-    _lastTimePlayBack = 0;
+    MIDIMessage msgNoteOff;
 
+    // Mutes all sounding nots
+    msgNoteOff.setType(midi::ControlChange);
+    msgNoteOff.setDataByte1(midi::AllSoundOff);
+    _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel); 
+        
     switch (_playBackMode)
     {
         case FORWARD:
@@ -207,7 +211,10 @@ void Sequencer::stopPlayBack()
         case BACKWARD:
             _playBackStep = LENGTH - 1;
         break;
-    } 
+    }   
+
+    _playBackOn = 0;
+    _lastTimePlayBack = 0;
 }
 
 uint8_t Sequencer::playBackSequence(uint32_t currentTime)

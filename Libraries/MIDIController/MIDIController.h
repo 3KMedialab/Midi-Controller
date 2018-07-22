@@ -56,6 +56,7 @@ class MIDIController
     void processOperationModeButton();
     void sendMIDIClock();
     void updateBpmIndicatorStatus();
+    void updateSyncTime();
     void updateSyncStatus();
 
   private:

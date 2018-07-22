@@ -17,6 +17,7 @@ class SyncManager
 
   void setBpm(uint16_t bpm);
 
+  void updateSyncTime();
   void updateSyncStatus();
   void activate();
   void deactivate();
