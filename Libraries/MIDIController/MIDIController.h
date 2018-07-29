@@ -37,12 +37,14 @@
 #include <GlobalConfig.h>
 #include <Sequencer.h>
 #include <SyncManager.h>
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
 class MIDIController
 {
-  public:   
+  public:     
     MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents);
     MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents);
       
@@ -81,7 +83,6 @@ class MIDIController
     Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                          // potentiometer for set the tempo in BPM of the controller.
     Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
     Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
-    uint16_t _bpm;                                                                                      // Current MIDI controller tempo in BPMs.   
     uint32_t _lastTimeBlink;                                                                                 // Led blink timer
     uint32_t _lastTimeBlinkFade;                                                                                 // Led blink fade timer
     uint32_t _lastTimeClock;                                                                            // MIDI clock tick timer  

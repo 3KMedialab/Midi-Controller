@@ -40,11 +40,10 @@ const uint8_t intervals [9][7] PROGMEM = {
 * Return the octave of a note
 * midiNote: note which octave will be returned
 */
-String MIDIUtils::getOctave(uint8_t midiNote)
+int8_t MIDIUtils::getOctave(uint8_t midiNote)
 {
-     //Calculate the octave of the midi note
-     String octave = String((midiNote / 12) -1, DEC);
-     return octave;
+    //Calculate the octave of the midi note
+    return (midiNote / 12) -1;     
 }
 
 /*
@@ -61,8 +60,10 @@ uint8_t MIDIUtils::getNoteNumber(uint8_t midiNote)
 * Return the note name of a note
 * midiNote: note which name will be returned
 */
-String MIDIUtils::getNoteName(uint8_t midiNote)
+char *  MIDIUtils::getNoteName(uint8_t midiNote)
 {
+    char buffer [4];
+
     //Get note number (0-11) 
     uint8_t note = getNoteNumber(midiNote);
     
@@ -71,19 +72,56 @@ String MIDIUtils::getNoteName(uint8_t midiNote)
     switch(note)
     {
       //Note: each case returns so break keyword is not needed here
-       case C:   return F("C");    
-       case Db:  return F("Db");
-       case D:   return F("D"); 
-       case Eb:  return F("Eb"); 
-       case E:   return F("E"); 
-       case F:   return F("F"); 
-       case Gb:  return F("Gb"); 
-       case G:   return F("G"); 
-       case Ab:  return F("Ab"); 
-       case A:   return F("A"); 
-       case Bb:  return F("Bb");  
-       case B:   return F("B");
-       default:  return F("N/A");        
+       case C:   
+        getMessage(NOTE_C, buffer); 
+        break;    
+       
+       case Db:  
+        getMessage(NOTE_Db, buffer); 
+        break;
+
+       case D:   
+        getMessage(NOTE_D, buffer); 
+        break; 
+       
+       case Eb:  
+        getMessage(NOTE_Eb, buffer); 
+        break;
+
+       case E:
+        getMessage(NOTE_E, buffer); 
+        break;
+
+       case F:   
+        getMessage(NOTE_F, buffer); 
+        break; 
+       
+       case Gb: 
+        getMessage(NOTE_Gb, buffer); 
+        break;
+
+       case G:  
+        getMessage(NOTE_G, buffer); 
+        break;
+
+       case Ab:  
+        getMessage(NOTE_Ab, buffer); 
+        break;
+
+       case A:   
+        getMessage(NOTE_A, buffer); 
+        break;
+
+       case Bb:  
+        getMessage(NOTE_Bb, buffer); 
+        break;  
+       
+       case B:  
+        getMessage(NOTE_B, buffer); 
+        break;
+
+       default:  
+        getMessage(ERROR, buffer);                 
     }
 }
 
@@ -120,23 +158,68 @@ uint8_t MIDIUtils::isNoteInScale(uint8_t midiNote, uint8_t rootNote, uint8_t mod
 * Return the name of a musical mode
 * mode: mode number which name will be returned
 */
-String MIDIUtils::getModeName(uint8_t mode)
+char * MIDIUtils::getModeName(uint8_t mode)
 {
+    char buffer [12];
+
     //Use a switch statement to determine mode name. 
     switch(mode)
     {
       //Note: each case returns so break keyword is not needed here
      
-       case Ionian:     return F("Ionian");    
-       case Dorian:     return F("Dorian");
-       case Phrygian:   return F("Phrygian"); 
-       case Lydian:     return F("Lydian"); 
-       case Mixolydian: return F("Mixolydian"); 
-       case Aeolian:    return F("Aeolian"); 
-       case Locrian:    return F("Locrian"); 
-       case Maj_Blues:  return F("Maj Blues"); 
-       case Min_Blues:  return F("Min Blues"); 
-       case Chromatic:  return F("Chromatic"); 
-       default:         return F("N/A");        
+       case Ionian:     
+        getMessage(IONINAN, buffer); 
+        break;
+
+       case Dorian:     
+        getMessage(DORIAN, buffer); 
+        break;
+
+       case Phrygian:   
+        getMessage(PHRYGIAN, buffer); 
+        break;
+
+       case Lydian:     
+        getMessage(LYDIAN, buffer); 
+        break;
+
+       case Mixolydian: 
+        getMessage(MIXOLYDIAN, buffer); 
+        break;
+
+       case Aeolian:    
+        getMessage(AEOLIAN, buffer); 
+        break;
+
+       case Locrian:    
+        getMessage(LOCRIAN, buffer); 
+        break;
+
+       case Maj_Blues:  
+        getMessage(MAJBLUES, buffer);
+        break; 
+       
+       case Min_Blues:  
+        getMessage(MINBLUES, buffer); 
+        break;
+
+       case Chromatic:  
+        getMessage(CHROMATIC, buffer); 
+        break;
+
+       default:         
+        getMessage(ERROR, buffer);    
     }
+
+    return buffer;
+}
+
+/*
+* Load a string of chars from the PROGMEM
+* msgIndex: text to Load
+* buffer: array of chars where the text will be loaded
+*/
+void MIDIUtils::getMessage(uint8_t msgIndex, char * buffer)
+{
+    strcpy_P(buffer, (char*)pgm_read_word(&(midiStrings[msgIndex])));    
 }

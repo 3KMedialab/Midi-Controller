@@ -23,7 +23,7 @@
 #include "IPotentiometer.h"
 #include "Component.h"
 
-const uint8_t MAX_WINDOW_SIZE = 10;
+const uint8_t MAX_WINDOW_SIZE = 5;
 
 class Potentiometer : public IPotentiometer, public Component {
 	public:

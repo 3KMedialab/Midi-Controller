@@ -113,7 +113,7 @@ const uint8_t OPERATION_MODE_BUTTON_PIN = 12;
 
 //-------------------------------- S C R E E N  S E C T I O N ---------------------------------------------------------
 const uint8_t I2C_ADDRESS = 0x27;
-const uint8_t ROW_LENGTH = 16;
+const uint8_t COLUMNS = 16;
 const uint8_t ROWS = 2;
 //-------------------------------- E N D  O F  S C R E E N  S E C T I O N ---------------------------------------------
 

@@ -29,6 +29,9 @@
 #include <Multiplexer.h>
 #include <MuxButton.h>
 #include <MuxPotentiometer.h>
+#include <Wire.h> 
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
 // Create the MIDI interface object
 MidiInterface MIDI(Serial);
@@ -97,7 +100,7 @@ MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  {
     //Initializes MIDI interface
     worker.begin();
-    //Serial.begin(9600);    
+    //Serial.begin(9600);  
 
     controller.begin();
 

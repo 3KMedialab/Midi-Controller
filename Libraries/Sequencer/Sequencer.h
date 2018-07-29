@@ -10,8 +10,31 @@
 #include "ScreenManager.h"
 #include "ControllerConfig.h"
 #include "GlobalConfig.h"
+#include "SyncManager.h"
+#include <avr/pgmspace.h>
 
 #define MICROSECONDS_PER_MINUTE 60000000
+
+#define MSG_FORWARD 0
+#define MSG_BACKWARD 1
+#define MSG_RANDOM 2
+#define MSG_QUARTER 3
+#define MSG_EIGHTH 4
+#define MSG_SIXTEENTH 5
+#define MSG_THIRTYSECOND 6
+#define MSG_NA 7
+
+// Messages that will be displayed on the screen
+const char msg_Forward[] PROGMEM = "Forward";
+const char msg_Backward[] PROGMEM = "Backward";
+const char msg_Random[] PROGMEM = "Random";
+const char msg_Quarter[] PROGMEM = "1/4";
+const char msg_Eighth[] PROGMEM = "1/8";
+const char msg_Sixteenth[] PROGMEM = "1/16";
+const char msg_ThirtySecond[] PROGMEM = "1/32";
+const char msg_NA[] PROGMEM = "N/A";
+
+const char * const sequencerMessages[] PROGMEM = {msg_Forward, msg_Backward, msg_Random, msg_Quarter, msg_Eighth, msg_Sixteenth, msg_ThirtySecond, msg_NA};
 
 class Sequencer
 {
@@ -35,8 +58,7 @@ class Sequencer
     Step getSequenceStep(uint8_t pos);    
     uint8_t getStepSize();
      
-    void setMidiWorker (MidiWorker * midiWorker);
-    void setBpm(uint16_t * bpm);
+    void setMidiWorker (MidiWorker * midiWorker);    
     void setPlayBackStep(int8_t currentStep);
     void setMIDIChannel(uint8_t channel);
     void setCurrentSequence(uint8_t numSequence);
@@ -54,9 +76,10 @@ class Sequencer
 
     void startPlayBack();
     void stopPlayBack();
-    uint8_t playBackSequence(uint32_t currentTime);
+    uint8_t playBackSequence(SyncManager syncManager);
+    void stopNote();
 
-    void printDefault();
+    void printDefault(SyncManager syncManager);
     void updateDisplayedStep();
     void printEditStepData();
     void printPreviousStep();
@@ -75,15 +98,18 @@ class Sequencer
 
     void playBackForward();
     void playBackBackward();
-    void playBackRandom();
+    void playBackRandom();    
+    void stopAllNotes();
+    void stopCurrentNotePlayed();
 
-    String getPlayBackModeName();
-    String getPlayBackModeName(uint8_t playBackMode);
-    String getStepSizeName();
-    String getStepSizeName(uint8_t stepSize);
+    char * getPlayBackModeName();
+    char * getPlayBackModeName(uint8_t playBackMode);
+    char * getStepSizeName();
+    char * getStepSizeName(uint8_t stepSize);
 
-    uint8_t _playBackOn;
-    uint16_t * _bpm;          
+    void getMessage(uint8_t msgIndex, char * buffer);
+
+    uint8_t _playBackOn;   
     uint32_t _lastTimePlayBack;
     int8_t _playBackStep;
     uint8_t _midiChannel;
@@ -92,7 +118,9 @@ class Sequencer
     uint8_t _stepSize;
     uint8_t _currentSequence;
     Step _steps[LENGTH]; 
-
+    uint8_t _stopCurrentPlayedNote;
+    uint8_t _currentNotePlayed;
+ 
     MemoryManager * _memoryManager;
     ScreenManager * _screenManager;
 };

@@ -7,6 +7,7 @@ Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryMana
     _stepSize = stepSize;
     _playBackMode = mode;
     _currentSequence = 1;
+    _stopCurrentPlayedNote = 0;
 
     switch (_playBackMode)
     {
@@ -22,11 +23,6 @@ Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryMana
 
     _memoryManager = memoryManager;
     _screenManager = screenManager;
-}
-
-void Sequencer::setBpm(uint16_t * bpm)
-{
-    _bpm = bpm;
 }
 
 void Sequencer::setPlayBackStep(int8_t currentStep)
@@ -56,7 +52,7 @@ void Sequencer::setPlayBackMode(uint8_t mode)
                 _playBackStep = LENGTH - 1;
             break;
         }
-    }
+    }    
 }
 
 void Sequencer::setStepSize(uint8_t size)
@@ -178,7 +174,8 @@ uint8_t Sequencer::getCurrentSequence()
 }
 
 void Sequencer::loadCurrentSequence()
-{    
+{
+    stopCurrentNotePlayed();
     _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
 }
 
@@ -194,12 +191,7 @@ void Sequencer::startPlayBack()
 
 void Sequencer::stopPlayBack()
 {
-    MIDIMessage msgNoteOff;
-
-    // Mutes all sounding nots
-    msgNoteOff.setType(midi::ControlChange);
-    msgNoteOff.setDataByte1(midi::AllSoundOff);
-    _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel); 
+    stopCurrentNotePlayed();
         
     switch (_playBackMode)
     {
@@ -217,12 +209,25 @@ void Sequencer::stopPlayBack()
     _lastTimePlayBack = 0;
 }
 
-uint8_t Sequencer::playBackSequence(uint32_t currentTime)
+void Sequencer::stopNote()
+{
+    _stopCurrentPlayedNote = 1;
+}
+
+uint8_t Sequencer::playBackSequence(SyncManager syncManager)
 { 
     if (_playBackOn)
     {     
-        if (currentTime - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / *_bpm) / _stepSize)
+        if (syncManager.getSyncTimeStamp() - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / syncManager.getBpm()) / _stepSize)
         {
+            _lastTimePlayBack = syncManager.getSyncTimeStamp();
+
+            // when playback mode has changed, it's necessary to stop current played note before play next step
+            if (_stopCurrentPlayedNote)
+            {
+                stopCurrentNotePlayed();
+            }
+
             switch (_playBackMode)
             {
                 case FORWARD:
@@ -237,8 +242,6 @@ uint8_t Sequencer::playBackSequence(uint32_t currentTime)
                     playBackRandom();
                 break;
             }
-
-            _lastTimePlayBack = currentTime;
 
             return 1; // play next step is true                   
         }
@@ -276,6 +279,9 @@ void Sequencer::playBackForward()
     // Play current step if enabled
     if (_steps[_playBackStep].isEnabled())
     {
+        // set current note being played
+        _currentNotePlayed = _steps[_playBackStep].getNote();
+
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
@@ -325,6 +331,9 @@ void Sequencer::playBackBackward()
     // Play current step if enabled
     if (_steps[_playBackStep].isEnabled())
     {
+        // set current note being played
+        _currentNotePlayed = _steps[_playBackStep].getNote();
+
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
@@ -368,6 +377,9 @@ void Sequencer::playBackRandom()
     // Play current step if enabled
     if (_steps[_playBackStep].isEnabled())
     {
+        // set current note being played
+        _currentNotePlayed = _steps[_playBackStep].getNote();
+
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
@@ -380,9 +392,35 @@ void Sequencer::playBackRandom()
     }
 }
 
-void Sequencer::printDefault()
+void Sequencer::stopCurrentNotePlayed()
+{    
+    MIDIMessage msgNoteOff;
+    
+    msgNoteOff.setType(midi::NoteOff);
+    msgNoteOff.setDataByte1(_currentNotePlayed);
+    _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
+    
+    _stopCurrentPlayedNote = 0;   
+}
+
+void Sequencer::stopAllNotes()
+{    
+    // send note off messages before loading new sequence
+    MIDIMessage msgNoteOff;
+    
+    //Send Note Off messages
+    msgNoteOff.setType(midi::NoteOff);
+
+    for (int i=0; i<LENGTH; i++)
+    {
+        msgNoteOff.setDataByte1(_steps[i].getNote());
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
+    }    
+}
+
+void Sequencer::printDefault(SyncManager syncManager)
 {
-    _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, *_bpm);
+    _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, syncManager.getBpm());
     _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
 }
 
@@ -483,48 +521,120 @@ void Sequencer::moveCursorToMIDIChannel()
     _screenManager->moveCursorToSequencerMIDIChannel();
 }
 
-String Sequencer::getPlayBackModeName()
-{     
+char * Sequencer::getPlayBackModeName()
+{
+    char buffer [10];
+
     switch(_playBackMode)
     {    
-       case FORWARD:    return F("Forward");    
-       case BACKWARD:   return F("Backward");
-       case RANDOM:     return F("Random"); 
-       default:         return F("N/A");        
+       case FORWARD:    
+        getMessage(MSG_FORWARD, buffer); 
+        break;
+
+       case BACKWARD:   
+        getMessage(MSG_BACKWARD, buffer); 
+        break;
+       
+       case RANDOM:     
+        getMessage(MSG_RANDOM, buffer); 
+        break;       
+
+       default:        
+        getMessage(MSG_NA, buffer);
     }
+
+    return buffer;
 }
 
-String Sequencer::getStepSizeName()
+char * Sequencer::getStepSizeName()
 {
+    char buffer[5];
+
     switch(_stepSize)
     {    
-       case QUARTER:        return F("1/4");    
-       case EIGHTH:         return F("1/8");
-       case SIXTEENTH:      return F("1/16");
-       case THIRTYSECOND:   return F("1/32");
-       default:             return F("N/A");        
+       case QUARTER:        
+        getMessage(MSG_QUARTER, buffer); 
+        break;
+
+       case EIGHTH:         
+        getMessage(MSG_EIGHTH, buffer); 
+        break;
+       
+       case SIXTEENTH:     
+        getMessage(MSG_SIXTEENTH, buffer); 
+        break;
+       
+       case THIRTYSECOND:   
+        getMessage(MSG_THIRTYSECOND, buffer); 
+        break;   
+
+        default:        
+         getMessage(MSG_NA, buffer);            
     }
+
+    return buffer;
 }
 
-String Sequencer::getPlayBackModeName(uint8_t playBackMode)
-{     
+char * Sequencer::getPlayBackModeName(uint8_t playBackMode)
+{    
+    char buffer [10];
+
     switch(playBackMode)
     {    
-       case FORWARD:    return F("Forward");    
-       case BACKWARD:   return F("Backward");
-       case RANDOM:     return F("Random"); 
-       default:         return F("N/A");        
+       case FORWARD:    
+        getMessage(MSG_FORWARD, buffer); 
+        break;
+
+       case BACKWARD:   
+        getMessage(MSG_BACKWARD, buffer); 
+        break;
+       
+       case RANDOM:     
+        getMessage(MSG_RANDOM, buffer); 
+        break;
+
+       default:        
+        getMessage(MSG_NA, buffer);   
     }
+
+    return buffer;
 }
 
-String Sequencer::getStepSizeName(uint8_t stepSize)
+char * Sequencer::getStepSizeName(uint8_t stepSize)
 {
+    char buffer[5];
+
     switch(stepSize)
     {    
-       case QUARTER:        return F("1/4");    
-       case EIGHTH:         return F("1/8");
-       case SIXTEENTH:      return F("1/16");
-       case THIRTYSECOND:   return F("1/32");
-       default:             return F("N/A");        
+       case QUARTER:        
+        getMessage(MSG_QUARTER, buffer); 
+        break;
+
+       case EIGHTH:         
+        getMessage(MSG_EIGHTH, buffer); 
+        break;
+       
+       case SIXTEENTH:     
+        getMessage(MSG_SIXTEENTH, buffer); 
+        break;
+       
+       case THIRTYSECOND:   
+        getMessage(MSG_THIRTYSECOND, buffer); 
+        break;   
+
+       default:        
+        getMessage(MSG_NA, buffer);     
     }
+
+    return buffer;
+}
+
+/*
+* Load a string of chars from the PROGMEM
+* msgIndex: text to Load
+* buffer: array of chars where the text will be loaded
+*/
+void Sequencer::getMessage(uint8_t msgIndex, char * buffer)
+{
+    strcpy_P(buffer, (char*)pgm_read_word(&(sequencerMessages[msgIndex])));    
 }

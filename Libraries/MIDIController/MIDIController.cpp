@@ -34,8 +34,7 @@ MIDIController::MIDIController(MidiWorker * midiWorker, IMIDIComponent ** midiCo
 {
     _midiWorker = midiWorker;
     _midiComponents = midiComponents;
-    _numMIDIComponents = numMIDIComponents;
-    
+    _numMIDIComponents = numMIDIComponents;    
 }
 
 /*
@@ -56,7 +55,7 @@ MIDIController::MIDIController(IMIDIComponent ** midiComponents, uint8_t numMIDI
 void MIDIController::begin()
 {  
    _memoryManager.initialize(_midiComponents, _numMIDIComponents, _sequencer.getSequenceLength(), Step::getSize(), _globalConfig.getSize());
-   _screenManager.initialize(I2C_ADDRESS, ROW_LENGTH, ROWS);
+   _screenManager.initialize(/*_lcd*/);
 
    // load from EEPROM the Global Configuration parameters
    _memoryManager.loadGlobalConfiguration(&_globalConfig);
@@ -77,18 +76,16 @@ void MIDIController::begin()
    _accesToSequencerEdit = 0;
 
    // set the default tempo
-   _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM);   
+   _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM+1));   
 
    // variable that controls the bpm led blink frequency
    _lastTimeBlink = 0;
    _lastTimeBlinkFade = 0;
    _lastTimeClock = 0;
+   
+   _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
 
-   _screenManager.cleanScreen();
-   _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
-
-   // sequencer initialization
-   _sequencer.setBpm(&_bpm);
+   // sequencer initialization  
    _sequencer.setMIDIChannel(_globalConfig.getSequencerMIDIChannel());
 
    // Controller initial state and substate
@@ -121,7 +118,7 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage -= 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
                 }
 
             break;
@@ -151,12 +148,11 @@ void MIDIController::processIncDecButtons()
                     }
 
                     else
-                    {
-                        _waitForLoadSequence = 0;
+                    {                       
                         _sequencer.loadCurrentSequence();
                     }
 
-                    _sequencer.printDefault();
+                    _sequencer.printDefault(_syncManager);
                 }
 
             break; 
@@ -177,7 +173,7 @@ void MIDIController::processIncDecButtons()
         {
             if (_syncManager.canStart())
             {
-                _waitForLoadSequence = 0;
+                _waitForLoadSequence = 0;               
                 _sequencer.loadCurrentSequence();
             }
         }
@@ -199,7 +195,7 @@ void MIDIController::processIncDecButtons()
                 {
                     _currentPage += 1;
                     loadPage(_currentPage);
-                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
                 }   
             
             break;
@@ -220,7 +216,7 @@ void MIDIController::processIncDecButtons()
                 
                 if (_sequencer.getCurrentSequence() < NUM_SEQUENCES)
                 {
-                    _sequencer.setCurrentSequence(_sequencer.getCurrentSequence() + 1);
+                    _sequencer.setCurrentSequence(_sequencer.getCurrentSequence() + 1);      
                     
                     // if playback is on controller must wait for the start of a new bar before load the new sequence into the sequencer
                     if (_sequencer.isPlayBackOn())
@@ -229,12 +225,11 @@ void MIDIController::processIncDecButtons()
                     }
 
                     else
-                    {
-                        _waitForLoadSequence = 0;
+                    {                                          
                         _sequencer.loadCurrentSequence();
                     }
 
-                    _sequencer.printDefault();
+                    _sequencer.printDefault(_syncManager);
                 }   
             
             break;
@@ -255,7 +250,7 @@ void MIDIController::processIncDecButtons()
         {
             if (_syncManager.canStart())
             {
-                _waitForLoadSequence = 0;
+                _waitForLoadSequence = 0;                
                 _sequencer.loadCurrentSequence();
             }
         }
@@ -272,7 +267,25 @@ void MIDIController::processMIDIComponents()
 {
     for (int i = 0; i < _numMIDIComponents; i++)
     {
+        // update sync timestamp
+        updateSyncTime();
+
+        // Send MIDI clock
+        sendMIDIClock();
+
+        // play the sequence
+        playBackSequence();
+
         processMidiComponent(_midiComponents[i]);
+        
+        // update sync timestamp
+        updateSyncTime();
+
+        // Send MIDI clock
+        sendMIDIClock();
+
+        // play the sequence
+        playBackSequence();
     }
 }
 
@@ -287,6 +300,7 @@ void MIDIController::processMidiComponent(IMIDIComponent * component)
     {
         // send a MIDI message
         case CONTROLLER:
+        case SEQUENCER:
         {            
             MIDIMessage * message = component->getMessageToSend();
             
@@ -372,23 +386,18 @@ void MIDIController::processSelectValuePot()
             case CONTROLLER:
             case SEQUENCER:
             {
-                _bpm = map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, (MAX_BPM+1));
-
-                // set the new bpm value into the sync manager and the step sequencer 
-                _syncManager.setBpm(_bpm);              
-
-                // calculate the step delay of the sequencer
-                _sequencer.setBpm(&_bpm);
+                // set the new bpm value into the sync manager 
+                _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM+1));              
 
                 // update screen regarding the state
                 if (_state == CONTROLLER)
                 {
-                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
                 }
 
                 if (_state == SEQUENCER)
                 {
-                    _sequencer.printDefault();
+                    _sequencer.printDefault(_syncManager);
                 }
             
                 break;
@@ -441,7 +450,7 @@ void MIDIController::processSelectValuePot()
                     {
 
                         //set the new velocity value into the component
-                        uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 128);
+                        uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 128);
                         displayedComponent->getMessages()[displayedMessageIndex].setDataByte2(velocity);
 
                         // print the new velocity value on the screen
@@ -576,6 +585,11 @@ void MIDIController::processSelectValuePot()
 
                         if (currentMode != _sequencer.getPlayBackMode())
                         {
+                            if (_sequencer.isPlayBackOn())
+                            {
+                                _sequencer.stopNote();
+                            }
+                            
                             _sequencer.refreshDisplayedPlayBackMode(_sequencer.getPlayBackMode());
                         }
 
@@ -713,7 +727,7 @@ void MIDIController::updateMIDIClockState()
 				
 				_midiWorker->sendMIDIStartClock();
 
-                _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn); 
+                _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm()); 
 			}
 			
 			// sequencer is playing the sequence, so sending MIDI clock signal must wait for the start of the bar
@@ -743,7 +757,7 @@ void MIDIController::updateMIDIClockState()
 				_syncManager.deactivate();
             }
 
-            _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+            _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
               
         break;
     }           
@@ -797,7 +811,7 @@ void MIDIController::updateSequencerPlayBackStatus()
 				_syncManager.deactivate();
             }
 
-            _sequencer.printDefault();
+            _sequencer.printDefault(_syncManager);
 
         break;        
     } 
@@ -968,7 +982,7 @@ void MIDIController::moveCursorToSequencerConfigParameter()
 void MIDIController::sendMIDIClock()
 {   
     // send MIDI clock signal regarding the tempo
-    if (_syncManager.getSyncTimeStamp() - _lastTimeClock >= ((MICROSECONDS_PER_MINUTE / _bpm) / 24))
+    if (_syncManager.getSyncTimeStamp() - _lastTimeClock >= ((MICROSECONDS_PER_MINUTE / _syncManager.getBpm()) / 24))
     {                       
         if (_isMIDIClockOn)
         {    
@@ -984,7 +998,7 @@ void MIDIController::sendMIDIClock()
 void MIDIController::playBackSequence()
 {
     // play next step in the sequence if sequencer playback is on
-    if (_sequencer.playBackSequence(_syncManager.getSyncTimeStamp()))
+    if (_sequencer.playBackSequence(_syncManager))
     {
         // update screen with next step data if controller state is SEQUENCER
         if (_state == SEQUENCER && _subState == PLAYBACK_ON)
@@ -1001,7 +1015,7 @@ void MIDIController::updateBpmIndicatorStatus()
 {
 	if (_waitForStart || _waitForLoadSequence)
 	{
-		if (_syncManager.getSyncTimeStamp() - _lastTimeBlinkFade >= ((MICROSECONDS_PER_MINUTE / _bpm) / 8))
+		if (_syncManager.getSyncTimeStamp() - _lastTimeBlinkFade >= ((MICROSECONDS_PER_MINUTE / _syncManager.getBpm()) / 8))
 		{
 			_midiLed.setState(!_midiLed.getState());
             _lastTimeBlinkFade = _syncManager.getSyncTimeStamp();
@@ -1010,7 +1024,7 @@ void MIDIController::updateBpmIndicatorStatus()
 	
 	else
 	{
-		if (_syncManager.getSyncTimeStamp() - _lastTimeBlink >= ((MICROSECONDS_PER_MINUTE / _bpm) / 2))
+		if (_syncManager.getSyncTimeStamp() - _lastTimeBlink >= ((MICROSECONDS_PER_MINUTE / _syncManager.getBpm()) / 2))
 		{
 			if (_isMIDIClockOn || _sequencer.isPlayBackOn())
 			{          
@@ -1040,15 +1054,15 @@ void MIDIController::processOperationModeButton()
             // Set the operation mode to Sequencer
             case CONTROLLER:
                 _state = SEQUENCER;     
-                _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF;  
-                _sequencer.printDefault();
+                _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF;                 
+                _sequencer.printDefault(_syncManager);             
 
             break;
 
             case SEQUENCER:
                  _state = CONTROLLER;             
                  _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF;
-                 _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn); 
+                 _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm()); 
 
             break;
         }
@@ -1085,7 +1099,7 @@ void MIDIController::processEditModeButton()
                     _state = CONTROLLER;
                     _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF; 
 
-                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);       
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());       
                     
                 break;
 
@@ -1100,7 +1114,7 @@ void MIDIController::processEditModeButton()
                         _state = CONTROLLER;
                         _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF;                
                               
-                        _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);     
+                        _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());     
                     }
                     
                 break;
@@ -1120,7 +1134,7 @@ void MIDIController::processEditModeButton()
                     _state = SEQUENCER;
                     _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF; 
 
-                    _sequencer.printDefault();       
+                    _sequencer.printDefault(_syncManager);       
                     
                 break;
 
@@ -1134,7 +1148,7 @@ void MIDIController::processEditModeButton()
                         _state = SEQUENCER;
                         _subState = _sequencer.isPlayBackOn() ? PLAYBACK_ON : PLAYBACK_OFF; 
 
-                        _sequencer.printDefault();  
+                        _sequencer.printDefault(_syncManager);  
                     }
                     
                 break;                     
@@ -1149,7 +1163,7 @@ void MIDIController::processEditModeButton()
                 case CONTROLLER:
 
                     // display default message on screen
-                    _screenManager.printDefault(_currentPage, NUM_PAGES, _bpm, _globalConfig, _isMIDIClockOn);
+                    _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm());
         
                     // Reset the flags for further button events
                     _wasPageSaved = 0;
@@ -1159,7 +1173,7 @@ void MIDIController::processEditModeButton()
 
                 case SEQUENCER:
 
-                    _sequencer.printDefault();
+                    _sequencer.printDefault(_syncManager);
 
                     // Reset the flags for further button events
                     _wasSequenceSaved = 0;

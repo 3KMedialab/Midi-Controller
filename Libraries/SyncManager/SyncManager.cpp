@@ -28,9 +28,15 @@ uint8_t SyncManager::getTimeInBar()
     return _timeInBar;
 }
 
+uint16_t SyncManager::getBpm()
+{
+    return _bpm;
+}
+
 void SyncManager::setBpm(uint16_t bpm)
 {
     _bpm = bpm;
+    updateSyncTime();
 }
 
 void SyncManager::activate()

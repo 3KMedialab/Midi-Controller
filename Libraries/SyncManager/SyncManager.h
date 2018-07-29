@@ -14,6 +14,7 @@ class SyncManager
   uint32_t getSyncTimeStamp();
   uint8_t isActive();
   uint8_t getTimeInBar();
+  uint16_t getBpm ();
 
   void setBpm(uint16_t bpm);
 
