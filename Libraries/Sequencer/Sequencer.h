@@ -120,6 +120,7 @@ class Sequencer
     Step _steps[LENGTH]; 
     uint8_t _stopCurrentPlayedNote;
     uint8_t _currentNotePlayed;
+    uint8_t _loadNewSequence;
  
     MemoryManager * _memoryManager;
     ScreenManager * _screenManager;

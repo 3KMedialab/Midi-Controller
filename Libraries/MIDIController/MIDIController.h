@@ -59,8 +59,7 @@ class MIDIController
     void sendMIDIClock();
     void updateBpmIndicatorStatus();
     void updateSyncTime();
-    void updateSyncStatus();
-
+    
   private:
     uint8_t _numMIDIComponents;                                                                         // number of MIDI components the controller will manage
     IMIDIComponent ** _midiComponents;                                                                  // MIDI components the controller will manage
@@ -92,9 +91,7 @@ class MIDIController
     
     Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager);
 
-    SyncManager _syncManager = SyncManager(BAR_LENGTH);
-    uint8_t _waitForStart;
-    uint8_t _waitForLoadSequence;
+    SyncManager _syncManager;
     
     enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG, SEQUENCER_EDIT_STEP, SEQUENCER_EDIT_CONFIG}; // Controller status list
     enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 

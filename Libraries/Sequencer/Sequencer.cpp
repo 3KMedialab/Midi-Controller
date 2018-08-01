@@ -8,6 +8,7 @@ Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryMana
     _playBackMode = mode;
     _currentSequence = 1;
     _stopCurrentPlayedNote = 0;
+    _loadNewSequence = 0;
 
     switch (_playBackMode)
     {
@@ -175,8 +176,15 @@ uint8_t Sequencer::getCurrentSequence()
 
 void Sequencer::loadCurrentSequence()
 {
-    stopCurrentNotePlayed();
-    _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+    if (isPlayBackOn())
+    {
+        _loadNewSequence = 1;
+    }
+
+    else
+    {
+        _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);        
+    }   
 }
 
 void Sequencer::saveCurrentSequence()
@@ -226,6 +234,14 @@ uint8_t Sequencer::playBackSequence(SyncManager syncManager)
             if (_stopCurrentPlayedNote)
             {
                 stopCurrentNotePlayed();
+            }
+
+            // if sequencer has to load a new sequence while playback is on
+            if (_loadNewSequence)
+            {
+                stopCurrentNotePlayed();
+                _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+                _loadNewSequence = 0;
             }
 
             switch (_playBackMode)

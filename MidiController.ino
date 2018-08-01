@@ -109,26 +109,8 @@ MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
  
  void loop(void)
   {
-   
  
-    // Update the status of the synchronisation manager
-    controller.updateSyncStatus(); 
-
-
     f();
-
-    // Blink BPM indicator
-    controller.updateBpmIndicatorStatus();
-
-    f();
-
- 
-
-
-    // Process multiple purpose button for activate/deactivate MIDI clock signal or move to the next value to edit
-    controller.processMultiplePurposeButton();
-
-   f();
       
     // Process the select value potentiometer
     controller.processSelectValuePot();
@@ -140,8 +122,11 @@ MIDIController controller(&worker, components, NUM_MIDI_BUTTONS+NUM_MIDI_POTS);
 
   f();
 
+  // Process multiple purpose button for activate/deactivate MIDI clock signal or move to the next value to edit
+    controller.processMultiplePurposeButton();
 
-    
+      f();
+
     // Process the page inc/dec buttons
     controller.processIncDecButtons();
 f();
@@ -159,8 +144,8 @@ f();
   }
 
   void f(){ 
-
-    // update sync timestamp
+    
+    // Update the sync timestamp
     controller.updateSyncTime();
 
     // Send MIDI clock
@@ -168,6 +153,9 @@ f();
 
          // Play sequence
     controller.playBackSequence();  
+
+        // Blink BPM indicator
+    controller.updateBpmIndicatorStatus();
 
    
     
