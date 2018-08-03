@@ -222,14 +222,12 @@ void Sequencer::stopNote()
     _stopCurrentPlayedNote = 1;
 }
 
-uint8_t Sequencer::playBackSequence(SyncManager syncManager)
-{ 
-    if (_playBackOn)
-    {     
-        if (syncManager.getSyncTimeStamp() - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / syncManager.getBpm()) / _stepSize)
+uint8_t Sequencer::playBackSequence(SyncManager * syncManager)
+{
+    if (syncManager->getSyncTimeStamp() - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / syncManager->getBpm()) / _stepSize)
+    {
+        if (_playBackOn)
         {
-            _lastTimePlayBack = syncManager.getSyncTimeStamp();
-
             // when playback mode has changed, it's necessary to stop current played note before play next step
             if (_stopCurrentPlayedNote)
             {
@@ -257,9 +255,11 @@ uint8_t Sequencer::playBackSequence(SyncManager syncManager)
                 case RANDOM:
                     playBackRandom();
                 break;
-            }
+            }           
 
-            return 1; // play next step is true                   
+            _lastTimePlayBack = syncManager->getSyncTimeStamp();
+
+            return 1; // play next step is true 
         }
     }
 

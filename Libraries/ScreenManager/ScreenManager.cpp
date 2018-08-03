@@ -42,7 +42,7 @@ void ScreenManager::initialize()
 * page: current selected page of messages
 * tempo: current selected tempo in BPMs
 */
-void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
+void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, uint8_t isMIDIClockOn)
 {
     char line[COLUMNS+1];
 
@@ -74,7 +74,11 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo)
 
     line[0] = '\0';
 
-    for (int i=0; i<COLUMNS; i++)
+    // prints the MIDI clock status 
+    getMessage(MSG_CLOCK, line);
+    isMIDIClockOn ? getMessage(ON, line + strlen (line)) : getMessage(OFF, line + strlen (line));
+
+    for (int i=strlen(line); i<COLUMNS; i++)
     {
         append(line, ' ');
     }

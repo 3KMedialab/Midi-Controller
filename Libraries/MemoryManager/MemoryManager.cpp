@@ -60,8 +60,7 @@ void MemoryManager::loadGlobalConfiguration(GlobalConfig * globalConfig)
     globalConfig->setMIDIChannel(EEPROM.read(0));
 	globalConfig->setSequencerMIDIChannel(EEPROM.read(1));
     globalConfig->setMode(EEPROM.read(2));
-    globalConfig->setRootNote(EEPROM.read(3));
-    globalConfig->setSendClockWhilePlayBack(EEPROM.read(4));
+    globalConfig->setRootNote(EEPROM.read(3));    
 }
 
 /*
@@ -73,8 +72,7 @@ void MemoryManager::saveGlobalConfiguration(GlobalConfig globalConfig)
     EEPROM.update(0, globalConfig.getMIDIChannel());
 	EEPROM.update(1, globalConfig.getSequencerMIDIChannel());
     EEPROM.update(2, globalConfig.getMode());
-    EEPROM.update(3, globalConfig.getRootNote());
-    EEPROM.update(4, globalConfig.getSendClockWhilePlayBack());
+    EEPROM.update(3, globalConfig.getRootNote());  
 }
 
 /*

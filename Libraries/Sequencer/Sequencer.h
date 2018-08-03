@@ -76,7 +76,7 @@ class Sequencer
 
     void startPlayBack();
     void stopPlayBack();
-    uint8_t playBackSequence(SyncManager syncManager);
+    uint8_t playBackSequence(SyncManager * syncManager);
     void stopNote();
 
     void printDefault(SyncManager syncManager);

@@ -58,6 +58,9 @@
 #define MSG_STEP_SIZE 21
 #define YES 22
 #define NO 23
+#define MSG_CLOCK 24
+#define ON 25
+#define OFF 26
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Pg:";
@@ -84,16 +87,20 @@ const char msg_playback_mode[] PROGMEM = "Mode:";
 const char msg_step_size[] PROGMEM = "Size:";
 const char msg_Yes[] PROGMEM = "Yes";
 const char msg_No[] PROGMEM = "No";
+const char msg_Clock[] PROGMEM = "Clock:";
+const char msg_On[] PROGMEM = "On";
+const char msg_Off[] PROGMEM = "Off";
+
 
 const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit1, msg_Edit2, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, 
 msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key, msg_seq, msg_step, msg_step_legato, msg_step_enabled,
-msg_playback_mode, msg_step_size, msg_Yes, msg_No}; 
+msg_playback_mode, msg_step_size, msg_Yes, msg_No, msg_Clock, msg_On, msg_Off}; 
 
 class ScreenManager
 {
   public:       
     void initialize();
-    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo);
+    void printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, uint8_t isMIDIClockOn);
     void printSelectComponentMessage();
     void printEditGlobalConfig(GlobalConfig globalConf);
     void printSavedMessage();

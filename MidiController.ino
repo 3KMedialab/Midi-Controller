@@ -144,19 +144,13 @@ f();
   }
 
   void f(){ 
-    
-    // Update the sync timestamp
+
     controller.updateSyncTime();
 
-    // Send MIDI clock
-    controller.sendMIDIClock();
-
-         // Play sequence
+             // Play sequence
     controller.playBackSequence();  
 
-        // Blink BPM indicator
-    controller.updateBpmIndicatorStatus();
-
-   
+    // Send MIDI clock
+    controller.sendMIDIClock();   
     
   }
