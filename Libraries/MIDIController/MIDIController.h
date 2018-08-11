@@ -26,7 +26,7 @@
 #define MIDIController_h
 
 #include <MidiWorker.h>
-#include <IMIDIComponent.h> 
+#include <IMIDIComponent.h>
 #include <Pitches.h>
 #include <ControllerConfig.h>
 #include <MemoryManager.h>
@@ -39,79 +39,109 @@
 #include <SyncManager.h>
 #include <hd44780.h>                       // main hd44780 header
 #include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+#include <TimerOne.h>
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
 class MIDIController
 {
-  public:     
-    MIDIController(MidiWorker * worker, IMIDIComponent ** components, uint8_t numMIDIComponents);
-    MIDIController(IMIDIComponent ** components, uint8_t numMIDIComponents);
-      
-    void begin(); 
-    void processMIDIComponents(); 
-    void processIncDecButtons();
-    void processSelectValuePot();
-    void processMultiplePurposeButton();
-    void processEditModeButton();
-    void playBackSequence();
-    void processOperationModeButton();
-    void sendMIDIClock();
-    void updateBpmIndicatorStatus();
-    void updateSyncTime();
-    
-  private:
-    uint8_t _numMIDIComponents;                                                                         // number of MIDI components the controller will manage
-    IMIDIComponent ** _midiComponents;                                                                  // MIDI components the controller will manage
+public:
+  MIDIController(MidiWorker *worker, IMIDIComponent **components, uint8_t numMIDIComponents);
+  MIDIController(IMIDIComponent **components, uint8_t numMIDIComponents);
 
-    MemoryManager _memoryManager;                                                                       // object to manage interactions between the controller and the EEPROM
-    uint8_t _currentPage;                                                                               // current page of MIDI messages loaded into the controller
-    uint8_t _wasPageSaved;                                                                              // flag that indicates wether a page was saved or not.	  
-    uint8_t _wasSequenceSaved;                                                                          // flag that indicates wether a sequence was saved or not.
-    uint8_t _wasGlobalConfigSaved;                                                                      // flag that indicates wether global configuration was saved or not.
-    uint8_t _accesToGloabalEdit;                                                                        // flag that indicates wether we have just accesed to edit global config or not.
-    uint8_t _accesToSequencerEdit;                                                                      // flag that indicates wether we have just accesed to sequencer config edit or not.
+  void begin();
+  void processMIDIComponents();
+  void processIncDecButtons();
+  void processSelectValuePot();
+  void processMultiplePurposeButton();
+  void processEditModeButton();
+  void playBackSequence();
+  void processOperationModeButton();
+  void sendMIDIClock();
+  void updateBpmIndicatorStatus();
+  void updateSyncTime();
+  uint16_t getBpm();
+  uint8_t getStepSize();
+  uint8_t getResetMIDIClockPeriod();
+  void setResetMIDIClockPeriod(uint8_t resetMIDIClockPeriod);
 
-    ScreenManager _screenManager;                                                                       // object to manage interactions between the controller and the screen   
+private:
+  uint8_t _numMIDIComponents;       // number of MIDI components the controller will manage
+  IMIDIComponent **_midiComponents; // MIDI components the controller will manage
 
-    Button _decPageButton = Button(DEC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);                   // button for load the previous page of MIDI messages into the MIDI components
-    Button _incPageButton = Button(INC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);                   // button for load the next page of MIDI messages into the MIDI components
-    Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);                     // button that activates/deactivates the edit mode.
-    Button _operationModeButton = Button(OPERATION_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);       // button for change the operation mode: Controller or Sequencer
-    
-    Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                          // potentiometer for set the tempo in BPM of the controller.
-    Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                           // Led that blinks when MIDI information is being sent
-    Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);   // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
-    uint32_t _lastTimeBlink;                                                                                 // Led blink timer
-    uint32_t _lastTimeBlinkFade;                                                                                 // Led blink fade timer
-    uint32_t _lastTimeClock;                                                                            // MIDI clock tick timer  
-    uint8_t _isMIDIClockOn;                                                                             // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
+  MemoryManager _memoryManager;  // object to manage interactions between the controller and the EEPROM
+  uint8_t _currentPage;          // current page of MIDI messages loaded into the controller
+  uint8_t _wasPageSaved;         // flag that indicates wether a page was saved or not.
+  uint8_t _wasSequenceSaved;     // flag that indicates wether a sequence was saved or not.
+  uint8_t _wasGlobalConfigSaved; // flag that indicates wether global configuration was saved or not.
+  uint8_t _accesToGloabalEdit;   // flag that indicates wether we have just accesed to edit global config or not.
+  uint8_t _accesToSequencerEdit; // flag that indicates wether we have just accesed to sequencer config edit or not.
 
-    MidiWorker * _midiWorker;                                                                           // object to manage the MIDI functionality
-    
-    Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager);
+  ScreenManager _screenManager; // object to manage interactions between the controller and the screen
 
-    SyncManager _syncManager;
-    
-    enum State {CONTROLLER, SEQUENCER, EDIT_PAGE, EDIT_GLOBAL_CONFIG, SEQUENCER_EDIT_STEP, SEQUENCER_EDIT_CONFIG}; // Controller status list
-    enum SubState {MIDI_CLOCK_ON, MIDI_CLOCK_OFF, EDIT_GLOBAL_MODE, EDIT_GLOBAL_ROOT_NOTE, EDIT_GLOBAL_MIDI_CH, 
-                  DEFAULT_EDIT_MSG, EDIT_MIDI_TYPE, EDIT_NOTE, EDIT_VELOCITY, EDIT_CC, PLAYBACK_ON, PLAYBACK_OFF,
-                  SEQUENCER_EDIT_STEP_NOTE, SEQUENCER_EDIT_STEP_LEGATO, SEQUENCER_EDIT_STEP_ENABLED,
-                  SEQUENCER_EDIT_PLAYBACK_MODE, SEQUENCER_EDIT_STEP_SIZE, SEQUENCER_EDIT_MIDI_CH}; // Controller substatus list
-    uint8_t _state, _subState;                                                                                        // Controller current status and substatus
+  Button _decPageButton = Button(DEC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the previous page of MIDI messages into the MIDI components
+  Button _incPageButton = Button(INC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the next page of MIDI messages into the MIDI components
+  Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);               // button that activates/deactivates the edit mode.
+  Button _operationModeButton = Button(OPERATION_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS); // button for change the operation mode: Controller or Sequencer
 
-    GlobalConfig _globalConfig = GlobalConfig();                                                        // Object containing the global configuration
+  Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                        // potentiometer for set the tempo in BPM of the controller.
+  Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                        // Led that blinks when MIDI information is being sent
+  Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS); // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
 
-    void processMidiComponent(IMIDIComponent * component);
-   
-    void printSerial(MIDIMessage message);
-    void savePage(uint8_t page);
-    void loadPage(uint8_t page);
-    void updateMIDIClockState();
-    void updateSequencerPlayBackStatus();
-    void moveCursorToValue();
-    void moveCursorToStepValue();
-    void moveCursorToGLobalConfigParameter();
-    void moveCursorToSequencerConfigParameter();
+  uint8_t _isMIDIClockOn; // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
+  uint8_t _resetMIDIClockPeriod;
+
+  MidiWorker *_midiWorker; // object to manage the MIDI functionality
+
+  Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager);
+
+  SyncManager _syncManager;
+
+  enum State
+  {
+    CONTROLLER,
+    SEQUENCER,
+    EDIT_PAGE,
+    EDIT_GLOBAL_CONFIG,
+    SEQUENCER_EDIT_STEP,
+    SEQUENCER_EDIT_CONFIG
+  }; // Controller status list
+  enum SubState
+  {
+    MIDI_CLOCK_ON,
+    MIDI_CLOCK_OFF,
+    EDIT_GLOBAL_MODE,
+    EDIT_GLOBAL_ROOT_NOTE,
+    EDIT_GLOBAL_MIDI_CH,
+    DEFAULT_EDIT_MSG,
+    EDIT_MIDI_TYPE,
+    EDIT_NOTE,
+    EDIT_VELOCITY,
+    EDIT_CC,
+    PLAYBACK_ON,
+    PLAYBACK_OFF,
+    SEQUENCER_EDIT_STEP_NOTE,
+    SEQUENCER_EDIT_STEP_LEGATO,
+    SEQUENCER_EDIT_STEP_ENABLED,
+    SEQUENCER_EDIT_PLAYBACK_MODE,
+    SEQUENCER_EDIT_SEND_CLOCK_WHILE_PLAYBACK,
+    SEQUENCER_EDIT_STEP_SIZE,
+    SEQUENCER_EDIT_MIDI_CH
+  };                         // Controller substatus list
+  uint8_t _state, _subState; // Controller current status and substatus
+
+  GlobalConfig _globalConfig = GlobalConfig(); // Object containing the global configuration
+
+  void processMidiComponent(IMIDIComponent *component);
+
+  void printSerial(MIDIMessage message);
+  void savePage(uint8_t page);
+  void loadPage(uint8_t page);
+  void updateMIDIClockState();
+  void updateSequencerPlayBackStatus();
+  void moveCursorToValue();
+  void moveCursorToStepValue();
+  void moveCursorToGLobalConfigParameter();
+  void moveCursorToSequencerConfigParameter();
 };
 #endif

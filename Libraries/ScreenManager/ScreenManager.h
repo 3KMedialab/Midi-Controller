@@ -61,6 +61,8 @@
 #define MSG_CLOCK 24
 #define ON 25
 #define OFF 26
+#define MSG_PLAYBACK 27
+#define MSG_CLK 28
 
 // Messages that will be displayed on the screen
 const char msg_Page[] PROGMEM = "Pg:";
@@ -90,11 +92,13 @@ const char msg_No[] PROGMEM = "No";
 const char msg_Clock[] PROGMEM = "Clock:";
 const char msg_On[] PROGMEM = "On";
 const char msg_Off[] PROGMEM = "Off";
+const char msg_Playback[] PROGMEM = "Playback:";
+const char msg_Clk[] PROGMEM = "Clk:";
 
 
 const char * const messages[] PROGMEM = {msg_Page, msg_Tempo, msg_Bpm, msg_Edit1, msg_Edit2, msg_MsgChannel, msg_NoteOnOff, msg_CtrlChange, 
 msg_CC, msg_PgrmChange, msg_PGM, msg_Velocity, msg_saved, msg_empty_midi_type, msg_mode, msg_key, msg_seq, msg_step, msg_step_legato, msg_step_enabled,
-msg_playback_mode, msg_step_size, msg_Yes, msg_No, msg_Clock, msg_On, msg_Off}; 
+msg_playback_mode, msg_step_size, msg_Yes, msg_No, msg_Clock, msg_On, msg_Off, msg_Playback, msg_Clk}; 
 
 class ScreenManager
 {
@@ -131,20 +135,22 @@ class ScreenManager
     void refreshMIDIChannelData(uint8_t midiChannel);
 
     // SEQUENCER METHODS
-    void printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo);
-    void printEditSequencerConfig (char * playbackModeName, char * stepSizeName, uint8_t midiChannel);
+    void printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo, uint8_t playBackOn);
+    void printEditSequencerConfig(char *playbackModeName, char *stepSizeName, uint8_t midiChannel, uint8_t sendClockWhilePlayback);
     void updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep);
     void printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength);
     void moveCursorToStepNote();
     void moveCursorToStepLegato();
     void moveCursorToStepEnabled();
     void moveCursorToPlayBackMode();
+    void moveCursorToSendClockWhilePlayback();
     void moveCursorToStepSize();
     void moveCursorToSequencerMIDIChannel();
     void refreshStepNoteValue(uint8_t note);
     void refreshStepLegatoValue(uint8_t legato);
     void refreshStepEnabledValue(uint8_t enabled);
     void refreshDisplayedPlayBackMode(char * playBackMode);
+    void refreshDisplayedSendClockWhilePlayback(uint8_t sendClockWhilePlayback);
     void refreshDisplayedStepSizeValue(char * stepSize);
     void refreshDisplayedSequencerMidiChannel(uint8_t midiChannel);
 
@@ -171,6 +177,6 @@ class ScreenManager
     enum {PROGRAM_CHANNEL_POS=0};                                           // Screen start position of the Program Change message parameters 
     enum {EDIT_GLOBAL_MODE_POS=5, EDIT_GLOBAL_KEY_POS=4, EDIT_GLOBAL_CHANNEL_POS=7}; // Screen start position of the Global Config parameters
     enum {STEP_NUM_POS=5, STEP_NOTE_POS=9, STEP_ENABLED_POS=9, STEP_LEGATO_POS=4}; // Sequencer screen start position of the sequence step values
-    enum {SEQUENCER_EDIT_PLAYBACK_MODE_POS=5, SEQUENCER_EDIT_STEP_SIZE_POS=5, SEQUENCER_EDIT_MIDI_CHANNEL_POS=10 }; // Screen start position of the Sequencer Config parameters
+    enum {SEQUENCER_EDIT_PLAYBACK_MODE_POS=5, SEQUENCER_EDIT_SEND_CLOCK_POS=9, SEQUENCER_EDIT_STEP_SIZE_POS=5, SEQUENCER_EDIT_MIDI_CHANNEL_POS=10 }; // Screen start position of the Sequencer Config parameters
 };
 #endif

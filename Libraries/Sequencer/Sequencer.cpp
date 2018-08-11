@@ -1,9 +1,8 @@
 #include "Sequencer.h"
 
-Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryManager, ScreenManager * screenManager)
-{    
-    _lastTimePlayBack = 0;
-    _playBackOn = 0;    
+Sequencer::Sequencer(uint8_t mode, uint8_t stepSize, MemoryManager *memoryManager, ScreenManager *screenManager)
+{
+    _playBackOn = 0;
     _stepSize = stepSize;
     _playBackMode = mode;
     _currentSequence = 1;
@@ -12,13 +11,13 @@ Sequencer::Sequencer (uint8_t mode, uint8_t stepSize, MemoryManager * memoryMana
 
     switch (_playBackMode)
     {
-        case FORWARD:
-        case RANDOM:
-            _playBackStep = 0;
+    case FORWARD:
+    case RANDOM:
+        _playBackStep = 0;
         break;
 
-        case BACKWARD:
-            _playBackStep = LENGTH - 1;
+    case BACKWARD:
+        _playBackStep = LENGTH - 1;
         break;
     }
 
@@ -44,16 +43,16 @@ void Sequencer::setPlayBackMode(uint8_t mode)
     {
         switch (_playBackMode)
         {
-            case FORWARD:
-            case RANDOM:
-                _playBackStep = 0;
+        case FORWARD:
+        case RANDOM:
+            _playBackStep = 0;
             break;
 
-            case BACKWARD:
-                _playBackStep = LENGTH - 1;
+        case BACKWARD:
+            _playBackStep = LENGTH - 1;
             break;
         }
-    }    
+    }
 }
 
 void Sequencer::setStepSize(uint8_t size)
@@ -61,19 +60,19 @@ void Sequencer::setStepSize(uint8_t size)
     _stepSize = size;
 }
 
-void Sequencer::setCurrentSequence (uint8_t numSequence)
+void Sequencer::setCurrentSequence(uint8_t numSequence)
 {
-    _currentSequence = numSequence;    
+    _currentSequence = numSequence;
 }
 
-void Sequencer::setMidiWorker(MidiWorker * midiWorker)
+void Sequencer::setMidiWorker(MidiWorker *midiWorker)
 {
     _midiWorker = midiWorker;
 }
 
 void Sequencer::setDisplayedStepNote(uint8_t note)
 {
-    _steps[_screenManager->getDisplayedStepNumber()-1].setNote(note);
+    _steps[_screenManager->getDisplayedStepNumber() - 1].setNote(note);
 
     // refresh note value on screen
     _screenManager->refreshStepNoteValue(note);
@@ -81,7 +80,7 @@ void Sequencer::setDisplayedStepNote(uint8_t note)
 
 void Sequencer::setDisplayedStepLegato(uint8_t legato)
 {
-    _steps[_screenManager->getDisplayedStepNumber()-1].setLegato(legato);
+    _steps[_screenManager->getDisplayedStepNumber() - 1].setLegato(legato);
 
     // refresh legato value on screen
     _screenManager->refreshStepLegatoValue(legato);
@@ -89,7 +88,7 @@ void Sequencer::setDisplayedStepLegato(uint8_t legato)
 
 void Sequencer::setDisplayedStepEnabled(uint8_t enabled)
 {
-    _steps[_screenManager->getDisplayedStepNumber()-1].setEnabled(enabled);
+    _steps[_screenManager->getDisplayedStepNumber() - 1].setEnabled(enabled);
 
     // refresh enabled value on screen
     _screenManager->refreshStepEnabledValue(enabled);
@@ -98,6 +97,11 @@ void Sequencer::setDisplayedStepEnabled(uint8_t enabled)
 void Sequencer::refreshDisplayedPlayBackMode(uint8_t playBackMode)
 {
     _screenManager->refreshDisplayedPlayBackMode(getPlayBackModeName(playBackMode));
+}
+
+void Sequencer::refreshDisplayedSendClockWhilePlayback(uint8_t sendClockWhilePlayback)
+{
+    _screenManager->refreshDisplayedSendClockWhilePlayback(sendClockWhilePlayback);
 }
 
 void Sequencer::refreshDisplayedStepSizeValue(uint8_t stepSize)
@@ -117,26 +121,26 @@ int8_t Sequencer::getPlayBackStep()
 
 uint8_t Sequencer::isPlayBackOn()
 {
-    return _playBackOn; 
+    return _playBackOn;
 }
 
 uint8_t Sequencer::isStepSizeValueValid(uint8_t stepSizeValue)
 {
-    switch(stepSizeValue)
+    switch (stepSizeValue)
     {
-        case QUARTER:
-        case EIGHTH:
-        case SIXTEENTH:
-        case THIRTYSECOND:
-            return 1;
-        default:
-            return 0;
+    case QUARTER:
+    case EIGHTH:
+    case SIXTEENTH:
+    case THIRTYSECOND:
+        return 1;
+    default:
+        return 0;
     }
 }
 
 uint8_t Sequencer::getPlayBackMode()
 {
-    return _playBackMode; 
+    return _playBackMode;
 }
 
 uint8_t Sequencer::getPlayBackModeTypesNumber()
@@ -154,7 +158,7 @@ uint8_t Sequencer::getSequenceLength()
     return LENGTH;
 }
 
-Step * Sequencer::getSequence()
+Step *Sequencer::getSequence()
 {
     return _steps;
 }
@@ -183,8 +187,8 @@ void Sequencer::loadCurrentSequence()
 
     else
     {
-        _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);        
-    }   
+        _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+    }
 }
 
 void Sequencer::saveCurrentSequence()
@@ -200,21 +204,20 @@ void Sequencer::startPlayBack()
 void Sequencer::stopPlayBack()
 {
     stopCurrentNotePlayed();
-        
+
     switch (_playBackMode)
     {
-        case FORWARD:
-        case RANDOM:
-            _playBackStep = 0;
+    case FORWARD:
+    case RANDOM:
+        _playBackStep = 0;
         break;
 
-        case BACKWARD:
-            _playBackStep = LENGTH - 1;
+    case BACKWARD:
+        _playBackStep = LENGTH - 1;
         break;
-    }   
+    }
 
     _playBackOn = 0;
-    _lastTimePlayBack = 0;
 }
 
 void Sequencer::stopNote()
@@ -222,45 +225,40 @@ void Sequencer::stopNote()
     _stopCurrentPlayedNote = 1;
 }
 
-uint8_t Sequencer::playBackSequence(SyncManager * syncManager)
+uint8_t Sequencer::playBackSequence(SyncManager *syncManager)
 {
-    if (syncManager->getSyncTimeStamp() - _lastTimePlayBack >= (MICROSECONDS_PER_MINUTE / syncManager->getBpm()) / _stepSize)
+    if (_playBackOn)
     {
-        if (_playBackOn)
+        // when playback mode has changed, it's necessary to stop current played note before play next step
+        if (_stopCurrentPlayedNote)
         {
-            // when playback mode has changed, it's necessary to stop current played note before play next step
-            if (_stopCurrentPlayedNote)
-            {
-                stopCurrentNotePlayed();
-            }
-
-            // if sequencer has to load a new sequence while playback is on
-            if (_loadNewSequence)
-            {
-                stopCurrentNotePlayed();
-                _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
-                _loadNewSequence = 0;
-            }
-
-            switch (_playBackMode)
-            {
-                case FORWARD:
-                    playBackForward();
-                break;
-
-                case BACKWARD:
-                    playBackBackward();
-                break;
-
-                case RANDOM:
-                    playBackRandom();
-                break;
-            }           
-
-            _lastTimePlayBack = syncManager->getSyncTimeStamp();
-
-            return 1; // play next step is true 
+            stopCurrentNotePlayed();
         }
+
+        // if sequencer has to load a new sequence while playback is on
+        if (_loadNewSequence)
+        {
+            stopCurrentNotePlayed();
+            _memoryManager->loadSequence(_currentSequence, _steps, LENGTH);
+            _loadNewSequence = 0;
+        }
+
+        switch (_playBackMode)
+        {
+        case FORWARD:
+            playBackForward();
+            break;
+
+        case BACKWARD:
+            playBackBackward();
+            break;
+
+        case RANDOM:
+            playBackRandom();
+            break;
+        }
+
+        return 1; // play next step is true
     }
 
     return 0;
@@ -274,7 +272,7 @@ void Sequencer::playBackForward()
 
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
-            
+
     if (_playBackStep == 0)
     {
         msgNoteOff.setDataByte1(_steps[LENGTH - 1].getNote());
@@ -285,11 +283,11 @@ void Sequencer::playBackForward()
     {
         msgNoteOff.setDataByte1(_steps[_playBackStep - 1].getNote());
         isStepLegato = _steps[_playBackStep - 1].isLegato();
-    }            
-            
+    }
+
     if (!isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 
     // Play current step if enabled
@@ -301,12 +299,12 @@ void Sequencer::playBackForward()
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
-        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
+        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
     if (isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 
     // Move sequence to next step
@@ -315,7 +313,7 @@ void Sequencer::playBackForward()
     if (_playBackStep >= LENGTH)
     {
         _playBackStep = 0;
-    }    
+    }
 }
 
 void Sequencer::playBackBackward()
@@ -326,7 +324,7 @@ void Sequencer::playBackBackward()
 
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
-            
+
     if (_playBackStep == LENGTH - 1)
     {
         msgNoteOff.setDataByte1(_steps[0].getNote());
@@ -337,11 +335,11 @@ void Sequencer::playBackBackward()
     {
         msgNoteOff.setDataByte1(_steps[_playBackStep + 1].getNote());
         isStepLegato = _steps[_playBackStep + 1].isLegato();
-    }            
-            
+    }
+
     if (!isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 
     // Play current step if enabled
@@ -353,21 +351,21 @@ void Sequencer::playBackBackward()
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
-        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
+        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
     if (isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 
     // Move sequence to next step
-    _playBackStep--;  
+    _playBackStep--;
 
     if (_playBackStep < 0)
     {
         _playBackStep = LENGTH - 1;
-    }        
+    }
 }
 
 void Sequencer::playBackRandom()
@@ -379,12 +377,12 @@ void Sequencer::playBackRandom()
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
     msgNoteOff.setDataByte1(_steps[_playBackStep].getNote());
-    
+
     isStepLegato = _steps[_playBackStep].isLegato();
-               
+
     if (!isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 
     // Calculate next step
@@ -399,89 +397,88 @@ void Sequencer::playBackRandom()
         msgNoteOn.setType(midi::NoteOn);
         msgNoteOn.setDataByte1(_steps[_playBackStep].getNote());
         msgNoteOn.setDataByte2(127);
-        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);  
+        _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
     if (isStepLegato)
     {
-        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);       
+        _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 }
 
 void Sequencer::stopCurrentNotePlayed()
-{    
+{
     MIDIMessage msgNoteOff;
-    
+
     msgNoteOff.setType(midi::NoteOff);
     msgNoteOff.setDataByte1(_currentNotePlayed);
     _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
-    
-    _stopCurrentPlayedNote = 0;   
+
+    _stopCurrentPlayedNote = 0;
 }
 
 void Sequencer::stopAllNotes()
-{    
+{
     // send note off messages before loading new sequence
     MIDIMessage msgNoteOff;
-    
+
     //Send Note Off messages
     msgNoteOff.setType(midi::NoteOff);
 
-    for (int i=0; i<LENGTH; i++)
+    for (int i = 0; i < LENGTH; i++)
     {
         msgNoteOff.setDataByte1(_steps[i].getNote());
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
-    }    
+    }
 }
 
 void Sequencer::printDefault(SyncManager syncManager)
 {
-    _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, syncManager.getBpm());
-    _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+    _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, syncManager.getBpm(), _playBackOn);    
 }
 
 void Sequencer::printEditConfig(GlobalConfig globalConfig)
 {
-    _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig.getSequencerMIDIChannel());
+    _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig.getSequencerMIDIChannel(), globalConfig.getSendClockWhilePlayback());
 }
 
 void Sequencer::updateDisplayedStep()
 {
-    
+
     switch (_playBackMode)
     {
-        case FORWARD:
+    case FORWARD:
 
-            if (_playBackStep == 0)
-            {
-                _screenManager->updateDisplayedPlaybackStep(_steps[LENGTH - 1], LENGTH, LENGTH);    
-            }          
+        if (_playBackStep == 0)
+        {
+            _screenManager->updateDisplayedPlaybackStep(_steps[LENGTH - 1], LENGTH, LENGTH);
+        }
 
-            else
-            {
-                _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep - 1], LENGTH, _playBackStep);
-            }
-        
+        else
+        {
+            _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep - 1], LENGTH, _playBackStep);
+        }
+
         break;
 
-        case BACKWARD:
+    case BACKWARD:
 
-            if (_playBackStep == LENGTH - 1)
-            {
-                _screenManager->updateDisplayedPlaybackStep(_steps[0], LENGTH, 1);    
-            }          
+        if (_playBackStep == LENGTH - 1)
+        {
+            _screenManager->updateDisplayedPlaybackStep(_steps[0], LENGTH, 1);
+        }
 
-            else
-            {
-                _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep + 1], LENGTH, _playBackStep + 2);
-            }
-        
+        else
+        {
+            _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep + 1], LENGTH, _playBackStep + 2);
+        }
+
         break;
 
-        case RANDOM:
+    case RANDOM:
 
-            _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
-        
+        _screenManager->updateDisplayedPlaybackStep(_steps[_playBackStep], LENGTH, _playBackStep + 1);
+
         break;
     }
 }
@@ -495,7 +492,7 @@ void Sequencer::printPreviousStep()
 {
     if (_screenManager->getDisplayedStepNumber() - 1 > 0)
     {
-        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber() - 2], _screenManager->getDisplayedStepNumber() - 1, LENGTH);     
+        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber() - 2], _screenManager->getDisplayedStepNumber() - 1, LENGTH);
     }
 }
 
@@ -503,7 +500,7 @@ void Sequencer::printNextStep()
 {
     if (_screenManager->getDisplayedStepNumber() - 1 < LENGTH - 1)
     {
-        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber()], _screenManager->getDisplayedStepNumber() + 1, LENGTH);       
+        _screenManager->printEditStepData(_steps[_screenManager->getDisplayedStepNumber()], _screenManager->getDisplayedStepNumber() + 1, LENGTH);
     }
 }
 
@@ -527,6 +524,11 @@ void Sequencer::moveCursorToPlayBackMode()
     _screenManager->moveCursorToPlayBackMode();
 }
 
+void Sequencer::moveCursorToSendClockWhilePlayback()
+{
+    _screenManager->moveCursorToSendClockWhilePlayback();
+}
+
 void Sequencer::moveCursorToStepSize()
 {
     _screenManager->moveCursorToStepSize();
@@ -537,109 +539,109 @@ void Sequencer::moveCursorToMIDIChannel()
     _screenManager->moveCursorToSequencerMIDIChannel();
 }
 
-char * Sequencer::getPlayBackModeName()
+char *Sequencer::getPlayBackModeName()
 {
-    char buffer [10];
+    char buffer[10];
 
-    switch(_playBackMode)
-    {    
-       case FORWARD:    
-        getMessage(MSG_FORWARD, buffer); 
+    switch (_playBackMode)
+    {
+    case FORWARD:
+        getMessage(MSG_FORWARD, buffer);
         break;
 
-       case BACKWARD:   
-        getMessage(MSG_BACKWARD, buffer); 
+    case BACKWARD:
+        getMessage(MSG_BACKWARD, buffer);
         break;
-       
-       case RANDOM:     
-        getMessage(MSG_RANDOM, buffer); 
-        break;       
 
-       default:        
+    case RANDOM:
+        getMessage(MSG_RANDOM, buffer);
+        break;
+
+    default:
         getMessage(MSG_NA, buffer);
     }
 
     return buffer;
 }
 
-char * Sequencer::getStepSizeName()
+char *Sequencer::getStepSizeName()
 {
     char buffer[5];
 
-    switch(_stepSize)
-    {    
-       case QUARTER:        
-        getMessage(MSG_QUARTER, buffer); 
+    switch (_stepSize)
+    {
+    case QUARTER:
+        getMessage(MSG_QUARTER, buffer);
         break;
 
-       case EIGHTH:         
-        getMessage(MSG_EIGHTH, buffer); 
+    case EIGHTH:
+        getMessage(MSG_EIGHTH, buffer);
         break;
-       
-       case SIXTEENTH:     
-        getMessage(MSG_SIXTEENTH, buffer); 
-        break;
-       
-       case THIRTYSECOND:   
-        getMessage(MSG_THIRTYSECOND, buffer); 
-        break;   
 
-        default:        
-         getMessage(MSG_NA, buffer);            
+    case SIXTEENTH:
+        getMessage(MSG_SIXTEENTH, buffer);
+        break;
+
+    case THIRTYSECOND:
+        getMessage(MSG_THIRTYSECOND, buffer);
+        break;
+
+    default:
+        getMessage(MSG_NA, buffer);
     }
 
     return buffer;
 }
 
-char * Sequencer::getPlayBackModeName(uint8_t playBackMode)
-{    
-    char buffer [10];
+char *Sequencer::getPlayBackModeName(uint8_t playBackMode)
+{
+    char buffer[10];
 
-    switch(playBackMode)
-    {    
-       case FORWARD:    
-        getMessage(MSG_FORWARD, buffer); 
+    switch (playBackMode)
+    {
+    case FORWARD:
+        getMessage(MSG_FORWARD, buffer);
         break;
 
-       case BACKWARD:   
-        getMessage(MSG_BACKWARD, buffer); 
-        break;
-       
-       case RANDOM:     
-        getMessage(MSG_RANDOM, buffer); 
+    case BACKWARD:
+        getMessage(MSG_BACKWARD, buffer);
         break;
 
-       default:        
-        getMessage(MSG_NA, buffer);   
+    case RANDOM:
+        getMessage(MSG_RANDOM, buffer);
+        break;
+
+    default:
+        getMessage(MSG_NA, buffer);
     }
 
     return buffer;
 }
 
-char * Sequencer::getStepSizeName(uint8_t stepSize)
+char *Sequencer::getStepSizeName(uint8_t stepSize)
 {
     char buffer[5];
 
-    switch(stepSize)
-    {    
-       case QUARTER:        
-        getMessage(MSG_QUARTER, buffer); 
+    switch (stepSize)
+    {
+    case QUARTER:
+        getMessage(MSG_QUARTER, buffer);
         break;
 
-       case EIGHTH:         
-        getMessage(MSG_EIGHTH, buffer); 
+    case EIGHTH:
+        getMessage(MSG_EIGHTH, buffer);
         break;
-       
-       case SIXTEENTH:     
-        getMessage(MSG_SIXTEENTH, buffer); 
-        break;
-       
-       case THIRTYSECOND:   
-        getMessage(MSG_THIRTYSECOND, buffer); 
-        break;   
 
-       default:        
-        getMessage(MSG_NA, buffer);     
+    case SIXTEENTH:
+        getMessage(MSG_SIXTEENTH, buffer);
+        break;
+
+    case THIRTYSECOND:
+        getMessage(MSG_THIRTYSECOND, buffer);
+        break;
+
+    default:
+        getMessage(MSG_NA, buffer);
     }
 
     return buffer;
@@ -650,7 +652,7 @@ char * Sequencer::getStepSizeName(uint8_t stepSize)
 * msgIndex: text to Load
 * buffer: array of chars where the text will be loaded
 */
-void Sequencer::getMessage(uint8_t msgIndex, char * buffer)
+void Sequencer::getMessage(uint8_t msgIndex, char *buffer)
 {
-    strcpy_P(buffer, (char*)pgm_read_word(&(sequencerMessages[msgIndex])));    
+    strcpy_P(buffer, (char *)pgm_read_word(&(sequencerMessages[msgIndex])));
 }

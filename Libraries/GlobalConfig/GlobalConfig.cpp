@@ -23,12 +23,13 @@
 /*
 * Constructor
 */
-GlobalConfig::GlobalConfig(uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote)
+GlobalConfig::GlobalConfig(uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote, uint8_t sendClockWhilePlayback)
 {
      _MIDIChannel = MIDIChannel;   
 	 _sequencerMIDIChannel = sequencerMIDIChannel;   
      _mode = mode; 
      _rootNote = rootNote;
+     _sendClockWhilePlayback = sendClockWhilePlayback;
 }   
 
 /*
@@ -59,6 +60,11 @@ void GlobalConfig::setRootNote(uint8_t rootNote)
     _rootNote = rootNote;
 }
 
+void GlobalConfig::setSendClockWhilePlayback (uint8_t sendClockWhilePlayback)
+{
+    _sendClockWhilePlayback = sendClockWhilePlayback;
+}     
+
 /*
 * Getter methods
 */
@@ -82,7 +88,12 @@ uint8_t GlobalConfig::getRootNote()
     return _rootNote;    
 }
 
+uint8_t GlobalConfig::getSendClockWhilePlayback()
+{
+    return _sendClockWhilePlayback;
+}
+
 uint8_t GlobalConfig::getSize()
 {
-    return sizeof(uint8_t) * 4;    
+    return sizeof(uint8_t) * 5;    
 }

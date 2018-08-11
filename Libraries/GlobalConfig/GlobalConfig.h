@@ -26,24 +26,26 @@ class GlobalConfig
 {
     public:
         
-        GlobalConfig (uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote);
+        GlobalConfig (uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote, uint8_t sendClockWhilePlayback);
         GlobalConfig ();
         void setMIDIChannel (uint8_t MIDIChannel);
 		void setSequencerMIDIChannel (uint8_t sequencerMIDIChannel);
         void setMode (uint8_t mode);
-        void setRootNote (uint8_t rootNote);      
+        void setRootNote (uint8_t rootNote);
+        void setSendClockWhilePlayback (uint8_t sendClockWhilePlayback);      
         
         uint8_t getMIDIChannel();
 		uint8_t getSequencerMIDIChannel();
         uint8_t getMode();
         uint8_t getRootNote();     
-
+        uint8_t getSendClockWhilePlayback();
         uint8_t getSize();
     
     private:             
         uint8_t _MIDIChannel;
 		uint8_t _sequencerMIDIChannel;
         uint8_t _mode;
-        uint8_t _rootNote;          
+        uint8_t _rootNote;
+        uint8_t _sendClockWhilePlayback;          
 };
 #endif
