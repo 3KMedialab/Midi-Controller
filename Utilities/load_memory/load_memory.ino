@@ -42,7 +42,7 @@
 #define STEP_SIZE 3
 
 // create the global configuration object
-GlobalConfig _config = GlobalConfig(1, 2, MIDIUtils::Aeolian, MIDIUtils::C);
+GlobalConfig _config = GlobalConfig(1, 2, MIDIUtils::Aeolian, MIDIUtils::C, 1);
 
 // PAGE DATA
 MIDIMessage b1m(midi::NoteOn, NOTE_C3, 127);
@@ -59,14 +59,14 @@ MIDIMessage p2m(midi::ControlChange, midi::BreathController, 0);
 MIDIMessage p3m(midi::ControlChange, midi::BreathController, 0);
 
 // SEQUENCE DATA
-Step s1(NOTE_C5, 1, 0);
-Step s2(NOTE_D5, 1, 0);
-Step s3(NOTE_E5, 1, 0);
-Step s4(NOTE_F5, 1, 0);
-Step s5(NOTE_G5, 1, 0);
-Step s6(NOTE_A5, 1, 0);
-Step s7(NOTE_B5, 1, 0);
-Step s8(NOTE_C6, 1, 0);
+Step s1(NOTE_C_1, 1, 0);
+Step s2(NOTE_D_1, 1, 0);
+Step s3(NOTE_E_1, 1, 0);
+Step s4(NOTE_F_1, 1, 0);
+Step s5(NOTE_G_1, 1, 0);
+Step s6(NOTE_A_1, 1, 0);
+Step s7(NOTE_B_1, 1, 0);
+Step s8(NOTE_C0, 1, 0);
 
 uint16_t address = 0;
 
@@ -86,6 +86,8 @@ void setup(void)
   EEPROM.update(address, _config.getMode());
   address += sizeof(uint8_t);
   EEPROM.update(address, _config.getRootNote());
+  address += sizeof(uint8_t);
+  EEPROM.update(address, _config.getSendClockWhilePlayback());
   address += sizeof(uint8_t);
 	
   // STORE PAGES DATA
@@ -109,14 +111,46 @@ void setup(void)
   // STORE SEQUENCES DATA
   for (int i = 0; i < NUM_SEQUENCES; i++)
   { 
-    saveStep(&address, s1);
-	saveStep(&address, s2);
-	saveStep(&address, s3);
-	saveStep(&address, s4);
-	saveStep(&address, s5);
-	saveStep(&address, s6);
-	saveStep(&address, s7);
-	saveStep(&address, s8);
+    
+    if (i==0)
+    {      
+      saveStep(&address, s1);    
+      saveStep(&address, s2);
+      saveStep(&address, s3);
+      saveStep(&address, s4);
+      saveStep(&address, s5);
+      saveStep(&address, s6);
+      saveStep(&address, s7);
+      saveStep(&address, s8);
+    }
+
+    else
+    {
+      s1.setNote(s1.getNote() + 12);
+      saveStep(&address, s1);
+    
+      s2.setNote(s2.getNote() + 12);
+      saveStep(&address, s2);
+    
+      s3.setNote(s3.getNote() + 12);
+      saveStep(&address, s3);
+ 
+      s4.setNote(s4.getNote() + 12);
+      saveStep(&address, s4);
+  
+      s5.setNote(s5.getNote() + 12);
+      saveStep(&address, s5);
+    
+      s6.setNote(s6.getNote() + 12);
+      saveStep(&address, s6);
+    
+      s7.setNote(s7.getNote() + 12);
+      saveStep(&address, s7);
+    
+      s8.setNote(s8.getNote() + 12);
+      saveStep(&address, s8);
+    } 
+ 
   }
   
   // LOAD THE REST OF THE MEMORY SLOTS WITH DEFAULT VALUE
@@ -142,6 +176,10 @@ void setup(void)
   address++;
 
   Serial.println("ROOT NOTE");
+  Serial.println(EEPROM.read(address), DEC);
+  address++;
+
+  Serial.println("SEND CLOCK WHILE PLAYBACK");
   Serial.println(EEPROM.read(address), DEC);
   address++;
 
