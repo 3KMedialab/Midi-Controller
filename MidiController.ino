@@ -96,22 +96,30 @@ MidiWorker worker(MIDI);
 // Creates the MIDI Controller object
 volatile MIDIController controller(&worker, components, NUM_MIDI_BUTTONS + NUM_MIDI_POTS);
 
+// Times a MIDI tick is sent. Used to calculate when next step should be played within a sequence
 volatile uint8_t periods = 0;
 
 void setup(void)
 {
   //Initializes MIDI interface
   worker.begin();
-  //Serial.begin(9600);
-
+  
   controller.begin();
 
+  // Used for random step playback mode
   randomSeed(analogRead(0));
 
+  // Default time a MIDI tick is sent
   Timer1.initialize((MICROSECONDS_PER_MINUTE / controller.getBpm()) / 24);
+  
+  // TODO: move timer1 logic to SyncManager class
   Timer1.attachInterrupt(executeRealTimeTasks);
 }
 
+/******************************************************************************/
+/* INTERRUPT METHOD LINKED TO TIMER1                                          */
+/* Executes the real time tasks such as send MIDI clock and sequencer playback*/
+/******************************************************************************/
 void executeRealTimeTasks()
 {
   // update the period in case the Bpm has changed

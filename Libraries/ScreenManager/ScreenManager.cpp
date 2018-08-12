@@ -1,9 +1,9 @@
 /*
- * ScreenManager.cpp
+ * ScreenManager.h
  *
- * Class that manage the interactions between the MIDI controller and the screen
+ * Class that manage the interactions between the MIDI controller and the sequencer with the screen
  *
- * Copyright 2017 3K MEDIALAB
+ * Copyright 2018 3K MEDIALAB
  *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,16 +22,12 @@
 
 /*
 * Initializes the screen manager
-* i2cAddress	I2C slave address of the LCD display. Most likely printed on the
-*			    LCD circuit board, or look in the supplied LCD documentation.
-* cols          Number of columns your LCD display has.
-* rows	        Number of rows your LCD display has.
 */
 void ScreenManager::initialize()
 {
     _lcd.begin(COLUMNS, ROWS); // initialize the lcd
 
-    Wire.setClock(400000L);
+    Wire.setClock(400000L); // set the clock frequency for the I2C protocol (High Speed Mode)
 
     _displayedMIDIComponent = NULL;
     _currentMIDIMessageDisplayed = 0;
@@ -352,14 +348,16 @@ void ScreenManager::printPCMIDIData(MIDIMessage message)
 {
     char line[COLUMNS + 1];
 
+    line[0] = '\0';
+
     _lcd.setCursor(0, 1);
 
-    for (int i = strlen(line); i < COLUMNS; i++)
+    for (int i = 0; i < COLUMNS; i++)
     {
         append(line + strlen(line), ' ');
     }
 
-    _lcd.print(line);
+    _lcd.print(line);    
 }
 
 /*
@@ -738,6 +736,10 @@ void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to
 /**************************************************/
 /* SEQUENCER METHODS                              */
 /**************************************************/
+
+/*
+* Prints the information of the sequencer
+*/
 void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo, uint8_t playBackOn)
 {
     char line[COLUMNS + 1];
@@ -782,6 +784,9 @@ void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t total
     _lcd.print(line);
 }
 
+/*
+* Prints current step being played
+*/
 void ScreenManager::updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep)
 {
     char line[COLUMNS + 1];
@@ -804,6 +809,9 @@ void ScreenManager::updateDisplayedPlaybackStep(Step step, uint8_t sequenceLengt
     _lcd.print(line);
 }
 
+/*
+* Prints step data in edit mode
+*/
 void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength)
 {
     char line[COLUMNS + 1];
@@ -860,6 +868,9 @@ void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t se
     _lcd.blink();
 }
 
+/*
+* Return a char * value with the note value
+*/
 char *ScreenManager::getStepNoteValue(Step step)
 {
     char line[COLUMNS + 1];
@@ -886,6 +897,9 @@ char *ScreenManager::getStepNoteValue(Step step)
     return line;
 }
 
+/*
+* Return current step being displayed
+*/
 uint8_t ScreenManager::getDisplayedStepNumber()
 {
     return _currentDisplayedStep;

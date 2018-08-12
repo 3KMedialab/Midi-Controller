@@ -1,13 +1,12 @@
 /*
- * MIDIController.cpp
+ * MIDIController.h
  *
- * The MIDI Controller class. It contains an array of MIDIButtons and MIDIPotentiometers. 
- * It also contains a button that implemts the shift function and two leds to indicate 
- * the current shift mode. 
+ * The MIDI Controller class. It contains an array of MIDIButtons and MIDIPotentiometers. It is the core class within the system.
+ * The controller also manages the behaviour of the step sequencer. 
  *
  * The configuration of the controller is stored in the ControllerConfig.h file
  *
- * Copyright 2017 3K MEDIALAB
+ * Copyright 2018 3K MEDIALAB
  *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +25,7 @@
 
 /*
 * Constructor
-* inInterface: the MIDI interface that the controller will use.
+* midiWorker: the MIDI interface that the controller will use.
 * midiComponents: the array of MIDI components the controller will manage.
 * numMIDIComponents: number of MIDI components assigned to the controller
 */
@@ -77,6 +76,7 @@ void MIDIController::begin()
     // set the default tempo
     _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM + 1));
 
+    // Display the controller current page, bpm and MIDI clock status data
     _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm(), _isMIDIClockOn);
 
     // sequencer initialization
@@ -211,11 +211,6 @@ void MIDIController::processMIDIComponents()
 {
     for (int i = 0; i < _numMIDIComponents; i++)
     {
-        //updateSyncTime();
-
-        // play the sequence
-        //playBackSequence();
-
         processMidiComponent(_midiComponents[i]);
     }
 }
@@ -526,7 +521,7 @@ void MIDIController::processSelectValuePot()
 
                 break;
             }
-
+            // activate/deactivate send clock in sync with sequencer playback
             case SEQUENCER_EDIT_SEND_CLOCK_WHILE_PLAYBACK:
             {
                 if (!_sequencer.isPlayBackOn())
@@ -544,7 +539,7 @@ void MIDIController::processSelectValuePot()
                 break;
             }
 
-            // select the root note value
+            // select the sequencer step size
             case SEQUENCER_EDIT_STEP_SIZE:
             {
                 //sequencer step size cannot be changed while playback is on
@@ -671,7 +666,7 @@ void MIDIController::updateSequencerPlayBackStatus()
 
         switch (_subState)
         {
-        // send start real time message
+        // start sequence playback
         case PLAYBACK_ON:
             _sequencer.startPlayBack();
             _resetMIDIClockPeriod = 1;
@@ -688,7 +683,7 @@ void MIDIController::updateSequencerPlayBackStatus()
         case PLAYBACK_OFF:
             _sequencer.stopPlayBack();
 
-            // stop MIDI clock regarding global configuration
+            // stop sequencer playback
             if (_globalConfig.getSendClockWhilePlayback())
             {
                 _midiWorker->sendMIDIStopClock();
@@ -804,6 +799,9 @@ void MIDIController::moveCursorToGLobalConfigParameter()
     }
 }
 
+/*
+* Moves the cursor to the different step parameters in step edit screen
+*/
 void MIDIController::moveCursorToStepValue()
 {
     switch (_subState)
@@ -833,7 +831,7 @@ void MIDIController::moveCursorToStepValue()
 }
 
 /*
-* 
+* Moves the cursor to the different sequencer global configuration parameters in global configuration screen
 */
 void MIDIController::moveCursorToSequencerConfigParameter()
 {
@@ -870,7 +868,7 @@ void MIDIController::moveCursorToSequencerConfigParameter()
 }
 
 /*
-* Send a MIDI clock tick and blink the LED
+* Send a MIDI clock tick. This method is called from the interrupt method set to the timer1 interrupt
 */
 void MIDIController::sendMIDIClock()
 {
@@ -882,12 +880,12 @@ void MIDIController::sendMIDIClock()
 }
 
 /*
-* Playback current sequence assigned to the sequencer
+* Playback current sequence assigned to the sequencer. This method is called from the interrupt method set to the timer1 interrupt
 */
 void MIDIController::playBackSequence()
 {
     // play next step in the sequence if sequencer playback is on
-    _sequencer.playBackSequence(&_syncManager);
+    _sequencer.playBackSequence();
 }
 
 /*
@@ -924,7 +922,8 @@ void MIDIController::processOperationModeButton()
             _sequencer.printDefault(_syncManager);
 
             break;
-
+        
+        // Set the operation mode to Controller
         case SEQUENCER:
             _state = CONTROLLER;
             _subState = _isMIDIClockOn ? MIDI_CLOCK_ON : MIDI_CLOCK_OFF;
@@ -991,7 +990,7 @@ void MIDIController::processEditModeButton()
 
                 break;
 
-            // defaut edit message is displayed on screen
+            // display step edit screen
             case SEQUENCER:
 
                 _state = SEQUENCER_EDIT_STEP;
@@ -1003,6 +1002,7 @@ void MIDIController::processEditModeButton()
 
                 break;
 
+            // display sequencer default screen
             case SEQUENCER_EDIT_STEP:
 
                 _state = SEQUENCER;
@@ -1014,6 +1014,7 @@ void MIDIController::processEditModeButton()
 
                 break;
 
+            // display sequencer global configuration screen
             case SEQUENCER_EDIT_CONFIG:
 
                 if (_accesToSequencerEdit)              
@@ -1033,7 +1034,7 @@ void MIDIController::processEditModeButton()
             }
         }
 
-        // after saving a page or global configuration, set controller status to CONTROLLER
+        // after saving a page or global configuration
         else
         {
             switch (_state)
@@ -1064,7 +1065,7 @@ void MIDIController::processEditModeButton()
         }
     }
 
-    // save current page component's configuration / global configuration and exits edit mode
+    // save current page component's configuration / steps within a sequence / global configuration and exits edit mode
     if (_editButton.pressedFor(PRESSED_FOR_WAIT))
     {
         switch (_state)
@@ -1235,7 +1236,3 @@ void MIDIController::setResetMIDIClockPeriod(uint8_t resetMIDIClockPeriod)
     _resetMIDIClockPeriod = resetMIDIClockPeriod;
 }
 
-void MIDIController::updateSyncTime()
-{
-    _syncManager.updateSyncTime();
-}

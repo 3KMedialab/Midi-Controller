@@ -42,7 +42,7 @@ class MemoryManager
   private:
     uint8_t _pageSize;        // size of a MIDI messages page regarding the number of MIDI components 
 	uint8_t _sequenceSize; // size of a sequence regarding the nimber of steps
-	uint8_t _globalConfigSize;	
+	uint8_t _globalConfigSize;	// size of the global configuration object
 
     void saveMIDIComponent(uint16_t * address , IMIDIComponent * midiComponent);
     void saveMIDIMessage(uint16_t * address, MIDIMessage message); 

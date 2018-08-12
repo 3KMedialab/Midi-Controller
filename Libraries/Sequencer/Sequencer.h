@@ -1,3 +1,23 @@
+/*
+ * Sequencer.h
+ *
+ * Step sequencer implementation allowing three different playback modes (Forward, Backward and Random) and different step sizes (1/4, 1/8, 1/16 and 1/32) 
+ *
+ * Copyright 2018 3K MEDIALAB
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef Sequencer_h
 #define Sequencer_h
 
@@ -15,6 +35,7 @@
 
 #define MICROSECONDS_PER_MINUTE 60000000
 
+/* String characters inserted into PROGMEM area */
 #define MSG_FORWARD 0
 #define MSG_BACKWARD 1
 #define MSG_RANDOM 2
@@ -45,18 +66,18 @@ public:
     FORWARD,
     BACKWARD,
     RANDOM
-  };
+  }; // playback modes
   enum
   {
     QUARTER = 1,
     EIGHTH = 2,
     SIXTEENTH = 4,
     THIRTYSECOND = 8
-  };
+  }; // step sizes
   enum
   {
     LENGTH = 8
-  };
+  }; // number of steps within a sequence
   enum
   {
     PLAYBACK_MODE_TYPES = 3
@@ -93,7 +114,7 @@ public:
 
   void startPlayBack();
   void stopPlayBack();
-  uint8_t playBackSequence(SyncManager *syncManager);
+  uint8_t playBackSequence();
   void stopNote();
 
   void printDefault(SyncManager syncManager);
@@ -126,19 +147,19 @@ private:
 
   void getMessage(uint8_t msgIndex, char *buffer);
 
-  uint8_t _playBackOn;
-  int8_t _playBackStep;
-  uint8_t _midiChannel;
-  MidiWorker *_midiWorker;
-  uint8_t _playBackMode;
-  uint8_t _stepSize;
-  uint8_t _currentSequence;
-  Step _steps[LENGTH];
-  uint8_t _stopCurrentPlayedNote;
-  uint8_t _currentNotePlayed;
-  uint8_t _loadNewSequence;
+  uint8_t _playBackOn;                      // 1 when playback is on, 0 otherwise
+  int8_t _playBackStep;                     // current step being played
+  uint8_t _midiChannel;                     // MIDI channel of the sequencer
+  MidiWorker *_midiWorker;                  // Worker to deal with MIDI operations
+  uint8_t _playBackMode;                    // playback mode (forward, Backward or Random)
+  uint8_t _stepSize;                        // step size, where 1/4 is the length of a quarter note
+  uint8_t _currentSequence;                 // current sequence assigned to the sequencer
+  Step _steps[LENGTH];                      // steps array within a sequence
+  uint8_t _stopCurrentPlayedNote;           // flag to stop current note being played
+  uint8_t _currentNotePlayed;               // current note being played
+  uint8_t _loadNewSequence;                 // indicates when a new sequence has been loaded
 
-  MemoryManager *_memoryManager;
-  ScreenManager *_screenManager;
+  MemoryManager *_memoryManager;            // Worker that manages memory load/store operations
+  ScreenManager *_screenManager;            // Worker that manages screen display operations
 };
 #endif

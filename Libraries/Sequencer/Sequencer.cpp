@@ -1,3 +1,22 @@
+/*
+ * Sequencer.h
+ *
+ * Step sequencer implementation allowing three different playback modes (Forward, Backward and Random) and different step sizes (1/4, 1/8, 1/16 and 1/32) 
+ *
+ * Copyright 2018 3K MEDIALAB
+ *   
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "Sequencer.h"
 
 Sequencer::Sequencer(uint8_t mode, uint8_t stepSize, MemoryManager *memoryManager, ScreenManager *screenManager)
@@ -24,6 +43,10 @@ Sequencer::Sequencer(uint8_t mode, uint8_t stepSize, MemoryManager *memoryManage
     _memoryManager = memoryManager;
     _screenManager = screenManager;
 }
+
+/*
+* SETTER METHODS
+*/
 
 void Sequencer::setPlayBackStep(int8_t currentStep)
 {
@@ -94,25 +117,9 @@ void Sequencer::setDisplayedStepEnabled(uint8_t enabled)
     _screenManager->refreshStepEnabledValue(enabled);
 }
 
-void Sequencer::refreshDisplayedPlayBackMode(uint8_t playBackMode)
-{
-    _screenManager->refreshDisplayedPlayBackMode(getPlayBackModeName(playBackMode));
-}
-
-void Sequencer::refreshDisplayedSendClockWhilePlayback(uint8_t sendClockWhilePlayback)
-{
-    _screenManager->refreshDisplayedSendClockWhilePlayback(sendClockWhilePlayback);
-}
-
-void Sequencer::refreshDisplayedStepSizeValue(uint8_t stepSize)
-{
-    _screenManager->refreshDisplayedStepSizeValue(getStepSizeName(stepSize));
-}
-
-void Sequencer::refreshDisplayedMIDIChannel(uint8_t midiChannel)
-{
-    _screenManager->refreshDisplayedSequencerMidiChannel(midiChannel);
-}
+/*
+* GETTER METHODS
+*/
 
 int8_t Sequencer::getPlayBackStep()
 {
@@ -178,8 +185,12 @@ uint8_t Sequencer::getCurrentSequence()
     return _currentSequence;
 }
 
+/*
+* Load a new sequence from EEPROM into the sequencer
+*/
 void Sequencer::loadCurrentSequence()
 {
+    // new sequence is loaded in sync when playback mode is on
     if (isPlayBackOn())
     {
         _loadNewSequence = 1;
@@ -191,16 +202,25 @@ void Sequencer::loadCurrentSequence()
     }
 }
 
+/*
+* Stores current sequence into EEPROM
+*/
 void Sequencer::saveCurrentSequence()
 {
     _memoryManager->saveSequence(_currentSequence, _steps, LENGTH);
 }
 
+/*
+* Start sequencer playback
+*/
 void Sequencer::startPlayBack()
 {
     _playBackOn = 1;
 }
 
+/*
+* Stop playback and reset first step to be played
+*/
 void Sequencer::stopPlayBack()
 {
     stopCurrentNotePlayed();
@@ -225,7 +245,10 @@ void Sequencer::stopNote()
     _stopCurrentPlayedNote = 1;
 }
 
-uint8_t Sequencer::playBackSequence(SyncManager *syncManager)
+/*
+* Plays next step within a sequence regarding the selected playback mode
+*/
+uint8_t Sequencer::playBackSequence()
 {
     if (_playBackOn)
     {
@@ -243,6 +266,7 @@ uint8_t Sequencer::playBackSequence(SyncManager *syncManager)
             _loadNewSequence = 0;
         }
 
+        // plays next step
         switch (_playBackMode)
         {
         case FORWARD:
@@ -264,6 +288,9 @@ uint8_t Sequencer::playBackSequence(SyncManager *syncManager)
     return 0;
 }
 
+/*
+* Calculate and play next step when Forward mode is selected
+*/
 void Sequencer::playBackForward()
 {
     MIDIMessage msgNoteOff;
@@ -273,6 +300,7 @@ void Sequencer::playBackForward()
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
 
+    // last step within a sequence
     if (_playBackStep == 0)
     {
         msgNoteOff.setDataByte1(_steps[LENGTH - 1].getNote());
@@ -285,6 +313,7 @@ void Sequencer::playBackForward()
         isStepLegato = _steps[_playBackStep - 1].isLegato();
     }
 
+    // send note off message if legato is off
     if (!isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
@@ -302,6 +331,7 @@ void Sequencer::playBackForward()
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
+    // send note off message if legato is on
     if (isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
@@ -316,6 +346,9 @@ void Sequencer::playBackForward()
     }
 }
 
+/*
+* Calculate and play next step when Backward mode is selected
+*/
 void Sequencer::playBackBackward()
 {
     MIDIMessage msgNoteOff;
@@ -325,6 +358,7 @@ void Sequencer::playBackBackward()
     // stop last played step
     msgNoteOff.setType(midi::NoteOff);
 
+    // last step of the sequence
     if (_playBackStep == LENGTH - 1)
     {
         msgNoteOff.setDataByte1(_steps[0].getNote());
@@ -337,6 +371,7 @@ void Sequencer::playBackBackward()
         isStepLegato = _steps[_playBackStep + 1].isLegato();
     }
 
+    // send note off message if legato is off
     if (!isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
@@ -354,6 +389,7 @@ void Sequencer::playBackBackward()
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
+    // send note off message if legato is on
     if (isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
@@ -368,6 +404,9 @@ void Sequencer::playBackBackward()
     }
 }
 
+/*
+* Calculate and play next step when Random mode is selected
+*/
 void Sequencer::playBackRandom()
 {
     MIDIMessage msgNoteOff;
@@ -380,6 +419,7 @@ void Sequencer::playBackRandom()
 
     isStepLegato = _steps[_playBackStep].isLegato();
 
+    // send note off message when legato is off
     if (!isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
@@ -400,12 +440,16 @@ void Sequencer::playBackRandom()
         _midiWorker->sendMIDIMessage(&msgNoteOn, _midiChannel);
     }
 
+    // send note off message when legato is on
     if (isStepLegato)
     {
         _midiWorker->sendMIDIMessage(&msgNoteOff, _midiChannel);
     }
 }
 
+/*
+* Stop current note being played
+*/
 void Sequencer::stopCurrentNotePlayed()
 {
     MIDIMessage msgNoteOff;
@@ -417,6 +461,9 @@ void Sequencer::stopCurrentNotePlayed()
     _stopCurrentPlayedNote = 0;
 }
 
+/*
+* Send Note Off MIDI messages for all the steps within a sequence
+*/
 void Sequencer::stopAllNotes()
 {
     // send note off messages before loading new sequence
@@ -432,16 +479,27 @@ void Sequencer::stopAllNotes()
     }
 }
 
+/*
+* Display current sequence and total number of sequences available, general bpm and playback status
+* syncManager: object that contains the global Bpm value
+*/
 void Sequencer::printDefault(SyncManager syncManager)
 {
     _screenManager->printDefaultSequencer(_currentSequence, NUM_SEQUENCES, syncManager.getBpm(), _playBackOn);    
 }
 
+/*
+* Display sequencer global configuration parameters
+9 globalConfig: contains the global configuration of the system
+*/
 void Sequencer::printEditConfig(GlobalConfig globalConfig)
 {
     _screenManager->printEditSequencerConfig(getPlayBackModeName(), getStepSizeName(), globalConfig.getSequencerMIDIChannel(), globalConfig.getSendClockWhilePlayback());
 }
 
+/*
+* Display the step's information that is being played
+*/
 void Sequencer::updateDisplayedStep()
 {
 
@@ -483,11 +541,17 @@ void Sequencer::updateDisplayedStep()
     }
 }
 
+/*
+* Display the screen with the step information for edit: current step, total available steps, note of the step, legato and enabled values
+*/
 void Sequencer::printEditStepData()
 {
     _screenManager->printEditStepData(_steps[0], 1, LENGTH);
 }
 
+/*
+* Regarding current step, display the step information of the previos step within a sequence
+*/
 void Sequencer::printPreviousStep()
 {
     if (_screenManager->getDisplayedStepNumber() - 1 > 0)
@@ -496,6 +560,9 @@ void Sequencer::printPreviousStep()
     }
 }
 
+/*
+* Regarding current step, display the step information of the following step within a sequence
+*/
 void Sequencer::printNextStep()
 {
     if (_screenManager->getDisplayedStepNumber() - 1 < LENGTH - 1)
@@ -504,41 +571,97 @@ void Sequencer::printNextStep()
     }
 }
 
+/*
+* When edit step information, move cursor to note value parameter
+*/
 void Sequencer::moveCursorToNote()
 {
     _screenManager->moveCursorToStepNote();
 }
 
+/*
+* When edit step information, move cursor to legato value parameter
+*/
 void Sequencer::moveCursorToLegato()
 {
     _screenManager->moveCursorToStepLegato();
 }
 
+/*
+* When edit step information, move cursor to enable parameter
+*/
 void Sequencer::moveCursorToEnabled()
 {
     _screenManager->moveCursorToStepEnabled();
 }
 
+/*
+* When edit sequencer configuration, move cursor to playback mode parameter
+*/
 void Sequencer::moveCursorToPlayBackMode()
 {
     _screenManager->moveCursorToPlayBackMode();
 }
 
+/*
+* When edit sequencer configuration, move cursor to send clock while playback parameter
+*/
 void Sequencer::moveCursorToSendClockWhilePlayback()
 {
     _screenManager->moveCursorToSendClockWhilePlayback();
 }
 
+/*
+* When edit sequencer configuration, move cursor to step size parameter
+*/
 void Sequencer::moveCursorToStepSize()
 {
     _screenManager->moveCursorToStepSize();
 }
 
+/*
+* When edit sequencer configuration, move cursor to sequencer MIDI channel parameter
+*/
 void Sequencer::moveCursorToMIDIChannel()
 {
     _screenManager->moveCursorToSequencerMIDIChannel();
 }
 
+/*
+* When edit sequencer configuration, update the value of the playback mode parameter
+*/
+void Sequencer::refreshDisplayedPlayBackMode(uint8_t playBackMode)
+{
+    _screenManager->refreshDisplayedPlayBackMode(getPlayBackModeName(playBackMode));
+}
+
+/*
+* When edit sequencer configuration, update the value of the send clock while playback parameter
+*/
+void Sequencer::refreshDisplayedSendClockWhilePlayback(uint8_t sendClockWhilePlayback)
+{
+    _screenManager->refreshDisplayedSendClockWhilePlayback(sendClockWhilePlayback);
+}
+
+/*
+* When edit sequencer configuration, update the value of the step size parameter
+*/
+void Sequencer::refreshDisplayedStepSizeValue(uint8_t stepSize)
+{
+    _screenManager->refreshDisplayedStepSizeValue(getStepSizeName(stepSize));
+}
+
+/*
+* When edit sequencer configuration, update the value of the sequencer MIDI channel parameter
+*/
+void Sequencer::refreshDisplayedMIDIChannel(uint8_t midiChannel)
+{
+    _screenManager->refreshDisplayedSequencerMidiChannel(midiChannel);
+}
+
+/*
+* Returns a char * with the playback mode to be displayed on the screen
+*/
 char *Sequencer::getPlayBackModeName()
 {
     char buffer[10];
@@ -564,6 +687,9 @@ char *Sequencer::getPlayBackModeName()
     return buffer;
 }
 
+/*
+* Returns a char * with the step size to be displayed on the screen
+*/
 char *Sequencer::getStepSizeName()
 {
     char buffer[5];
@@ -593,6 +719,10 @@ char *Sequencer::getStepSizeName()
     return buffer;
 }
 
+/*
+* Returns a char * with the playback mode to be displayed on the screen
+* playBackMode: the value to be returned
+*/
 char *Sequencer::getPlayBackModeName(uint8_t playBackMode)
 {
     char buffer[10];
@@ -618,6 +748,10 @@ char *Sequencer::getPlayBackModeName(uint8_t playBackMode)
     return buffer;
 }
 
+/*
+* Returns a char * with the step size to be displayed on the screen
+* stepSize: the value to be returned 
+*/
 char *Sequencer::getStepSizeName(uint8_t stepSize)
 {
     char buffer[5];

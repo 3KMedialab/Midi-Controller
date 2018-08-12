@@ -42,10 +42,10 @@ class GlobalConfig
         uint8_t getSize();
     
     private:             
-        uint8_t _MIDIChannel;
-		uint8_t _sequencerMIDIChannel;
-        uint8_t _mode;
-        uint8_t _rootNote;
-        uint8_t _sendClockWhilePlayback;          
+        uint8_t _MIDIChannel;                   // Controller's MIDI channel
+		uint8_t _sequencerMIDIChannel;          // Seuqncer's MIDI channel
+        uint8_t _mode;                          // Musical mode of the controller (Ionian,...)
+        uint8_t _rootNote;                      // Root note of the musical mode (C, D,...)
+        uint8_t _sendClockWhilePlayback;        // Flag which indicates wether the MIDI clock and the sequence playback has to be executed in sync        
 };
 #endif

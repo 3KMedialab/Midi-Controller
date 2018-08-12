@@ -1,13 +1,12 @@
 /*
  * MIDIController.h
  *
- * The MIDI Controller class. It contains an array of MIDIButtons and MIDIPotentiometers. 
- * It also contains a button that implemts the shift function and two leds to indicate 
- * the current shift mode. 
+ * The MIDI Controller class. It contains an array of MIDIButtons and MIDIPotentiometers. It is the core class within the system.
+ * The controller also manages the behaviour of the step sequencer. 
  *
  * The configuration of the controller is stored in the ControllerConfig.h file
  *
- * Copyright 2017 3K MEDIALAB
+ * Copyright 2018 3K MEDIALAB
  *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +58,6 @@ public:
   void processOperationModeButton();
   void sendMIDIClock();
   void updateBpmIndicatorStatus();
-  void updateSyncTime();
   uint16_t getBpm();
   uint8_t getStepSize();
   uint8_t getResetMIDIClockPeriod();
@@ -79,23 +77,23 @@ private:
 
   ScreenManager _screenManager; // object to manage interactions between the controller and the screen
 
-  Button _decPageButton = Button(DEC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the previous page of MIDI messages into the MIDI components
-  Button _incPageButton = Button(INC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the next page of MIDI messages into the MIDI components
-  Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);               // button that activates/deactivates the edit mode.
+  Button _decPageButton = Button(DEC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the previous page of MIDI messages into the MIDI components or load the previous sequence into the sequencer
+  Button _incPageButton = Button(INC_PAGE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);             // button for load the next page of MIDI messages into the MIDI components or load the following sequence into the sequencer
+  Button _editButton = Button(EDIT_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);               // button that activates/deactivates the edit mode. On long presses stores data into EEPROM 
   Button _operationModeButton = Button(OPERATION_MODE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS); // button for change the operation mode: Controller or Sequencer
 
-  Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                        // potentiometer for set the tempo in BPM of the controller.
+  Potentiometer _selectValuePot = Potentiometer(VALUE_POT_PIN, WINDOW_SIZE);                        // potentiometer for select values in the different screens of the system
   Led _midiLed = Led(MIDI_TRANSMISSION_PIN);                                                        // Led that blinks when MIDI information is being sent
-  Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS); // Button that activates/deactivates MIDI clock signal sending or move the cursor to the next value to edit
+  Button _multiplePurposeButton = Button(MULTIPLE_PURPOSE_BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS); // Button that activates/deactivates MIDI clock signal, start/stop sequence or move the cursor to the parameters in edit screens
 
   uint8_t _isMIDIClockOn; // set to TRUE when controller is sending MIDI Clock Data. FALSE otherwise
   uint8_t _resetMIDIClockPeriod;
 
   MidiWorker *_midiWorker; // object to manage the MIDI functionality
 
-  Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager);
+  Sequencer _sequencer = Sequencer(Sequencer::FORWARD, Sequencer::EIGHTH, &_memoryManager, &_screenManager); // Sequencer object
 
-  SyncManager _syncManager;
+  SyncManager _syncManager; // Bpm manager
 
   enum State
   {
@@ -127,7 +125,7 @@ private:
     SEQUENCER_EDIT_SEND_CLOCK_WHILE_PLAYBACK,
     SEQUENCER_EDIT_STEP_SIZE,
     SEQUENCER_EDIT_MIDI_CH
-  };                         // Controller substatus list
+  }; // Controller substatus list
   uint8_t _state, _subState; // Controller current status and substatus
 
   GlobalConfig _globalConfig = GlobalConfig(); // Object containing the global configuration
