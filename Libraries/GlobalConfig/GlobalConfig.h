@@ -26,21 +26,26 @@ class GlobalConfig
 {
     public:
         
-        GlobalConfig (uint8_t MIDIChannel, uint8_t mode, uint8_t rootNote);
+        GlobalConfig (uint8_t MIDIChannel, uint8_t sequencerMIDIChannel, uint8_t mode, uint8_t rootNote, uint8_t sendClockWhilePlayback);
         GlobalConfig ();
         void setMIDIChannel (uint8_t MIDIChannel);
+		void setSequencerMIDIChannel (uint8_t sequencerMIDIChannel);
         void setMode (uint8_t mode);
         void setRootNote (uint8_t rootNote);
+        void setSendClockWhilePlayback (uint8_t sendClockWhilePlayback);      
         
         uint8_t getMIDIChannel();
+		uint8_t getSequencerMIDIChannel();
         uint8_t getMode();
-        uint8_t getRootNote();
-
-        static uint8_t getSize();
+        uint8_t getRootNote();     
+        uint8_t getSendClockWhilePlayback();
+        uint8_t getSize();
     
     private:             
-        uint8_t _MIDIChannel;
-        uint8_t _mode;
-        uint8_t _rootNote;       
+        uint8_t _MIDIChannel;                   // Controller's MIDI channel
+		uint8_t _sequencerMIDIChannel;          // Seuqncer's MIDI channel
+        uint8_t _mode;                          // Musical mode of the controller (Ionian,...)
+        uint8_t _rootNote;                      // Root note of the musical mode (C, D,...)
+        uint8_t _sendClockWhilePlayback;        // Flag which indicates wether the MIDI clock and the sequence playback has to be executed in sync        
 };
 #endif

@@ -22,19 +22,33 @@
 
 /*
 * Initializes the memory manager regarding the number of MIDI components that will be managed
-* midiComponents: list of the MID Icomponents that will be managed
+* Return: 0 if the total components size don't fit into the EEPROM, 1 otherwise
+* midiComponents: list of the MIDI components that will be managed
 * numMIDIComponents: number of MIDI components
+* sequenceLength: number of steps in a sequence
+* stepSize: size of each step on a sequence
+* globalConfigSize: size of the controller global configuration
 */
-void MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents)
+uint8_t MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents, uint8_t sequenceLength, uint8_t stepSize, uint8_t globalConfigSize)
 {
     // calculate the page size in bytes in EEPROM
     for (uint8_t i = 0; i < numMIDIComponents; i++)
     {
         _pageSize += midiComponents[i]->getDataSize();
     }
+	
+	// calculate the sequence size in bytes in EEPROM
+	_sequenceSize = sequenceLength * stepSize;
+	
+	_globalConfigSize = globalConfigSize;		
 
-    // calculate the maximum number of pages
-    _maxNumPages = (MEMORY_SIZE - GlobalConfig::getSize())  / _pageSize;
+    // calculate the total size of data in bytes that will be stored into EEPROM and check if it fits
+	if (((_pageSize * NUM_PAGES) + (_sequenceSize * NUM_SEQUENCES) + globalConfigSize) > MEMORY_SIZE)
+	{
+		return 0;
+	}
+	
+	return 1;    
 }
 
 /*
@@ -44,8 +58,10 @@ void MemoryManager::initialize(IMIDIComponent ** midiComponents, uint8_t numMIDI
 void MemoryManager::loadGlobalConfiguration(GlobalConfig * globalConfig)
 {
     globalConfig->setMIDIChannel(EEPROM.read(0));
-    globalConfig->setMode(EEPROM.read(1));
-    globalConfig->setRootNote(EEPROM.read(2));
+	globalConfig->setSequencerMIDIChannel(EEPROM.read(1));
+    globalConfig->setMode(EEPROM.read(2));
+    globalConfig->setRootNote(EEPROM.read(3));    
+    globalConfig->setSendClockWhilePlayback(EEPROM.read(4));
 }
 
 /*
@@ -55,8 +71,10 @@ void MemoryManager::loadGlobalConfiguration(GlobalConfig * globalConfig)
 void MemoryManager::saveGlobalConfiguration(GlobalConfig globalConfig)
 {
     EEPROM.update(0, globalConfig.getMIDIChannel());
-    EEPROM.update(1, globalConfig.getMode());
-    EEPROM.update(2, globalConfig.getRootNote());
+	EEPROM.update(1, globalConfig.getSequencerMIDIChannel());
+    EEPROM.update(2, globalConfig.getMode());
+    EEPROM.update(3, globalConfig.getRootNote());
+    EEPROM.update(4, globalConfig.getSendClockWhilePlayback());  
 }
 
 /*
@@ -68,7 +86,7 @@ void MemoryManager::saveGlobalConfiguration(GlobalConfig globalConfig)
 void MemoryManager::saveMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents)
 {
     //get the begin address of the page
-    uint16_t address = GlobalConfig::getSize();
+    uint16_t address = _globalConfigSize;
     
     if (page > 1)
     {
@@ -111,6 +129,44 @@ void MemoryManager::saveMIDIMessage(uint16_t * address, MIDIMessage message)
 }
 
 /*
+* Saves the steps within a sequence into the EEPROM
+* numSequence: sequence number that will be stored
+* sequence: list of the steps that will be stored
+* sequenceLength: number of steps that will be stored
+*/
+void MemoryManager::saveSequence(uint8_t numSequence, Step * sequence, uint8_t sequenceLength)
+{
+    //calculate the start address of the sequence
+    uint16_t address = _globalConfigSize + (_pageSize * NUM_PAGES);
+    
+    if (numSequence > 1)
+    {
+        address += _sequenceSize * (numSequence-1); 
+    }
+
+    // save the steps of the sequence into the EEPROM
+    for (uint8_t i = 0; i < sequenceLength; i++)
+    {
+        saveStep(&address, sequence[i]);        
+    }
+}
+
+/*
+* Saves a step of a sequence into the EEPROM
+* address: start addres of the EEPROM where the step will be stored.
+* step: the step that will be stored
+*/
+void MemoryManager::saveStep(uint16_t * address, Step step)
+{
+    EEPROM.update((*address),step.getNote());
+    (*address) += sizeof(uint8_t);
+    EEPROM.update((*address),step.isEnabled());
+    (*address) += sizeof(uint8_t);
+    EEPROM.update((*address),step.isLegato());
+    (*address) += sizeof(uint8_t);    
+}
+
+/*
 * Load the MIDI messages stored in a page into the MIDI components
 * page: page number where the data is stored
 * midiComponents: list of the MID Icomponents that will be managed
@@ -119,7 +175,7 @@ void MemoryManager::saveMIDIMessage(uint16_t * address, MIDIMessage message)
 void MemoryManager::loadMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents)
 {
     //get the begin address of the page
-    uint16_t address = GlobalConfig::getSize();
+    uint16_t address = _globalConfigSize;
     
     if (page > 1)
     {
@@ -162,9 +218,39 @@ void MemoryManager::loadMIDIMessage(uint16_t * address, MIDIMessage * message)
 }
 
 /*
-* Returns the maximum page numbers that the MemoryManager can manage
+* Load the steps data into a sequence
+* numSequence: sequence number that will be loaded
+* sequence: sequence that will be loaded with the steps data
+* sequenceLength: number of steps that will be loaded
 */
-uint8_t MemoryManager::getMaxPages()
+void MemoryManager::loadSequence(uint8_t numSequence, Step * sequence, uint8_t sequenceLength)
 {
-    return _maxNumPages;
+    //get the begin address of the sequence
+    uint16_t address = _globalConfigSize + (_pageSize * NUM_PAGES);
+    
+    if (numSequence > 1)
+    {
+        address += _sequenceSize * (numSequence-1); 
+    }
+  
+    // load the steps into the sequence
+    for (uint8_t i = 0; i < sequenceLength; i++)
+    {      
+        loadStep(&address, &(sequence[i]));        
+    }
+}
+
+/*
+* Load a step from the EEPROM
+* address: start addres of the EEPROM where the step is stored.
+* step: the step that will be loaded with the data from the EEPROM
+*/
+void MemoryManager::loadStep(uint16_t * address, Step * step)
+{
+    step->setNote(EEPROM.read((*address)));
+    (*address) += sizeof(uint8_t);
+    step->setEnabled(EEPROM.read((*address)));
+    (*address) += sizeof(uint8_t);
+    step->setLegato(EEPROM.read((*address)));
+    (*address) += sizeof(uint8_t);   
 }

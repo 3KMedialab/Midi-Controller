@@ -1,9 +1,9 @@
 /*
- * ScreenManager.cpp
+ * ScreenManager.h
  *
- * Class that manage the interactions between the MIDI controller and the screen
+ * Class that manage the interactions between the MIDI controller and the sequencer with the screen
  *
- * Copyright 2017 3K MEDIALAB
+ * Copyright 2018 3K MEDIALAB
  *   
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,15 @@
 
 /*
 * Initializes the screen manager
-* i2cAddress	I2C slave address of the LCD display. Most likely printed on the
-*			    LCD circuit board, or look in the supplied LCD documentation.
-* cols          Number of columns your LCD display has.
-* rows	        Number of rows your LCD display has.
 */
-void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
+void ScreenManager::initialize()
 {
-    _screen.setLCDAddress(i2cAddress);
-    _screen.setLCDCols(cols);
-    _screen.setLCDRows(rows);
+    _lcd.begin(COLUMNS, ROWS); // initialize the lcd
+
+    Wire.setClock(400000L); // set the clock frequency for the I2C protocol (High Speed Mode)
 
     _displayedMIDIComponent = NULL;
     _currentMIDIMessageDisplayed = 0;
-
-    _screen.begin();
 }
 
 /*
@@ -44,40 +38,48 @@ void ScreenManager::initialize(uint8_t i2cAddress, uint8_t cols, uint8_t rows)
 * page: current selected page of messages
 * tempo: current selected tempo in BPMs
 */
-void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, GlobalConfig globalConf)
+void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo, uint8_t isMIDIClockOn)
 {
-    char buffer[10];
-    String s ="";
+    char line[COLUMNS + 1];
 
     // No MIDI component is assigned to the Screen Manager
     _displayedMIDIComponent = NULL;
-    
+
     //Set the cursor on the top left of the screen
-    _screen.home();
-    
-    // prints the pages and tempo information 
-    s.concat(page);
-    s.concat(F("/"));
-    s.concat(numPages);
-    s.concat(F(" "));
-    s.concat(tempo);   
-    s.concat(F(" "));
-    getMessage(MSG_BPM, buffer);  
-    s.concat(buffer);  
-    _screen.print(s);
-       
-    clearRangeOnCurentLine(0, s.length(), _screen.getLCDCols());
-    
-    s = "";
+    _lcd.setCursor(0, 0);
 
-    // prints the mode and root note information
-    _screen.setCursor(0,1);
-    s.concat(MIDIUtils::getNoteName(globalConf.getRootNote()));  
-    s.concat(F(" "));
-    s.concat(MIDIUtils::getModeName(globalConf.getMode()));
-    _screen.print(s);
+    // prints the pages and tempo information
+    getMessage(MSG_PAGE, line);
+    itoa(page, line + strlen(line), 10);
+    append(line, '/');
+    itoa(numPages, line + strlen(line), 10);
+    append(line, ' ');
+    itoa(tempo, line + strlen(line), 10);
+    append(line, ' ');
+    getMessage(MSG_BPM, line + strlen(line));
 
-    clearRangeOnCurentLine(1, s.length(), _screen.getLCDCols());    
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // second line is empty
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    // prints the MIDI clock status
+    getMessage(MSG_CLOCK, line);
+    isMIDIClockOn ? getMessage(ON, line + strlen(line)) : getMessage(OFF, line + strlen(line));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
 }
 
 /*
@@ -85,23 +87,34 @@ void ScreenManager::printDefault(uint8_t page, uint8_t numPages, uint16_t tempo,
 */
 void ScreenManager::printSelectComponentMessage()
 {
-    char buffer[20]; 
+    char line[COLUMNS + 1];
 
-    _screen.noBlink();
-    cleanScreen();
+    _lcd.noBlink();
+    _lcd.setCursor(0, 0);
 
-    getMessage(MSG_EDIT, buffer);  
-    for (int i=0; i<strlen(buffer); i++)
+    // first line
+    getMessage(MSG_EDIT1, line);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
     {
-        if (buffer[i] != '\n')
-        {
-            _screen.write(buffer[i]);
-        }
-        else
-        {
-            _screen.setCursor(0,1);
-        }
-    }        
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // second line
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    getMessage(MSG_EDIT2, line);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
 }
 
 /*
@@ -110,43 +123,50 @@ void ScreenManager::printSelectComponentMessage()
 */
 void ScreenManager::printEditGlobalConfig(GlobalConfig globalConf)
 {
-    char buffer[10];
-    String s ="";
-
-    cleanScreen();
-    
-    //Set the cursor on the top left of the screen
-    _screen.home();
+    char line[COLUMNS + 1];
 
     // No MIDI component is assigned to the Screen Manager
     _displayedMIDIComponent = NULL;
 
+    _lcd.noBlink();
+    _lcd.setCursor(0, 0);
+
     // prints the musical mode
-    getMessage(MSG_MODE, buffer);  
-    s.concat(buffer);
-    s.concat(MIDIUtils::getModeName(globalConf.getMode()));
-    _screen.print(s);    
-    
-    s = "";
+    getMessage(MSG_MODE, line);
+    strcat(line + strlen(line), MIDIUtils::getModeName(globalConf.getMode()));
 
-    // prints the root note
-    _screen.setCursor(0,1);
-    getMessage(MSG_KEY, buffer); 
-    s.concat(buffer);   
-    s.concat(MIDIUtils::getNoteName(globalConf.getRootNote()));   
-    _screen.print(s);
-    
-    s = "";
-    
-    // prints the MIDI Channel  
-    _screen.setCursor(EDIT_GLOBAL_CHANNEL_POS,1);
-    getMessage(MSG_CHANNEL, buffer);
-    s.concat(buffer);
-    s.concat(globalConf.getMIDIChannel());    
-    _screen.print(s);
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
 
-    _screen.setCursor(EDIT_GLOBAL_MODE_POS,0);
-    _screen.blink();
+    _lcd.print(line);
+
+    // prints the root note and the MIDI Channel data
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    getMessage(MSG_KEY, line);
+    strcat(line + strlen(line), MIDIUtils::getNoteName(globalConf.getRootNote()));
+
+    for (int i = strlen(line); i < EDIT_GLOBAL_CHANNEL_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    getMessage(MSG_CHANNEL, line + strlen(line));
+    itoa(globalConf.getMIDIChannel(), line + strlen(line), 10);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    _lcd.setCursor(EDIT_GLOBAL_MODE_POS, 0);
+    _lcd.blink();
 }
 
 /*
@@ -154,23 +174,28 @@ void ScreenManager::printEditGlobalConfig(GlobalConfig globalConf)
 * msgIndex: text to Load
 * buffer: array of chars where the text will be loaded
 */
-void ScreenManager::getMessage(uint8_t msgIndex, char * buffer)
+void ScreenManager::getMessage(uint8_t msgIndex, char *buffer)
 {
-    strcpy_P(buffer, (char*)pgm_read_word(&(messages[msgIndex])));    
+    strcpy_P(buffer, (char *)pgm_read_word(&(messages[msgIndex])));
 }
 
 /*
-* Clean the lines of the screen
+* Append a char to a String
+* char * s: string destination
+* char c: the char to be appended
 */
-void ScreenManager::cleanScreen()
+void ScreenManager::append(char *s, char c)
 {
-    _screen.clear();
+
+    uint8_t len = strlen(s);
+    s[len] = c;
+    s[len + 1] = '\0';
 }
 
 /*
 * Return the MIDI component currently assigned to the screen
 */
-IMIDIComponent * ScreenManager::getDisplayedMIDIComponent()
+IMIDIComponent *ScreenManager::getDisplayedMIDIComponent()
 {
     return _displayedMIDIComponent;
 }
@@ -190,11 +215,11 @@ uint8_t ScreenManager::getDisplayedMessageType()
 {
     if (_displayedMIDIComponent != NULL)
     {
-        return _displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType();
+        return _displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1].getType();
     }
     else
     {
-        return midi::InvalidType; 
+        return midi::InvalidType;
     }
 }
 
@@ -204,55 +229,64 @@ uint8_t ScreenManager::getDisplayedMessageType()
 */
 void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
 {
-    char buffer[20];
+    char line[COLUMNS + 1];
 
     if (_displayedMIDIComponent != NULL)
-    {    
+    {
         // set the currently MIDI message being displayed
         _currentMIDIMessageDisplayed = msgIndex;
-        
-        cleanScreen();
+
+        _lcd.setCursor(0, 0);
 
         // display current message index and total messages of the component
-        _screen.print(msgIndex);
-        _screen.print(F("/"));
-        _screen.print(_displayedMIDIComponent->getNumMessages());
-        _screen.print(F(" "));  
+        itoa(msgIndex, line, DEC);
+        append(line, '/');
+        itoa(_displayedMIDIComponent->getNumMessages(), line + strlen(line), DEC);
+        append(line, ' ');
 
         // display the first MIDI message of the component
-        switch((_displayedMIDIComponent->getMessages()[msgIndex-1]).getType())
+        switch ((_displayedMIDIComponent->getMessages()[msgIndex - 1]).getType())
         {
-            case midi::NoteOn:
-            case midi::NoteOff:
-                getMessage(MSG_NOTE_ON_OFF, buffer);  
-                _screen.print(buffer);            
-                printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+        case midi::NoteOn:
+        case midi::NoteOff:
+            getMessage(MSG_NOTE_ON_OFF, line + strlen(line));
+            _lcd.print(line);
+            printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[msgIndex - 1]);
             break;
 
-            case midi::ControlChange:
-                getMessage(MSG_CTRL_CHANGE, buffer);  
-                _screen.print(buffer);         
-                printCCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+        case midi::ControlChange:
+            getMessage(MSG_CTRL_CHANGE, line + strlen(line));
+            _lcd.print(line);
+            printCCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex - 1]);
             break;
 
-            case midi::ProgramChange:
-                getMessage(MSG_PGRM_CHANGE, buffer);  
-                _screen.print(buffer);   
-                printPCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex-1]);
+        case midi::ProgramChange:
+            getMessage(MSG_PGRM_CHANGE, line + strlen(line));
+            _lcd.print(line);
+            printPCMIDIData(_displayedMIDIComponent->getMessages()[msgIndex - 1]);
             break;
 
-            case midi::InvalidType:
-                getMessage(MSG_EMPTY_MIDI_TYPE, buffer);  
-                _screen.print(buffer);      
-            break;      
-               
-        break;
+        case midi::InvalidType:
+            getMessage(MSG_EMPTY_MIDI_TYPE, line + strlen(line));
+            _lcd.print(line);
+
+            line[0] = '\0';
+
+            _lcd.setCursor(0, 1);
+
+            for (int i = 0; i < COLUMNS; i++)
+            {
+                append(line + strlen(line), ' ');
+            }
+
+            _lcd.print(line);
+            break;
         }
 
         // display cursor for editing the message getType
-        _screen.setCursor(4,0);
-        _screen.blink();
-    }    
+        _lcd.setCursor(MESSAGE_TYPE_POS, 0);
+        _lcd.blink();
+    }
 }
 
 /*
@@ -261,21 +295,28 @@ void ScreenManager::displayComponentMIDIMessage(uint8_t msgIndex)
 */
 void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
 {
-    char buffer[10];
+    char line[COLUMNS + 1];
 
-    //print note    
-    _screen.setCursor(NOTE_POS,1);
-    String aux = String(MIDIUtils::getNoteName(message.getDataByte1()));
-    aux.concat(MIDIUtils::getOctave(message.getDataByte1()));
-    aux.concat(F(" "));    
-    _screen.print(aux);
-      
-    //print velocity
-    _screen.setCursor(VELOCITY_POS,1);
-    getMessage(MSG_VELOCITY, buffer);  
-    aux= String(buffer);
-    aux.concat(message.getDataByte2());
-    _screen.print(aux);
+    _lcd.setCursor(NOTE_POS, 1);
+
+    //print note + octave + velocity data
+    strcpy(line, MIDIUtils::getNoteName(message.getDataByte1()));
+    itoa(MIDIUtils::getOctave(message.getDataByte1()), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < VELOCITY_POS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    getMessage(MSG_VELOCITY, line + strlen(line));
+    itoa(message.getDataByte2(), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);
 }
 
 /*
@@ -284,15 +325,19 @@ void ScreenManager::printNoteOnOffMIDIData(MIDIMessage message)
 */
 void ScreenManager::printCCMIDIData(MIDIMessage message)
 {
-    char buffer[10];
-    String aux = "";
+    char line[COLUMNS + 1];
 
     //print CC Number
-    _screen.setCursor(CC_POS,1);   
-    getMessage(MSG_CC, buffer);  
-    aux.concat(buffer);
-    aux.concat(message.getDataByte1());
-    _screen.print(aux);
+    _lcd.setCursor(CC_POS, 1);
+    getMessage(MSG_CC, line);
+    itoa(message.getDataByte1(), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);
 }
 
 /*
@@ -301,23 +346,18 @@ void ScreenManager::printCCMIDIData(MIDIMessage message)
 */
 void ScreenManager::printPCMIDIData(MIDIMessage message)
 {
-    clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
-}
+    char line[COLUMNS + 1];
 
-/*
-* Display the MIDI channel value regarding the MIDI message type
-* channel: the MIDI channel value to display
-*/
-void ScreenManager::printMIDIChannel(uint8_t channel)
-{
-    char buffer[4];
-    String aux = "";
+    line[0] = '\0';
 
-    getMessage(MSG_CHANNEL, buffer);  
-    aux.concat(buffer);
-    aux.concat(channel);
-    _screen.print(aux);   
-    
+    _lcd.setCursor(0, 1);
+
+    for (int i = 0; i < COLUMNS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);    
 }
 
 /*
@@ -325,7 +365,7 @@ void ScreenManager::printMIDIChannel(uint8_t channel)
 */
 uint8_t ScreenManager::isComponentDisplayed()
 {
-    return _displayedMIDIComponent == NULL ? 0 : 1;  
+    return _displayedMIDIComponent == NULL ? 0 : 1;
 }
 
 /*
@@ -349,14 +389,14 @@ void ScreenManager::displayNextMIDIMsg()
     {
         _currentMIDIMessageDisplayed += 1;
         displayComponentMIDIMessage(_currentMIDIMessageDisplayed);
-    }    
+    }
 }
 
 /*
 * Assign a MIDI component to the screen to display its MIDI messages information
 * midiComponent: the MIDI component to be displayed
-*/ 
-void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent * midiComponent)
+*/
+void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent *midiComponent)
 {
     _displayedMIDIComponent = midiComponent;
 }
@@ -366,69 +406,70 @@ void ScreenManager::setMIDIComponentToDisplay(IMIDIComponent * midiComponent)
 */
 void ScreenManager::refreshMIDIData()
 {
-    char buffer[15];
+    char line[COLUMNS + 1];
 
-    // calculate the cursor position of the beginning of the MIDI message type name
-    String aux = String(_currentMIDIMessageDisplayed,DEC);
-    aux.concat(F("/"));
-    aux.concat(_displayedMIDIComponent->getNumMessages());
-    aux.concat(F(" "));
-
-    uint8_t backCursorPosition = aux.length();
-
-    switch(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
+    switch (_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1].getType())
     {
-        case midi::NoteOn:
-        case midi::NoteOff:
-            getMessage(MSG_NOTE_ON_OFF, buffer);             
-        break;        
-
-        case midi::ControlChange:
-            getMessage(MSG_CTRL_CHANGE, buffer);                   
+    case midi::NoteOn:
+    case midi::NoteOff:
+        getMessage(MSG_NOTE_ON_OFF, line);
         break;
 
-        case midi::ProgramChange:
-            getMessage(MSG_PGRM_CHANGE, buffer);                   
+    case midi::ControlChange:
+        getMessage(MSG_CTRL_CHANGE, line);
         break;
 
-        case midi::InvalidType:
-            getMessage(MSG_EMPTY_MIDI_TYPE, buffer);                   
+    case midi::ProgramChange:
+        getMessage(MSG_PGRM_CHANGE, line);
+        break;
+
+    case midi::InvalidType:
+        getMessage(MSG_EMPTY_MIDI_TYPE, line);
         break;
     }
-    
-    // print hte MIDI message type name on screen
-    _screen.print(buffer);
 
-    // clean the rest of the line and refresh the MIDI data displayed
-    aux.concat(buffer);
-    clearRangeOnCurentLine(0, aux.length(), _screen.getLCDCols());
-    clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
- 
-    switch (_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1].getType())
+    for (int i = (MESSAGE_TYPE_POS + strlen(line)); i < COLUMNS; i++)
     {
-        case midi::NoteOn:
-            printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);            
+        append(line + strlen(line), ' ');
+    }
+
+    // print hte MIDI message type name on screen
+    _lcd.print(line);
+
+    switch (_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1].getType())
+    {
+    case midi::NoteOn:
+        printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1]);
         break;
 
-        case midi::NoteOff:
-            printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);    
+    case midi::NoteOff:
+        printNoteOnOffMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1]);
         break;
 
-        case midi::ControlChange:
-            printCCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);                    
+    case midi::ControlChange:
+        printCCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1]);
         break;
 
-        case midi::ProgramChange:
-            printPCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed-1]);                  
+    case midi::ProgramChange:
+        printPCMIDIData(_displayedMIDIComponent->getMessages()[_currentMIDIMessageDisplayed - 1]);
         break;
 
-        case midi::InvalidType:
-            clearRangeOnCurentLine(1, 0, _screen.getLCDCols());
-        break;
+    case midi::InvalidType:
+
+        line[0] = '\0';
+
+        _lcd.setCursor(0, 1);
+
+        for (int i = 0; i < COLUMNS; i++)
+        {
+            append(line + strlen(line), ' ');
+        }
+
+        _lcd.print(line);
     }
 
     // set the cursor at the beginning of the MIDI message type name
-    _screen.setCursor(backCursorPosition,0);
+    _lcd.setCursor(MESSAGE_TYPE_POS, 0);
 }
 
 /*
@@ -436,102 +477,125 @@ void ScreenManager::refreshMIDIData()
 */
 void ScreenManager::printSavedMessage()
 {
-    char buffer[15];
-    
-    cleanScreen();
-    _screen.noBlink();   
-    getMessage(MSG_SAVED, buffer);  
-    _screen.print(buffer);    
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+    _lcd.setCursor(0, 0);
+
+    // print the message on the first line
+    getMessage(MSG_SAVED, line);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);
+
+    // second line is empty
+    line[0] = '\0';
+
+    _lcd.setCursor(0, 1);
+
+    for (int i = 0; i < COLUMNS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);
 }
 
 /*
 * Move the screen cursor to the start position of the MIDI message type
-*/ 
+*/
 void ScreenManager::moveCursorToMsgType()
 {
-    String aux = String(_currentMIDIMessageDisplayed,DEC);
-    aux.concat(F("/"));
-    aux.concat(_displayedMIDIComponent->getNumMessages());
-    aux.concat(F(" "));
-    _screen.setCursor(aux.length(),0);
+    _lcd.setCursor(MESSAGE_TYPE_POS, 0);
 }
 
 /*
 * Move the screen cursor to the start position of the note name
-*/ 
+*/
 void ScreenManager::moveCursorToNote()
 {
-    _screen.setCursor(NOTE_POS,1); 
+    _lcd.setCursor(NOTE_POS, 1);
 }
 
 /*
 * Move the screen cursor to the start position of the velocity value
-*/ 
+*/
 void ScreenManager::moveCursorToVelocity()
 {
-    char buffer[10];    
+    char buffer[10];
 
-    getMessage(MSG_CC, buffer);  
-    _screen.setCursor(VELOCITY_POS + strlen(buffer) - 1,1);   
+    getMessage(MSG_CC, buffer);
+    _lcd.setCursor(VELOCITY_POS + strlen(buffer) - 1, 1);
 }
 
 /*
 * Move the screen cursor to the start position of the MIDI CC type 
-*/ 
+*/
 void ScreenManager::moveCursorToCC()
 {
     char buffer[10];
-    
-    getMessage(MSG_CC, buffer);  
-    _screen.setCursor(strlen(buffer),1);    
+
+    getMessage(MSG_CC, buffer);
+    _lcd.setCursor(strlen(buffer), 1);
 }
 
 /*
 * Move the screen cursor to the start position of the root note parameter
-*/ 
+*/
 void ScreenManager::moveCursorToRootNote()
 {
     char buffer[10];
-    
-    getMessage(MSG_KEY, buffer);  
-    _screen.setCursor(strlen(buffer),1);   
+
+    getMessage(MSG_KEY, buffer);
+    _lcd.setCursor(strlen(buffer), 1);
 }
 
 /*
 * Move the screen cursor to the start position of the MIDI Channel parameter
-*/ 
+*/
 void ScreenManager::moveCursorToMIDIChannel()
 {
-   char buffer[10];
-    
-   getMessage(MSG_CHANNEL, buffer);  
-   _screen.setCursor(EDIT_GLOBAL_CHANNEL_POS + strlen(buffer), 1);   
+    char buffer[10];
+
+    getMessage(MSG_CHANNEL, buffer);
+    _lcd.setCursor(EDIT_GLOBAL_CHANNEL_POS + strlen(buffer), 1);
 }
 
 /*
 * Move the screen cursor to the start position of the musical mode parameter
-*/ 
+*/
 void ScreenManager::moveCursorToMode()
 {
-   _screen.setCursor(EDIT_GLOBAL_MODE_POS,0);   
+    _lcd.setCursor(EDIT_GLOBAL_MODE_POS, 0);
 }
 
 /*
 * Display the new note name and octave without refreshing all the screen data
 * note: note value which name and octave will be displayed.
 */
-void ScreenManager::refreshNoteValue (uint8_t note)
+void ScreenManager::refreshNoteValue(uint8_t note)
 {
-    _screen.noBlink();
-    
-    String noteName = String(MIDIUtils::getNoteName(note));
-    noteName.concat(MIDIUtils::getOctave(note));   
-    _screen.print(noteName);
+    char line[COLUMNS + 1];
 
-    clearRangeOnCurentLine(1,noteName.length(),VELOCITY_POS);
+    _lcd.noBlink();
+
+    strcpy(line, MIDIUtils::getNoteName(note));
+    itoa(MIDIUtils::getOctave(note), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < VELOCITY_POS; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.print(line);
+
     moveCursorToNote();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -540,18 +604,22 @@ void ScreenManager::refreshNoteValue (uint8_t note)
 */
 void ScreenManager::refreshVelocityValue(uint8_t velocity)
 {
-    char buffer[5];
+    char line[COLUMNS + 1];
 
-    _screen.noBlink();
-       
-    String velocityValue= String (velocity, DEC);
-    _screen.print(velocityValue);
- 
-    getMessage(MSG_VELOCITY, buffer);
-    clearRangeOnCurentLine(1, VELOCITY_POS + strlen(buffer) + velocityValue.length(), _screen.getLCDCols());
+    _lcd.noBlink();
+
+    itoa(velocity, line, DEC);
+
+    for (int i = 0; i < 2; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.write(line);
+
     moveCursorToVelocity();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -560,18 +628,22 @@ void ScreenManager::refreshVelocityValue(uint8_t velocity)
 */
 void ScreenManager::refreshCCValue(uint8_t cc)
 {
-    char buffer[5];
-    
-    _screen.noBlink();
-    
-    String ccValue= String (cc, DEC);
-    _screen.print(ccValue);
+    char line[4];
 
-    getMessage(MSG_CC, buffer);
-    clearRangeOnCurentLine(1, CC_POS + strlen(buffer) + ccValue.length(), _screen.getLCDCols());
+    _lcd.noBlink();
+
+    itoa(cc, line, DEC);
+
+    for (int i = 0; i < 2; i++)
+    {
+        append(line + strlen(line), ' ');
+    }
+
+    _lcd.write(line);
+
     moveCursorToCC();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -580,15 +652,22 @@ void ScreenManager::refreshCCValue(uint8_t cc)
 */
 void ScreenManager::refreshModeData(uint8_t mode)
 {
-    _screen.noBlink();
-    
-    String modeName = String(MIDIUtils::getModeName(mode));
-    _screen.print(modeName);
+    char line[COLUMNS + 1];
 
-    clearRangeOnCurentLine(0,EDIT_GLOBAL_MODE_POS + modeName.length(), _screen.getLCDCols());
+    _lcd.noBlink();
+
+    strcpy(line, MIDIUtils::getModeName(mode));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
     moveCursorToMode();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -597,19 +676,22 @@ void ScreenManager::refreshModeData(uint8_t mode)
 */
 void ScreenManager::refreshRootNoteData(uint8_t rootNote)
 {
-    char buffer[5];
+    char line[COLUMNS + 1];
 
-    _screen.noBlink();
-    
-    getMessage(MSG_KEY, buffer);
-    
-    String rootNoteName = String(MIDIUtils::getNoteName(rootNote));
-    _screen.print(rootNoteName);
+    _lcd.noBlink();
 
-    clearRangeOnCurentLine(1, EDIT_GLOBAL_KEY_POS + strlen(buffer) + rootNoteName.length(), EDIT_GLOBAL_CHANNEL_POS);
+    strcpy(line, MIDIUtils::getNoteName(rootNote));
+
+    for (int i = EDIT_GLOBAL_KEY_POS + strlen(line); i < EDIT_GLOBAL_CHANNEL_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
     moveCursorToRootNote();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -618,19 +700,22 @@ void ScreenManager::refreshRootNoteData(uint8_t rootNote)
 */
 void ScreenManager::refreshMIDIChannelData(uint8_t midiChannel)
 {
-    char buffer[5];
+    char line[COLUMNS + 1];
 
-    _screen.noBlink();
+    _lcd.noBlink();
 
-    getMessage(MSG_CHANNEL, buffer);
-   
-    String midiChannelName = String (midiChannel, DEC);
-    _screen.print(midiChannelName);   
+    itoa(midiChannel, line, 10);
 
-    clearRangeOnCurentLine(1, EDIT_GLOBAL_CHANNEL_POS + strlen(buffer) + midiChannelName.length(), _screen.getLCDCols());
+    for (int i = 0; i < 1; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.write(line);
+
     moveCursorToMIDIChannel();
 
-    _screen.blink();
+    _lcd.blink();
 }
 
 /*
@@ -641,9 +726,433 @@ void ScreenManager::refreshMIDIChannelData(uint8_t midiChannel)
 */
 void ScreenManager::clearRangeOnCurentLine(uint8_t row, uint8_t from, uint8_t to)
 {
-    _screen.setCursor(from, row);
-    for (int i=from; i<to; i++)
+    _lcd.setCursor(from, row);
+    for (int i = from; i < to; i++)
     {
-        _screen.print(F(" "));
+        _lcd.print(F(" "));
     }
+}
+
+/**************************************************/
+/* SEQUENCER METHODS                              */
+/**************************************************/
+
+/*
+* Prints the information of the sequencer
+*/
+void ScreenManager::printDefaultSequencer(uint8_t currentSequence, uint8_t totalSequences, uint16_t tempo, uint8_t playBackOn)
+{
+    char line[COLUMNS + 1];
+
+    // set to the screen manager the position of the step being edited
+    _currentDisplayedStep = 1;
+
+    //Set the cursor on the top left of the screen
+    _lcd.setCursor(0, 0);
+
+    // prints the sequence number and tempo information
+    getMessage(MSG_SEQ, line);
+    itoa(currentSequence, line + strlen(line), DEC);
+    append(line + strlen(line), '/');
+    itoa(totalSequences, line + strlen(line), DEC);
+    append(line + strlen(line), ' ');
+    itoa(tempo, line + strlen(line), 10);
+    append(line, ' ');
+
+    getMessage(MSG_BPM, line + strlen(line));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // prints playback status on/off
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    getMessage(MSG_PLAYBACK, line);
+    playBackOn ? getMessage(ON, line + strlen(line)) : getMessage(OFF, line + strlen(line));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+}
+
+/*
+* Prints current step being played
+*/
+void ScreenManager::updateDisplayedPlaybackStep(Step step, uint8_t sequenceLength, uint8_t currentStep)
+{
+    char line[COLUMNS + 1];
+
+    // prints the step number and note value (if active) and legato symbol (if is legato)
+    _lcd.setCursor(0, 1);
+
+    getMessage(MSG_STEP, line);
+    itoa(currentStep, line + strlen(line), DEC);
+    append(line + strlen(line), '/');
+    itoa(sequenceLength, line + strlen(line), DEC);
+    append(line + strlen(line), ' ');
+    strcat(line + strlen(line), getStepNoteValue(step));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+}
+
+/*
+* Prints step data in edit mode
+*/
+void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t sequenceLength)
+{
+    char line[COLUMNS + 1];
+
+    // set to the screen manager the position of the step being edited
+    _currentDisplayedStep = currentStep;
+
+    //Set the cursor on the top left of the screen
+    _lcd.setCursor(0, 0);
+
+    // prints the step number and note value
+    getMessage(MSG_STEP, line);
+    itoa(currentStep, line + strlen(line), DEC);
+    append(line + strlen(line), '/');
+    itoa(sequenceLength, line + strlen(line), DEC);
+    append(line + strlen(line), ' ');
+    strcat(line + strlen(line), MIDIUtils::getNoteName(step.getNote()));
+    itoa(MIDIUtils::getOctave(step.getNote()), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // prints step's enabled and legato values
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    getMessage(MSG_STEP_LEGATO, line);
+
+    step.isLegato() ? getMessage(YES, line + strlen(line)) : getMessage(NO, line + strlen(line));
+
+    for (int i = strlen(line); i < STEP_ENABLED_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    getMessage(MSG_STEP_ENABLED, line + strlen(line));
+
+    step.isEnabled() ? getMessage(YES, line + strlen(line)) : getMessage(NO, line + strlen(line));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // move cursor to step note value position
+    _lcd.setCursor(STEP_NOTE_POS, 0);
+    _lcd.blink();
+}
+
+/*
+* Return a char * value with the note value
+*/
+char *ScreenManager::getStepNoteValue(Step step)
+{
+    char line[COLUMNS + 1];
+
+    line[0] = '\0';
+
+    if (!step.isEnabled())
+    {
+        append(line, '-');
+        append(line + strlen(line), '-');
+    }
+
+    else
+    {
+        strcpy(line, MIDIUtils::getNoteName(step.getNote()));
+        itoa(MIDIUtils::getOctave(step.getNote()), line + strlen(line), DEC);
+
+        if (step.isLegato())
+        {
+            append(line + strlen(line), '_');
+        }
+    }
+
+    return line;
+}
+
+/*
+* Return current step being displayed
+*/
+uint8_t ScreenManager::getDisplayedStepNumber()
+{
+    return _currentDisplayedStep;
+}
+
+void ScreenManager::moveCursorToStepNote()
+{
+    _lcd.setCursor(STEP_NOTE_POS, 0);
+}
+
+void ScreenManager::moveCursorToStepLegato()
+{
+    char buffer[10];
+
+    _lcd.setCursor(STEP_LEGATO_POS, 1);
+}
+
+void ScreenManager::moveCursorToStepEnabled()
+{
+    char buffer[10];
+
+    getMessage(MSG_STEP_ENABLED, buffer);
+    _lcd.setCursor(STEP_ENABLED_POS + strlen(buffer), 1);
+}
+
+void ScreenManager::refreshStepNoteValue(uint8_t note)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    strcpy(line, MIDIUtils::getNoteName(note));
+    itoa(MIDIUtils::getOctave(note), line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToStepNote();
+    _lcd.blink();
+}
+
+void ScreenManager::refreshStepLegatoValue(uint8_t legato)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    if (legato == 0)
+    {
+        getMessage(NO, line);
+    }
+
+    else
+    {
+        getMessage(YES, line);
+    }
+
+    for (int i = STEP_LEGATO_POS + strlen(line); i < STEP_ENABLED_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToStepLegato();
+    _lcd.blink();
+}
+
+void ScreenManager::refreshStepEnabledValue(uint8_t enabled)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    if (enabled == 0)
+    {
+        getMessage(NO, line);
+    }
+
+    else
+    {
+        getMessage(YES, line);
+    }
+
+    for (int i = STEP_ENABLED_POS + strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToStepEnabled();
+    _lcd.blink();
+}
+
+void ScreenManager::printEditSequencerConfig(char *playbackModeName, char *stepSizeName, uint8_t midiChannel, uint8_t sendClockWhilePlayback)
+{
+    char line[COLUMNS + 1];
+
+    //Set the cursor on the top left of the screen
+    _lcd.setCursor(0, 0);
+
+    // prints the sequencer playback mode
+    getMessage(MSG_PLAYBACK_MODE, line);
+    strcat(line + strlen(line), playbackModeName);
+
+    for (int i = strlen(line); i < SEQUENCER_EDIT_SEND_CLOCK_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    // prints wether or not send MIDI clock when sequencer playback starts
+    getMessage(MSG_CLK, line + strlen(line));
+    sendClockWhilePlayback ? getMessage(YES, line + strlen(line)) : getMessage(NO, line + strlen(line));
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    // prints the step size
+    _lcd.setCursor(0, 1);
+
+    line[0] = '\0';
+
+    getMessage(MSG_STEP_SIZE, line);
+    strcat(line + strlen(line), stepSizeName);
+
+    for (int i = strlen(line); i < SEQUENCER_EDIT_MIDI_CHANNEL_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    // prints the MIDI Channel
+    getMessage(MSG_CHANNEL, line + strlen(line));
+    itoa(midiChannel, line + strlen(line), DEC);
+
+    for (int i = strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    _lcd.setCursor(SEQUENCER_EDIT_PLAYBACK_MODE_POS, 0);
+    _lcd.blink();
+}
+
+void ScreenManager::moveCursorToPlayBackMode()
+{
+    _lcd.setCursor(SEQUENCER_EDIT_PLAYBACK_MODE_POS, 0);
+}
+
+void ScreenManager::moveCursorToSendClockWhilePlayback()
+{
+    char buffer[10];
+
+    getMessage(MSG_CLK, buffer);
+    _lcd.setCursor(SEQUENCER_EDIT_SEND_CLOCK_POS + strlen(buffer), 0);
+}
+
+void ScreenManager::moveCursorToStepSize()
+{
+    _lcd.setCursor(SEQUENCER_EDIT_STEP_SIZE_POS, 1);
+}
+
+void ScreenManager::moveCursorToSequencerMIDIChannel()
+{
+    char buffer[10];
+
+    getMessage(MSG_CHANNEL, buffer);
+    _lcd.setCursor(SEQUENCER_EDIT_MIDI_CHANNEL_POS + strlen(buffer), 1);
+}
+
+void ScreenManager::refreshDisplayedPlayBackMode(char *playBackMode)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    strcpy(line, playBackMode);
+
+    for (int i = SEQUENCER_EDIT_PLAYBACK_MODE_POS + strlen(line); i < SEQUENCER_EDIT_SEND_CLOCK_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToPlayBackMode();
+    _lcd.blink();
+}
+
+void ScreenManager::refreshDisplayedSendClockWhilePlayback(uint8_t sendClockWhilePlayback)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    sendClockWhilePlayback ? getMessage(YES, line) : getMessage(NO, line);
+
+    for (int i = SEQUENCER_EDIT_SEND_CLOCK_POS + strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToSendClockWhilePlayback();
+    _lcd.blink();
+
+}
+
+void ScreenManager::refreshDisplayedStepSizeValue(char *stepSize)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    strcpy(line, stepSize);
+
+    for (int i = SEQUENCER_EDIT_STEP_SIZE_POS + strlen(line); i < SEQUENCER_EDIT_MIDI_CHANNEL_POS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToStepSize();
+    _lcd.blink();
+}
+
+void ScreenManager::refreshDisplayedSequencerMidiChannel(uint8_t midiChannel)
+{
+    char line[COLUMNS + 1];
+
+    _lcd.noBlink();
+
+    itoa(midiChannel, line, DEC);
+
+    for (int i = SEQUENCER_EDIT_MIDI_CHANNEL_POS + strlen(line); i < COLUMNS; i++)
+    {
+        append(line, ' ');
+    }
+
+    _lcd.print(line);
+
+    moveCursorToSequencerMIDIChannel();
+    _lcd.blink();
 }

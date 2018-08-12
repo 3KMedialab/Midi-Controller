@@ -1,5 +1,7 @@
 #ifndef ControllerConfig_h
 #define ControllerConfig_h
+
+#include "Arduino.h"
 //-------------------------------- B U T T O N S  S E C T I O N ---------------------------------------------
 
 /*************************************************
@@ -33,6 +35,11 @@
 
  // Input Digital Pin for edit mode button
  const uint8_t EDIT_MODE_BUTTON_PIN = 7;
+
+/*************************************************
+ * SEQUENCER BUTTONS CONFIG
+ *************************************************/
+const uint8_t OPERATION_MODE_BUTTON_PIN = 12;
 
 /*************************************************
  * MIDI BUTTONS CONFIGURATION
@@ -106,13 +113,14 @@
 
 //-------------------------------- S C R E E N  S E C T I O N ---------------------------------------------------------
 const uint8_t I2C_ADDRESS = 0x27;
-const uint8_t ROW_LENGTH = 16;
+const uint8_t COLUMNS = 16;
 const uint8_t ROWS = 2;
 //-------------------------------- E N D  O F  S C R E E N  S E C T I O N ---------------------------------------------
 
 //-------------------------------- T E M P O  S E C T I O N ---------------------------------------------------------
-const uint8_t MIN_BPM = 10;
+const uint8_t MIN_BPM = 20;
 const uint16_t MAX_BPM = 300;
+const uint8_t BAR_LENGTH = 4; // number of quarter notes within a bar
 //-------------------------------- E N D  O F  T E M P O  S E C T I O N ---------------------------------------------
 
 //-------------------------------- M U L T I P L E X E R  S E C T I O N  ---------------------------------------------------------
@@ -124,4 +132,9 @@ const uint8_t MUX1_MIDI_BUTTONS_CONTROL_PINS [MUX1_MIDI_BUTTONS_NUM_CONTROL_PINS
 const uint8_t MUX1_MIDI_POTS_NUM_CONTROL_PINS = 3;
 const uint8_t MUX1_MIDI_POTS_CONTROL_PINS [MUX1_MIDI_POTS_NUM_CONTROL_PINS] = {2, 3, 4};*/
 //-------------------------------- E N D  O F  M U L T I P L E X E R  S E C T I O N ---------------------------------------------
+const uint8_t NUM_PAGES = 10;
+const uint8_t NUM_SEQUENCES = 10;
+//-------------------------------- M E M O R Y  S E C T I O N  ---------------------------------------------------------
+
+//-------------------------------- E N D  O F  M E M O R Y  S E C T I O N ---------------------------------------------
 #endif

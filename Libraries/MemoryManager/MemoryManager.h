@@ -23,26 +23,32 @@
 #include <EEPROM.h>
 #include <IMIDIComponent.h> 
 #include <GlobalConfig.h>
+#include <ControllerConfig.h>
+#include <Step.h>
 
 #define MEMORY_SIZE 1024
 
 class MemoryManager
 {
   public:   
-    void initialize(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
+    uint8_t initialize(IMIDIComponent ** midiComponents, uint8_t numMIDIComponents, uint8_t sequenceLength, uint8_t stepSize, uint8_t globalConfigSize);
     void saveMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
+	void saveSequence(uint8_t numSequence, Step * sequence, uint8_t sequenceLength);
     void loadMIDIComponents(uint8_t page, IMIDIComponent ** midiComponents, uint8_t numMIDIComponents);
+	void loadSequence(uint8_t numSequence, Step * sequence, uint8_t sequenceLength);
     void loadGlobalConfiguration(GlobalConfig * globalConfig);
     void saveGlobalConfiguration(GlobalConfig globalConfig);
-    uint8_t getMaxPages();
 
   private:
-    uint8_t _pageSize;        // size of a MIDI messages page regarding the number of MIDI components                        
-    uint8_t _maxNumPages;     // maximum number of pages of MIDI data that can be managed
+    uint8_t _pageSize;        // size of a MIDI messages page regarding the number of MIDI components 
+	uint8_t _sequenceSize; // size of a sequence regarding the nimber of steps
+	uint8_t _globalConfigSize;	// size of the global configuration object
 
     void saveMIDIComponent(uint16_t * address , IMIDIComponent * midiComponent);
     void saveMIDIMessage(uint16_t * address, MIDIMessage message); 
+	void saveStep(uint16_t * address, Step step);
     void loadMIDIComponent(uint16_t * address , IMIDIComponent * midiComponent);
     void loadMIDIMessage(uint16_t * address, MIDIMessage * message); 
+	void loadStep(uint16_t * address, Step * step);
 };
 #endif
