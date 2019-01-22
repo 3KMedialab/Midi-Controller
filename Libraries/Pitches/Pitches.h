@@ -4,150 +4,140 @@
 
  // OCTAVE -1
  #define NOTE_C_1  0
- #define NOTE_C_b1 1
+ #define NOTE_D_b1 1
  #define NOTE_D_1  2
- #define NOTE_D_b1 3
+ #define NOTE_E_b1 3
  #define NOTE_E_1  4
  #define NOTE_F_1  5
- #define NOTE_F_b1 6
+ #define NOTE_G_b1 6
  #define NOTE_G_1  7
- #define NOTE_G_b1 8
+ #define NOTE_A_b1 8
  #define NOTE_A_1  9
- #define NOTE_A_b1 10
+ #define NOTE_B_b1 10
  #define NOTE_B_1  11
  
   // OCTAVE 0
  #define NOTE_C0  12
- #define NOTE_Cb0 13
+ #define NOTE_Db0 13
  #define NOTE_D0  14
- #define NOTE_Db0 15
+ #define NOTE_Eb0 15
  #define NOTE_E0  16
  #define NOTE_F0  17
- #define NOTE_Fb0 18
+ #define NOTE_Gb0 18
  #define NOTE_G0  19
- #define NOTE_Gb0 20
+ #define NOTE_Ab0 20
  #define NOTE_A0  21
- #define NOTE_Ab0 22
+ #define NOTE_Bb0 22
  #define NOTE_B0  23
 
  // OCTAVE 1
  #define NOTE_C1  24
- #define NOTE_Cb1 25
+ #define NOTE_Db1 25
  #define NOTE_D1  26
- #define NOTE_Db1 27
+ #define NOTE_Eb1 27
  #define NOTE_E1  28
  #define NOTE_F1  29
- #define NOTE_Fb1 30
+ #define NOTE_Gb1 30
  #define NOTE_G1  31
- #define NOTE_Gb1 32
+ #define NOTE_Ab1 32
  #define NOTE_A1  33
- #define NOTE_Ab1 34
+ #define NOTE_Bb1 34
  #define NOTE_B1  35
 
  // OCTAVE 2
  #define NOTE_C2  36
- #define NOTE_Cb2 37
+ #define NOTE_Db2 37
  #define NOTE_D2  38
- #define NOTE_Db2 39
+ #define NOTE_Eb2 39
  #define NOTE_E2  40
  #define NOTE_F2  41
- #define NOTE_Fb2 42
+ #define NOTE_Gb2 42
  #define NOTE_G2  43
- #define NOTE_Gb2 44
+ #define NOTE_Ab2 44
  #define NOTE_A2  45
- #define NOTE_Ab2 46
+ #define NOTE_Bb2 46
  #define NOTE_B2  47
 
  // OCTAVE 3
  #define NOTE_C3  48
- #define NOTE_Cb3 49
+ #define NOTE_Db3 49
  #define NOTE_D3  50
- #define NOTE_Db3 51
+ #define NOTE_Eb3 51
  #define NOTE_E3  52
  #define NOTE_F3  53
- #define NOTE_Fb3 54
+ #define NOTE_Gb3 54
  #define NOTE_G3  55
- #define NOTE_Gb3 56
+ #define NOTE_Ab3 56
  #define NOTE_A3  57
- #define NOTE_Ab3 58
+ #define NOTE_Bb3 58
  #define NOTE_B3  59
 
  // OCTAVE 4
  #define NOTE_C4  60
- #define NOTE_Cb4 61
+ #define NOTE_Db4 61
  #define NOTE_D4  62
- #define NOTE_Db4 63 
+ #define NOTE_Eb4 63 
  #define NOTE_E4  64
  #define NOTE_F4  65
- #define NOTE_Fb4 66
+ #define NOTE_Gb4 66
  #define NOTE_G4  67
- #define NOTE_Gb4 68
+ #define NOTE_Ab4 68
  #define NOTE_A4  69
- #define NOTE_Ab4 70
+ #define NOTE_Bb4 70
  #define NOTE_B4  71
 
  // OCTAVE 5
  #define NOTE_C5  72
- #define NOTE_Cb5 73
+ #define NOTE_Db5 73
  #define NOTE_D5  74
- #define NOTE_Db5 75
+ #define NOTE_Eb5 75
  #define NOTE_E5  76
  #define NOTE_F5  77
- #define NOTE_Fb5 78
+ #define NOTE_Gb5 78
  #define NOTE_G5  79
- #define NOTE_Gb5 80
+ #define NOTE_Ab5 80
  #define NOTE_A5  81
- #define NOTE_Ab5 82
+ #define NOTE_Bb5 82
  #define NOTE_B5  83
 
   // OCTAVE 6
  #define NOTE_C6  84
- #define NOTE_Cb6 85
+ #define NOTE_Db6 85
  #define NOTE_D6  86
- #define NOTE_Db6 87
+ #define NOTE_Eb6 87
  #define NOTE_E6  88
  #define NOTE_F6  89
- #define NOTE_Fb6 90
+ #define NOTE_Gb6 90
  #define NOTE_G6  91
- #define NOTE_Gb6 92
+ #define NOTE_Ab6 92
  #define NOTE_A6  93
- #define NOTE_Ab6 94
+ #define NOTE_Bb6 94
  #define NOTE_B6  95
 
  // OCTAVE 7
  #define NOTE_C7  96
- #define NOTE_Cb7 97
+ #define NOTE_Db7 97
  #define NOTE_D7  98
- #define NOTE_Db7 99
+ #define NOTE_Eb7 99
  #define NOTE_E7  100
  #define NOTE_F7  101
- #define NOTE_Fb7 102
+ #define NOTE_Gb7 102
  #define NOTE_G7  103
- #define NOTE_Gb7 104
+ #define NOTE_Ab7 104
  #define NOTE_A7  105
- #define NOTE_Ab7 106
+ #define NOTE_Bb7 106
  #define NOTE_B7  107
 
  // OCTAVE 8
  #define NOTE_C8  108
- #define NOTE_Cb8 109
+ #define NOTE_Db8 109
  #define NOTE_D8  110
- #define NOTE_Db8 111
+ #define NOTE_Eb8 111
  #define NOTE_E8  112
  #define NOTE_F8  113
- #define NOTE_Fb8 114
+ #define NOTE_Gb8 114
  #define NOTE_G8  115
- #define NOTE_Gb8 116
+ #define NOTE_Ab8 116
  #define NOTE_A8  117
- #define NOTE_Ab8 118
+ #define NOTE_Bb8 118
  #define NOTE_B8  119
-
-  // OCTAVE 9
-  #define NOTE_C9  120
-  #define NOTE_Cb9 121
-  #define NOTE_D9  122
-  #define NOTE_Db9 123
-  #define NOTE_E9  124
-  #define NOTE_F9  125
-  #define NOTE_Fb9 126
-  #define NOTE_G9  127
