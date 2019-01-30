@@ -528,8 +528,8 @@ void ScreenManager::moveCursorToVelocity()
 {
     char buffer[10];
 
-    getMessage(MSG_CC, buffer);
-    _lcd.setCursor(VELOCITY_POS + strlen(buffer) - 1, 1);
+    getMessage(MSG_VELOCITY, buffer);
+    _lcd.setCursor(VELOCITY_POS + strlen(buffer), 1);
 }
 
 /*

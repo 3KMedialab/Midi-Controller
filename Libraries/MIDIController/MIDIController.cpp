@@ -235,6 +235,7 @@ void MIDIController::processMidiComponent(IMIDIComponent *component)
             if (message->getType() != midi::InvalidType)
             {
                 _midiLed.setState(HIGH);
+                delay(5);
                 _midiWorker->sendMIDIMessage(message, _globalConfig.getMIDIChannel());
                 _midiLed.setState(LOW);
             }
@@ -359,7 +360,7 @@ void MIDIController::processSelectValuePot()
             case EDIT_NOTE:
             {
                 // set the new note value in to the component
-                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_Cb8);
+                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_C7);
 
                 if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
                 {
@@ -465,7 +466,7 @@ void MIDIController::processSelectValuePot()
             // update the note assigned to the current edited step
             case SEQUENCER_EDIT_STEP_NOTE:
             {
-                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_Cb8);
+                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_C7);
 
                 if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
                 {
