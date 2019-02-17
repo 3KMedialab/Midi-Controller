@@ -76,7 +76,7 @@ public:
   }; // step sizes
   enum
   {
-    LENGTH = 8
+    LENGTH = 16
   }; // number of steps within a sequence
   enum
   {

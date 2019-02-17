@@ -196,7 +196,7 @@ private:
   enum
   {
     STEP_NUM_POS = 5,
-    STEP_NOTE_POS = 9,
+    STEP_NOTE_POS = 11,
     STEP_ENABLED_POS = 9,
     STEP_LEGATO_POS = 4
   }; // Sequencer screen start position of the sequence step values

@@ -828,6 +828,12 @@ void ScreenManager::printEditStepData(Step step, uint8_t currentStep, uint8_t se
     append(line + strlen(line), '/');
     itoa(sequenceLength, line + strlen(line), DEC);
     append(line + strlen(line), ' ');
+
+    for (int i = strlen(line); i < STEP_NOTE_POS; i++)
+    {
+        append(line, ' ');
+    }
+
     strcat(line + strlen(line), MIDIUtils::getNoteName(step.getNote()));
     itoa(MIDIUtils::getOctave(step.getNote()), line + strlen(line), DEC);
 
