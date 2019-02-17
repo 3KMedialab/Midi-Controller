@@ -74,7 +74,7 @@ void MIDIController::begin()
     _accesToSequencerEdit = 0;
 
     // set the default tempo
-    _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM + 1));
+    _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1022, MIN_BPM, MAX_BPM));
 
     // Display the controller current page, bpm and MIDI clock status data
     _screenManager.printDefault(_currentPage, NUM_PAGES, _syncManager.getBpm(), _isMIDIClockOn);
@@ -235,6 +235,7 @@ void MIDIController::processMidiComponent(IMIDIComponent *component)
             if (message->getType() != midi::InvalidType)
             {
                 _midiLed.setState(HIGH);
+                delay(5);
                 _midiWorker->sendMIDIMessage(message, _globalConfig.getMIDIChannel());
                 _midiLed.setState(LOW);
             }
@@ -313,7 +314,7 @@ void MIDIController::processSelectValuePot()
         case SEQUENCER:
         {
             // set the new bpm value into the sync manager
-            _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1023, MIN_BPM, MAX_BPM + 1));
+            _syncManager.setBpm(map(_selectValuePot.getSmoothValue(), 0, 1022, MIN_BPM, MAX_BPM));
 
             // update screen regarding the state
             if (_state == CONTROLLER)
@@ -347,7 +348,7 @@ void MIDIController::processSelectValuePot()
                 uint8_t *availableMIDIMessages = displayedComponent->getAvailableMessageTypes();
                 uint8_t numAvailableMsgTypes = displayedComponent->getNumAvailableMessageTypes();
 
-                displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[map(_selectValuePot.getSmoothValue(), 0, 1023, 0, numAvailableMsgTypes)]);
+                displayedComponent->getMessages()[displayedMessageIndex].setType(availableMIDIMessages[map(_selectValuePot.getSmoothValue(), 0, 1022, 0, numAvailableMsgTypes - 1)]);
 
                 if (oldMessage.getType() != displayedComponent->getMessages()[displayedMessageIndex].getType())
                 {
@@ -359,7 +360,7 @@ void MIDIController::processSelectValuePot()
             case EDIT_NOTE:
             {
                 // set the new note value in to the component
-                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
+                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_C7);
 
                 if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
                 {
@@ -376,7 +377,7 @@ void MIDIController::processSelectValuePot()
             {
 
                 //set the new velocity value into the component
-                uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1023, 1, 128);
+                uint8_t velocity = map(_selectValuePot.getSmoothValue(), 0, 1022, 1, 127);
                 displayedComponent->getMessages()[displayedMessageIndex].setDataByte2(velocity);
 
                 // print the new velocity value on the screen
@@ -388,7 +389,7 @@ void MIDIController::processSelectValuePot()
             case EDIT_CC:
             {
                 //set the new control change type value into the component
-                uint8_t ccValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 128);
+                uint8_t ccValue = map(_selectValuePot.getSmoothValue(), 0, 1022, 0, 127);
                 displayedComponent->getMessages()[displayedMessageIndex].setDataByte1(ccValue);
 
                 // print the new cc value on the screen
@@ -412,7 +413,7 @@ void MIDIController::processSelectValuePot()
                 // get the current mode
                 uint8_t currentMode = _globalConfig.getMode();
 
-                _globalConfig.setMode(map(_selectValuePot.getSmoothValue(), 0, 1023, MIDIUtils::Ionian, MIDIUtils::Chromatic + 1));
+                _globalConfig.setMode(map(_selectValuePot.getSmoothValue(), 0, 1022, MIDIUtils::Ionian, MIDIUtils::Chromatic));
 
                 if (currentMode != _globalConfig.getMode())
                 {
@@ -428,7 +429,7 @@ void MIDIController::processSelectValuePot()
                 // get the current root note
                 uint8_t currentRootNote = _globalConfig.getRootNote();
 
-                _globalConfig.setRootNote(map(_selectValuePot.getSmoothValue(), 0, 1023, MIDIUtils::C, MIDIUtils::B + 1));
+                _globalConfig.setRootNote(map(_selectValuePot.getSmoothValue(), 0, 1022, MIDIUtils::C, MIDIUtils::B));
 
                 if (currentRootNote != _globalConfig.getRootNote())
                 {
@@ -444,7 +445,7 @@ void MIDIController::processSelectValuePot()
                 // get the current root note
                 uint8_t currentMIDIChannel = _globalConfig.getMIDIChannel();
 
-                _globalConfig.setMIDIChannel(map(_selectValuePot.getSmoothValue(), 0, 1023, MIDIUtils::CHANNEL1, MIDIUtils::CHANNEL16 + 1));
+                _globalConfig.setMIDIChannel(map(_selectValuePot.getSmoothValue(), 0, 1022, MIDIUtils::CHANNEL1, MIDIUtils::CHANNEL16));
 
                 if (currentMIDIChannel != _globalConfig.getMIDIChannel())
                 {
@@ -465,7 +466,7 @@ void MIDIController::processSelectValuePot()
             // update the note assigned to the current edited step
             case SEQUENCER_EDIT_STEP_NOTE:
             {
-                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1023, NOTE_C_1, NOTE_Cb8);
+                uint8_t note = map(_selectValuePot.getSmoothValue(), 0, 1022, NOTE_C_1, NOTE_C7);
 
                 if (MIDIUtils::isNoteInScale(note, _globalConfig.getRootNote(), _globalConfig.getMode()))
                 {
@@ -478,7 +479,7 @@ void MIDIController::processSelectValuePot()
             // update legato value assigned to the current edited step
             case SEQUENCER_EDIT_STEP_LEGATO:
             {
-                uint8_t legatoValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 2);
+                uint8_t legatoValue = map(_selectValuePot.getSmoothValue(), 0, 1022, 0, 1);
                 _sequencer.setDisplayedStepLegato(legatoValue);
 
                 break;
@@ -487,7 +488,7 @@ void MIDIController::processSelectValuePot()
             // update enabled value assigned to the current edited step
             case SEQUENCER_EDIT_STEP_ENABLED:
             {
-                uint8_t enabledValue = map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 2);
+                uint8_t enabledValue = map(_selectValuePot.getSmoothValue(), 0, 1022, 0, 1);
                 _sequencer.setDisplayedStepEnabled(enabledValue);
 
                 break;
@@ -507,7 +508,7 @@ void MIDIController::processSelectValuePot()
                 // get the current playback mode
                 uint8_t currentMode = _sequencer.getPlayBackMode();
 
-                _sequencer.setPlayBackMode(map(_selectValuePot.getSmoothValue(), 0, 1023, 0, _sequencer.getPlayBackModeTypesNumber()));
+                _sequencer.setPlayBackMode(map(_selectValuePot.getSmoothValue(), 0, 1022, 0, _sequencer.getPlayBackModeTypesNumber() - 1));
 
                 if (currentMode != _sequencer.getPlayBackMode())
                 {
@@ -528,7 +529,7 @@ void MIDIController::processSelectValuePot()
                 {
 
                     uint8_t currentSendClockWhilePlayBack = _globalConfig.getSendClockWhilePlayback();
-                    _globalConfig.setSendClockWhilePlayback(map(_selectValuePot.getSmoothValue(), 0, 1023, 0, 2));
+                    _globalConfig.setSendClockWhilePlayback(map(_selectValuePot.getSmoothValue(), 0, 1022, 0, 1));
 
                     if (currentSendClockWhilePlayBack != _globalConfig.getSendClockWhilePlayback())
                     {
@@ -548,7 +549,7 @@ void MIDIController::processSelectValuePot()
                     uint8_t currentStepSize = _sequencer.getStepSize();
 
                     // set the new value of the step size if valid
-                    uint8_t newStepSize = map(_selectValuePot.getSmoothValue(), 0, 1023, Sequencer::QUARTER, Sequencer::THIRTYSECOND + 1);
+                    uint8_t newStepSize = map(_selectValuePot.getSmoothValue(), 0, 1022, Sequencer::QUARTER, Sequencer::THIRTYSECOND);
 
                     if (_sequencer.isStepSizeValueValid(newStepSize))
                     {
@@ -569,7 +570,7 @@ void MIDIController::processSelectValuePot()
             {
                 uint8_t currentSeqMIDIChannel = _globalConfig.getSequencerMIDIChannel();
 
-                _globalConfig.setSequencerMIDIChannel(map(_selectValuePot.getSmoothValue(), 0, 1023, MIDIUtils::CHANNEL1, MIDIUtils::CHANNEL16 + 1));
+                _globalConfig.setSequencerMIDIChannel(map(_selectValuePot.getSmoothValue(), 0, 1022, MIDIUtils::CHANNEL1, MIDIUtils::CHANNEL16));
 
                 if (currentSeqMIDIChannel != _globalConfig.getSequencerMIDIChannel())
                 {
